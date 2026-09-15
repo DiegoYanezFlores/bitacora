@@ -12,105 +12,135 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Bitácora">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
   :root {
-    --bg: #E9EBE6;
+    --paper: #E9EBE6;
+    --card: #F3F4F0;
     --ink: #1B2321;
-    --ink-2: #4A5451;
-    --muted: #7C8582;
-    --line: #D2D6CF;
-    --card: #F3F4F1;
-    --danger: #9B3B2E;
-    --radius: 14px;
-    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+    --soft: #5C6663;
+    --line: #C9CDC5;
+    --done: #2F5D50;
+    --flag: #B4491F;
+    --r: 3px;
+    --font: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+  html, body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.45; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; }
   body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
-  button, input, select { font: inherit; color: inherit; }
+  button, input, select, textarea { font: inherit; color: inherit; }
   button { cursor: pointer; }
+  .num, .big, .hist, input[type=number] { font-variant-numeric: tabular-nums; }
+  .soft { color: var(--soft); }
+  .small { font-size: 13px; }
 
-  .wrap { max-width: 560px; margin: 0 auto; padding: 16px 16px 112px; }
+  .wrap { max-width: 600px; margin: 0 auto; padding: 8px 16px 48px; }
 
-  header.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 12px 0 18px; border-bottom: 1.5px solid var(--ink); }
-  h1 { font-family: var(--serif); font-weight: 600; font-size: 36px; letter-spacing: -.01em; margin: 0; line-height: 1; }
-  .date { color: var(--ink-2); font-size: 13px; margin-top: 8px; }
-  .date::first-letter { text-transform: uppercase; }
+  header.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1.5px solid var(--ink); }
+  h1 { font-size: 22px; font-weight: 600; margin: 0; letter-spacing: -.01em; line-height: 1.2; }
+  .sub { color: var(--soft); font-size: 13px; margin-top: 2px; }
 
-  .summary { display: flex; gap: 24px; padding: 16px 0; border-bottom: 1px solid var(--line); }
-  .summary:empty { display: none; }
-  .stat b { display: block; font-family: var(--serif); font-size: 26px; font-weight: 600; line-height: 1.1; }
-  .stat span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  section.block { padding: 18px 0; border-bottom: 1px solid var(--line); }
+  .block-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  h2 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--soft); margin: 0; }
 
-  .section-title { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin: 24px 0 10px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 12px; }
+  .big { font-size: 34px; font-weight: 600; line-height: 1; }
 
-  .goal { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 14px 12px; margin-bottom: 12px; }
-  .goal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .goal-title { background: none; border: 0; padding: 0; text-align: left; font-family: var(--serif); font-size: 19px; font-weight: 600; line-height: 1.25; flex: 1; min-width: 0; overflow-wrap: anywhere; }
-  .meta { font-size: 13px; color: var(--ink-2); margin-top: 8px; }
-
-  .check { width: 44px; height: 44px; flex: none; border-radius: 50%; border: 1.5px solid var(--ink); background: transparent; display: grid; place-items: center; transition: background .15s; }
-  .check svg { width: 20px; height: 20px; opacity: .18; }
-  .check.is-done { background: var(--ink); color: var(--bg); }
-  .check.is-done svg { opacity: 1; }
-
-  .strip { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; margin-top: 12px; }
-  .day { aspect-ratio: 1; border: 0; padding: 0; border-radius: 4px; background: var(--line); max-width: 100%; }
-  .day.on { background: var(--ink); }
-  .day.today { outline: 1.5px solid var(--ink); outline-offset: 1px; }
-
-  .bar { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; margin-top: 12px; }
-  .bar span { display: block; height: 100%; background: var(--ink); border-radius: 99px; transition: width .25s; }
-
-  .quick { display: flex; gap: 8px; margin-top: 12px; }
-  .quick input { flex: 1; min-width: 0; }
-
-  input[type=text], input[type=number], input[type=date], input[type=email], input[type=password] {
-    width: 100%; background: #FBFBF9; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 16px;
-  }
-  input:focus { outline: 2px solid var(--ink); outline-offset: -1px; }
-
-  .btn { border: 1.5px solid var(--ink); background: var(--ink); color: var(--bg); border-radius: 10px; padding: 10px 14px; font-weight: 600; font-size: 15px; white-space: nowrap; }
+  .btn { min-height: 44px; border: 1.5px solid var(--ink); background: var(--ink); color: var(--paper); border-radius: var(--r); padding: 8px 14px; font-weight: 500; font-size: 15px; white-space: nowrap; }
   .btn.ghost { background: transparent; color: var(--ink); }
-  .btn.danger { background: transparent; color: var(--danger); border-color: var(--danger); }
-  .btn.small { padding: 6px 10px; font-size: 13px; }
-  .link { background: none; border: 0; padding: 0; color: var(--ink-2); text-decoration: underline; font-size: 13px; }
+  .btn.danger { background: transparent; color: var(--flag); border-color: var(--flag); }
+  .btn.small { min-height: 36px; padding: 6px 10px; font-size: 13px; }
+  .btn.is-done { background: var(--done); border-color: var(--done); }
+  .link { background: none; border: 0; padding: 0; color: var(--soft); text-decoration: underline; font-size: 13px; }
 
-  .fab { position: fixed; right: max(16px, calc(50% - 264px)); bottom: calc(20px + env(safe-area-inset-bottom)); height: 52px; padding: 0 20px; border-radius: 99px; border: 0; background: var(--ink); color: var(--bg); font-weight: 600; font-size: 15px; box-shadow: 0 6px 20px rgba(27,35,33,.25); }
+  /* 1. Inglés */
+  .streak { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .streak-main span { display: block; font-size: 13px; color: var(--soft); margin-top: 4px; }
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
+  .cal .dow { font-size: 11px; color: var(--soft); text-align: center; }
+  .cal .c { height: 18px; border-radius: var(--r); border: 0; padding: 0; background: var(--line); }
+  .cal .c.on { background: var(--done); }
+  .cal .c.pre, .cal .c.future { background: transparent; border: 1px dashed var(--line); }
+  .cal .c.today { outline: 1.5px solid var(--ink); outline-offset: 1px; }
+  .cal button.c { cursor: pointer; }
+  .cal-foot { margin-top: 8px; }
 
-  .empty { text-align: center; padding: 48px 12px; color: var(--ink-2); }
-  .empty p { font-family: var(--serif); font-size: 20px; color: var(--ink); margin: 0 0 6px; }
+  /* 2. Tareas */
+  .notice { border-left: 3px solid var(--flag); padding: 8px 10px; background: var(--card); color: var(--flag); font-size: 13px; margin-bottom: 10px; border-radius: var(--r); }
+  ul.list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  ul.list li { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .tick { flex: none; width: 28px; height: 28px; margin: 8px 8px 8px 0; border: 1.5px solid var(--ink); border-radius: var(--r); background: transparent; display: grid; place-items: center; position: relative; }
+  .tick::after { content: ""; position: absolute; inset: -8px; }
+  .tick svg { width: 16px; height: 16px; visibility: hidden; }
+  .tick.on { background: var(--done); border-color: var(--done); color: var(--paper); }
+  .tick.on svg { visibility: visible; }
+  .item { flex: 1; min-width: 0; background: none; border: 0; padding: 8px 0; text-align: left; overflow-wrap: anywhere; }
+  .item .t { display: block; }
+  .item .w { display: block; font-size: 13px; color: var(--soft); margin-top: 2px; }
+  li.is-done .item .t { color: var(--soft); text-decoration: line-through; }
+  .prio { flex: none; font-size: 11px; font-weight: 600; border: 1px solid var(--line); border-radius: var(--r); padding: 1px 5px; margin-top: 12px; color: var(--soft); }
+  .prio.p1 { color: var(--flag); border-color: var(--flag); }
+  .row-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+  .row-actions .spacer { flex: 1; }
+  .empty-line { color: var(--soft); font-size: 14px; padding: 10px 0; margin: 0; }
 
-  details.archived summary { cursor: pointer; font-size: 13px; color: var(--ink-2); margin: 20px 0 10px; }
-  .goal.is-archived { opacity: .6; }
+  /* 3. Contadores */
+  .counters { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .counter .label, .capital .label { font-size: 13px; color: var(--soft); display: block; margin-bottom: 6px; }
+  .stepper { display: flex; gap: 8px; margin-top: 10px; }
+  .stepper button { flex: 1; min-height: 40px; border: 1px solid var(--line); background: var(--paper); border-radius: var(--r); font-size: 18px; }
+  .capital { grid-column: 1 / -1; display: block; width: 100%; text-align: left; }
+  .capital .figs { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; }
+  .bar { display: block; height: 6px; background: var(--line); border-radius: var(--r); overflow: hidden; margin-top: 10px; }
+  .bar span { display: block; height: 100%; background: var(--done); }
 
-  footer.tools { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--line); }
+  /* 4. Pendientes de terceros */
+  .since { flex: none; font-size: 13px; color: var(--soft); padding-top: 8px; }
+  .since.late { color: var(--flag); font-weight: 500; }
+  .x { flex: none; background: none; border: 0; color: var(--soft); font-size: 20px; line-height: 1; width: 36px; height: 36px; }
+  form.inline { display: flex; gap: 8px; margin-top: 10px; }
+  form.inline input { flex: 1; min-width: 0; }
 
-  dialog { border: 0; border-radius: 18px; padding: 0; width: min(520px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); background: var(--bg); color: var(--ink); box-shadow: 0 20px 60px rgba(27,35,33,.3); }
+  /* 5. Historial */
+  .hist { display: flex; gap: 4px; align-items: flex-end; }
+  .hcol { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .hbar { width: 100%; max-width: 28px; height: 80px; background: var(--card); border: 1px solid var(--line); border-radius: var(--r); display: flex; align-items: flex-end; overflow: hidden; }
+  .hbar span { display: block; width: 100%; background: var(--done); }
+  .hbar span.low { background: var(--flag); }
+  .hpct { font-size: 11px; }
+  .hwk { font-size: 10px; color: var(--soft); }
+
+  /* 6. Hoja de ruta */
+  ol.list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  ol.list li { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .item .m { display: block; font-size: 12px; font-weight: 600; color: var(--soft); text-transform: uppercase; letter-spacing: .05em; }
+
+  textarea, input[type=text], input[type=number], input[type=date], input[type=email], input[type=password], select {
+    width: 100%; background: #FAFAF8; border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; font-size: 16px;
+  }
+  textarea { min-height: 110px; resize: vertical; }
+  input:focus, textarea:focus, select:focus { outline: 2px solid var(--ink); outline-offset: -1px; }
+
+  footer.tools { display: flex; flex-wrap: wrap; gap: 16px; padding-top: 18px; }
+
+  dialog { border: 0; border-radius: var(--r); padding: 0; width: min(520px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); background: var(--paper); color: var(--ink); box-shadow: 0 16px 48px rgba(27,35,33,.3); }
   dialog::backdrop { background: rgba(27,35,33,.45); }
-  .dlg { padding: 20px; }
-  .dlg h2 { font-family: var(--serif); font-size: 24px; margin: 0 0 16px; font-weight: 600; overflow-wrap: anywhere; }
-  .field { margin-bottom: 14px; }
-  .field label, .field .label { display: block; font-size: 13px; color: var(--ink-2); margin-bottom: 6px; }
-  .row { display: flex; gap: 10px; }
-  .row > * { flex: 1; min-width: 0; }
-  .seg { display: flex; border: 1.5px solid var(--ink); border-radius: 10px; overflow: hidden; }
-  .seg label { flex: 1; text-align: center; padding: 9px 6px; font-size: 14px; margin: 0; color: var(--ink); cursor: pointer; }
-  .seg input { position: absolute; opacity: 0; pointer-events: none; }
-  .seg label:has(input:checked) { background: var(--ink); color: var(--bg); }
-  .actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+  .dlg { padding: 18px; }
+  .dlg h2 { font-size: 18px; text-transform: none; letter-spacing: 0; color: var(--ink); margin: 0 0 14px; }
+  .field { margin-bottom: 12px; }
+  .field label, .field .label { display: block; font-size: 13px; color: var(--soft); margin-bottom: 5px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; margin-top: 16px; }
   .actions .spacer { flex: 1; }
-  .hint { font-size: 13px; color: var(--muted); margin: 0; }
+  .hint { font-size: 13px; color: var(--soft); margin: 0; }
 
-  .entries { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--line); }
-  .entries li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
-  .entries li .when { color: var(--ink-2); width: 92px; flex: none; }
-  .entries li .what { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-  .entries li button { background: none; border: 0; color: var(--muted); font-size: 18px; line-height: 1; padding: 4px 6px; }
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 14px; border-radius: var(--r); font-size: 14px; max-width: calc(100vw - 32px); pointer-events: none; }
 
-  .toast { position: fixed; left: 50%; bottom: calc(88px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; max-width: calc(100vw - 32px); opacity: 0; pointer-events: none; transition: opacity .2s; }
-  .toast.show { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+  }
 </style>
 </head>
 <body>
@@ -118,73 +148,37 @@
   <header class="top">
     <div>
       <h1>Bitácora</h1>
-      <div class="date" id="today"></div>
+      <div class="sub num" id="weekInfo"></div>
     </div>
     <div id="sync"></div>
   </header>
 
-  <section class="summary" id="summary"></section>
-  <main id="list"></main>
-  <section id="archived"></section>
+  <section class="block" id="english"></section>
+  <section class="block" id="tasks"></section>
+  <section class="block" id="counters"></section>
+  <section class="block" id="waiting"></section>
+  <section class="block" id="history"></section>
+  <section class="block" id="roadmap"></section>
+  <section class="block">
+    <div class="block-head"><h2>Notas</h2></div>
+    <textarea id="notes" aria-label="Notas"></textarea>
+  </section>
 
   <footer class="tools">
-    <button class="link" data-action="export">Exportar copia (JSON)</button>
-    <button class="link" data-action="import">Importar copia</button>
+    <button class="link" data-act="export">Exportar copia (JSON)</button>
+    <button class="link" data-act="import">Importar copia</button>
     <input type="file" id="importFile" accept="application/json,.json" hidden>
   </footer>
 </div>
 
-<button class="fab" data-action="new">+ Nuevo objetivo</button>
-
-<dialog id="goalDialog">
-  <form class="dlg" id="goalForm" method="dialog">
-    <h2 id="goalFormTitle">Nuevo objetivo</h2>
-    <input type="hidden" name="id">
-    <div class="field">
-      <label for="f-title">Nombre</label>
-      <input type="text" id="f-title" name="title" required maxlength="120" autocomplete="off" placeholder="Ej. Leer 20 minutos">
-    </div>
-    <div class="field">
-      <span class="label">Tipo</span>
-      <div class="seg">
-        <label><input type="radio" name="kind" value="habit" checked> Hábito diario</label>
-        <label><input type="radio" name="kind" value="target"> Meta con cantidad</label>
-      </div>
-    </div>
-    <div id="targetFields">
-      <div class="row">
-        <div class="field">
-          <label for="f-target">Objetivo</label>
-          <input type="number" id="f-target" name="target" min="0" step="any" inputmode="decimal" placeholder="100">
-        </div>
-        <div class="field">
-          <label for="f-unit">Unidad</label>
-          <input type="text" id="f-unit" name="unit" maxlength="24" autocomplete="off" placeholder="km, páginas, $">
-        </div>
-      </div>
-    </div>
-    <div class="field">
-      <label for="f-deadline">Fecha límite (opcional)</label>
-      <input type="date" id="f-deadline" name="deadline">
-    </div>
-    <div class="actions">
-      <button type="button" class="btn ghost" data-action="close">Cancelar</button>
-      <button type="submit" class="btn">Guardar</button>
-    </div>
-  </form>
-</dialog>
-
-<dialog id="detailDialog">
-  <div class="dlg" id="detail"></div>
-</dialog>
-
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<dialog id="dlg"><form class="dlg" id="dlgForm" method="dialog"></form></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script>
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'bitacora:v1';
+  const STORAGE_KEY = 'bitacora-v1';
   const $ = (s, r = document) => r.querySelector(s);
 
   // ---------- utilidades ----------
@@ -192,38 +186,78 @@
   const pad = n => String(n).padStart(2, '0');
   const dayKey = (d = new Date()) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
   const parseDay = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
-  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
-  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const num = n => Number(n).toLocaleString('es', { maximumFractionDigits: 2 });
-  const fmtDay = k => parseDay(k).toLocaleDateString('es', { day: 'numeric', month: 'short' });
+  const addDays = (k, n) => { const d = parseDay(k); d.setDate(d.getDate() + n); return dayKey(d); };
   const daysBetween = (a, b) => Math.round((parseDay(b) - parseDay(a)) / 86400000);
+  const weekStart = k => { const d = parseDay(k); return addDays(k, -((d.getDay() + 6) % 7)); }; // lunes
+  const fmtDay = k => parseDay(k).toLocaleDateString('es', { day: 'numeric', month: 'short' });
+  const fmtShort = k => { const d = parseDay(k); return d.getDate() + '/' + (d.getMonth() + 1); };
+  const money = n => Number(n).toLocaleString('es-EC', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 
   let toastTimer;
   function toast(msg) {
     const t = $('#toast');
     t.textContent = msg;
-    t.classList.add('show');
+    t.hidden = false;
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+    toastTimer = setTimeout(() => { t.hidden = true; }, 2400);
   }
 
   // ---------- estado ----------
-  // Esquema: { version, updatedAt, goals: [{ id, title, kind: 'habit'|'target', target, unit, deadline,
-  //            createdAt, archived, entries: [{ id, date, amount, note, at }] }], deleted: { [id]: iso } }
-  // `deleted` guarda marcas de borrado para que la sincronización entre dispositivos no resucite datos.
-  const emptyState = () => ({ version: 1, updatedAt: null, goals: [], deleted: {} });
+  // { started, week, tasks:[{id,t,w,p,d}], english:{'YYYY-MM-DD':1}, apps, interviews, capital, capital0,
+  //   waiting:[{id,t,since}], hist:[{week,done,total}], notes, roadmap:[{id,m,t,d}], updatedAt, deleted:{id:iso} }
+  // `updatedAt` y `deleted` (marcas de borrado) los usa la sincronización entre dispositivos.
+  const SEED_ROADMAP = [
+    { id: 'rm1', m: 'Meses 1–3', t: 'Base: inglés todos los días. CV y LinkedIn en inglés con el stack actual (ELK, NestJS, Angular, PostgreSQL, Docker, AWS).', d: false },
+    { id: 'rm2', m: 'Meses 4–6', t: 'Salir al mercado: aplicaciones cada semana y primeras entrevistas.', d: false },
+    { id: 'rm3', m: 'Meses 7–9', t: 'Convertir: entrevistas técnicas en inglés; ajustar CV y enfoque con el feedback.', d: false },
+    { id: 'rm4', m: 'Meses 10–12', t: 'Cerrar: oferta aceptada y capital bajando según lo previsto.', d: false }
+  ];
+
+  function fresh() {
+    const today = dayKey();
+    return {
+      started: today, week: weekStart(today), tasks: [], english: {}, apps: 0, interviews: 0,
+      capital: null, capital0: null, waiting: [], hist: [], notes: '',
+      roadmap: SEED_ROADMAP.map(x => ({ ...x })), updatedAt: null, deleted: {}
+    };
+  }
+
+  const numOrNull = v => (v === null || v === undefined || v === '' || !isFinite(+v) ? null : +v);
+  const isDay = k => typeof k === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(k);
 
   function normalize(s) {
-    if (!s || typeof s !== 'object' || !Array.isArray(s.goals)) return null;
-    s.version = 1;
-    s.deleted = s.deleted && typeof s.deleted === 'object' ? s.deleted : {};
-    s.goals.forEach(g => { if (!Array.isArray(g.entries)) g.entries = []; });
-    return s;
+    if (!s || typeof s !== 'object') return null;
+    const base = fresh();
+    if (!Array.isArray(s.tasks)) {
+      // Documento del tracker genérico anterior: se conserva intacto en `legacy`.
+      if (!Array.isArray(s.goals)) return null;
+      return { ...base, legacy: s.goals, updatedAt: s.updatedAt || null };
+    }
+    const obj = v => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
+    return {
+      ...s,
+      started: isDay(s.started) ? s.started : base.started,
+      week: isDay(s.week) ? weekStart(s.week) : base.week,
+      tasks: s.tasks.filter(Boolean).map(x => ({ id: x.id || uid(), t: String(x.t || ''), w: String(x.w || ''), p: [1, 2, 3].includes(+x.p) ? +x.p : 2, d: !!x.d })),
+      english: obj(s.english),
+      apps: Math.max(0, +s.apps || 0),
+      interviews: Math.max(0, +s.interviews || 0),
+      capital: numOrNull(s.capital),
+      capital0: numOrNull(s.capital0),
+      waiting: (Array.isArray(s.waiting) ? s.waiting : []).filter(Boolean).map(x => ({ id: x.id || uid(), t: String(x.t || ''), since: isDay(x.since) ? x.since : dayKey() })),
+      hist: (Array.isArray(s.hist) ? s.hist : []).filter(h => h && isDay(h.week)).map(h => ({ week: h.week, done: +h.done || 0, total: +h.total || 0 })),
+      notes: String(s.notes || ''),
+      roadmap: Array.isArray(s.roadmap) ? s.roadmap.filter(Boolean).map(x => ({ id: x.id || uid(), m: String(x.m || ''), t: String(x.t || ''), d: !!x.d })) : base.roadmap,
+      updatedAt: s.updatedAt || null,
+      deleted: obj(s.deleted)
+    };
   }
 
   function load() {
-    try { return normalize(JSON.parse(localStorage.getItem(STORAGE_KEY))) || emptyState(); }
-    catch (e) { return emptyState(); }
+    try { return normalize(JSON.parse(localStorage.getItem(STORAGE_KEY))) || fresh(); }
+    catch (e) { return fresh(); }
   }
 
   let state = load();
@@ -240,10 +274,39 @@
     document.dispatchEvent(new CustomEvent('bitacora:change', { detail: { updatedAt: state.updatedAt } }));
   }
 
-  function tombstone(id) { state.deleted[id] = new Date().toISOString(); }
-  const findGoal = id => state.goals.find(g => g.id === id);
+  const tombstone = id => { state.deleted[id] = new Date().toISOString(); };
 
-  // API mínima para módulos externos (sincronización).
+  // Fusión de dos copias (local y nube). Campos simples: gana la copia más reciente.
+  // Listas con id: unión menos borrados. Inglés: unión de días. Historial: unión por semana.
+  function merge(a, b) {
+    a = normalize(a) || fresh();
+    b = normalize(b) || fresh();
+    const [newer, older] = (Date.parse(a.updatedAt) || 0) >= (Date.parse(b.updatedAt) || 0) ? [a, b] : [b, a];
+    const deleted = { ...older.deleted, ...newer.deleted };
+    const byId = (n, o) => {
+      const seen = new Set(n.map(x => x.id));
+      return n.concat(o.filter(x => !seen.has(x.id))).filter(x => !deleted[x.id]);
+    };
+    const english = { ...newer.english };
+    for (const k of Object.keys(older.english)) if (!newer.deleted['en:' + k]) english[k] = 1;
+    const hist = new Map();
+    for (const h of older.hist.concat(newer.hist)) hist.set(h.week, h);
+    return {
+      ...older,
+      ...newer,
+      started: older.started < newer.started ? older.started : newer.started,
+      week: older.week > newer.week ? older.week : newer.week,
+      tasks: byId(newer.tasks, older.tasks),
+      waiting: byId(newer.waiting, older.waiting),
+      roadmap: byId(newer.roadmap, older.roadmap),
+      english,
+      hist: [...hist.values()].sort((x, y) => x.week.localeCompare(y.week)),
+      deleted,
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  // API mínima para sync.js.
   window.Bitacora = {
     getState: () => JSON.parse(JSON.stringify(state)),
     replaceState(next) {
@@ -254,262 +317,369 @@
       render();
       return true;
     },
+    hasData: () => Boolean(state.updatedAt),
+    merge,
     toast
   };
 
-  // ---------- métricas ----------
-  const total = g => g.entries.reduce((a, e) => a + (Number(e.amount) || 0), 0);
-  const doneOn = (g, k) => g.entries.some(e => e.date === k);
-
-  function streak(g) {
-    const days = new Set(g.entries.map(e => e.date));
-    let d = new Date();
-    if (!days.has(dayKey(d))) d = addDays(d, -1);
-    let n = 0;
-    while (days.has(dayKey(d))) { n++; d = addDays(d, -1); }
+  // ---------- 1. Racha de inglés ----------
+  function streak(from) {
+    let k = from, n = 0;
+    while (state.english[k]) { n++; k = addDays(k, -1); }
     return n;
   }
 
-  function deadlineText(g) {
-    if (!g.deadline) return '';
-    const left = daysBetween(dayKey(), g.deadline);
-    if (left > 1) return `faltan ${left} días`;
-    if (left === 1) return 'vence mañana';
-    if (left === 0) return 'vence hoy';
-    return `venció hace ${-left} ${left === -1 ? 'día' : 'días'}`;
+  function bestStreak() {
+    const days = Object.keys(state.english).filter(k => state.english[k]).sort();
+    let best = 0, run = 0, prev = null;
+    for (const k of days) {
+      run = prev && daysBetween(prev, k) === 1 ? run + 1 : 1;
+      best = Math.max(best, run);
+      prev = k;
+    }
+    return best;
   }
 
-  // ---------- render ----------
-  const checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
-
-  function habitCard(g) {
+  function renderEnglish() {
     const today = dayKey();
-    const done = doneOn(g, today);
-    const cells = [];
-    for (let i = 13; i >= 0; i--) {
-      const k = dayKey(addDays(new Date(), -i));
-      const on = doneOn(g, k);
-      cells.push(`<button class="day${on ? ' on' : ''}${i === 0 ? ' today' : ''}" data-action="toggle-day" data-day="${k}" aria-label="${fmtDay(k)}${on ? ', hecho' : ''}"></button>`);
+    const yesterday = addDays(today, -1);
+    const doneToday = !!state.english[today];
+    const current = streak(doneToday ? today : yesterday);
+    const ws = weekStart(today);
+    let thisWeek = 0;
+    for (let i = 0; i < 7; i++) if (state.english[addDays(ws, i)]) thisWeek++;
+    const total = Object.keys(state.english).filter(k => state.english[k]).length;
+
+    const cells = ['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(d => `<span class="dow">${d}</span>`);
+    const first = addDays(ws, -28);
+    for (let i = 0; i < 35; i++) {
+      const k = addDays(first, i);
+      const on = !!state.english[k];
+      const cls = ['c', on ? 'on' : '', k > today ? 'future' : '', k < state.started && !on ? 'pre' : '', k === today ? 'today' : ''].filter(Boolean).join(' ');
+      // Solo hoy y ayer se pueden marcar/desmarcar (olvido de anoche); el resto es historial.
+      cells.push(k === today || k === yesterday
+        ? `<button class="${cls}" data-act="en-toggle" data-day="${k}" aria-pressed="${on}" aria-label="${fmtDay(k)}"></button>`
+        : `<span class="${cls}" title="${fmtDay(k)}${on ? ' · hecho' : ''}"></span>`);
     }
-    const s = streak(g);
-    const bits = [`Racha: ${s} ${s === 1 ? 'día' : 'días'}`, `Total: ${g.entries.length}`];
-    const dl = deadlineText(g);
-    if (dl) bits.push(dl);
-    return `
-      <div class="goal-head">
-        <button class="goal-title" data-action="open">${esc(g.title)}</button>
-        <button class="check${done ? ' is-done' : ''}" data-action="toggle-day" data-day="${today}" aria-pressed="${done}" aria-label="Marcar hoy">${checkIcon}</button>
+
+    $('#english').innerHTML = `
+      <div class="block-head"><h2>Racha de inglés</h2><span class="small soft num">Esta semana ${thisWeek}/7</span></div>
+      <div class="card streak">
+        <div class="streak-main"><b class="big">${current}</b><span>${current === 1 ? 'día seguido' : 'días seguidos'}</span></div>
+        <button class="btn${doneToday ? ' is-done' : ''}" data-act="en-toggle" data-day="${today}" aria-pressed="${doneToday}">${doneToday ? 'Hecho hoy' : 'Marcar hoy'}</button>
       </div>
-      <div class="strip">${cells.join('')}</div>
-      <div class="meta">${bits.join(' · ')}</div>`;
+      <div class="cal">${cells.join('')}</div>
+      <div class="cal-foot small soft num">Mejor racha: ${bestStreak()} · Total: ${total} días</div>`;
   }
 
-  function targetCard(g) {
-    const t = total(g);
-    const target = Number(g.target) || 0;
-    const pct = target > 0 ? Math.min(100, Math.round((t / target) * 100)) : 0;
-    const unit = g.unit ? ' ' + esc(g.unit) : '';
-    const bits = [target > 0 ? `${num(t)} / ${num(target)}${unit} · ${pct}%` : `${num(t)}${unit}`];
-    const dl = deadlineText(g);
-    if (dl) bits.push(dl);
-    return `
-      <div class="goal-head">
-        <button class="goal-title" data-action="open">${esc(g.title)}</button>
-      </div>
-      <div class="bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><span style="width:${pct}%"></span></div>
-      <div class="meta">${bits.join(' · ')}</div>
-      <form class="quick" data-form="amount">
-        <input type="number" name="amount" step="any" inputmode="decimal" placeholder="Cantidad${unit}" required aria-label="Cantidad">
-        <button class="btn" type="submit">Registrar</button>
-      </form>`;
-  }
-
-  const card = g => `<article class="goal${g.archived ? ' is-archived' : ''}" data-id="${g.id}">${g.kind === 'habit' ? habitCard(g) : targetCard(g)}</article>`;
-
-  function render() {
+  // ---------- 2. Tareas de la semana ----------
+  function renderTasks() {
     const today = dayKey();
-    $('#today').textContent = new Date().toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' });
+    const done = state.tasks.filter(t => t.d).length;
+    const total = state.tasks.length;
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    const ended = weekStart(today) > state.week;
+    const list = [...state.tasks].sort((a, b) => (a.d - b.d) || (a.p - b.p));
 
-    const active = state.goals.filter(g => !g.archived);
-    const archived = state.goals.filter(g => g.archived);
-    const habits = active.filter(g => g.kind === 'habit');
-    const targets = active.filter(g => g.kind === 'target');
-
-    const stats = [];
-    if (habits.length) stats.push(`<div class="stat"><b>${habits.filter(g => doneOn(g, today)).length}/${habits.length}</b><span>Hábitos hoy</span></div>`);
-    if (targets.length) {
-      const avg = Math.round(targets.reduce((a, g) => a + (g.target > 0 ? Math.min(1, total(g) / g.target) : 0), 0) / targets.length * 100);
-      stats.push(`<div class="stat"><b>${avg}%</b><span>Avance metas</span></div>`);
-    }
-    $('#summary').innerHTML = stats.join('');
-
-    let html = '';
-    if (!active.length) {
-      html = `<div class="empty"><p>Tu bitácora está vacía.</p>Añade un hábito diario o una meta para empezar.</div>`;
-    } else {
-      if (habits.length) html += `<div class="section-title">Hábitos</div>` + habits.map(card).join('');
-      if (targets.length) html += `<div class="section-title">Metas</div>` + targets.map(card).join('');
-    }
-    $('#list').innerHTML = html;
-
-    $('#archived').innerHTML = archived.length
-      ? `<details class="archived"><summary>Archivados (${archived.length})</summary>${archived.map(card).join('')}</details>`
-      : '';
-
-    const dd = $('#detailDialog');
-    if (dd.open) {
-      const g = findGoal(dd.dataset.id);
-      g ? renderDetail(g) : dd.close();
-    }
-  }
-
-  function renderDetail(g) {
-    const entries = [...g.entries].sort((a, b) => (b.date + (b.at || '')).localeCompare(a.date + (a.at || '')));
-    const unit = g.unit ? ' ' + esc(g.unit) : '';
-    const list = entries.length
-      ? `<ul class="entries">${entries.map(e => `
-          <li>
-            <span class="when">${fmtDay(e.date)}</span>
-            <span class="what">${g.kind === 'habit' ? 'Hecho' : num(e.amount) + unit}${e.note ? ' — ' + esc(e.note) : ''}</span>
-            <button data-action="del-entry" data-entry="${e.id}" aria-label="Borrar registro">×</button>
-          </li>`).join('')}</ul>`
-      : '<p class="hint">Sin registros todavía.</p>';
-    const since = g.createdAt ? `Creado el ${fmtDay(g.createdAt.slice(0, 10))}` : '';
-    $('#detail').innerHTML = `
-      <h2>${esc(g.title)}</h2>
-      <p class="hint" style="margin-bottom:14px">${g.kind === 'habit' ? 'Hábito diario' : 'Meta' + (g.target ? ` de ${num(g.target)}${unit}` : '')}${since ? ' · ' + since : ''}</p>
-      ${list}
-      <div class="actions">
-        <button class="btn danger small" data-action="delete">Eliminar</button>
-        <button class="btn ghost small" data-action="archive">${g.archived ? 'Restaurar' : 'Archivar'}</button>
+    $('#tasks').innerHTML = `
+      <div class="block-head"><h2>Tareas · semana del ${fmtDay(state.week)}</h2><span class="small soft num">${done}/${total} · ${pct}%</span></div>
+      ${ended ? `<div class="notice">La semana del ${fmtDay(state.week)} ya terminó. Ciérrala para archivar su resultado.</div>` : ''}
+      ${list.length ? `<ul class="list">${list.map(t => `
+        <li class="${t.d ? 'is-done' : ''}" data-id="${t.id}">
+          <button class="tick${t.d ? ' on' : ''}" data-act="task-toggle" aria-pressed="${t.d}" aria-label="Hecha">${checkSvg}</button>
+          <button class="item" data-act="task-edit"><span class="t">${esc(t.t)}</span>${t.w ? `<span class="w">${esc(t.w)}</span>` : ''}</button>
+          <span class="prio p${t.p}">P${t.p}</span>
+        </li>`).join('')}</ul>` : '<p class="empty-line">Sin tareas esta semana.</p>'}
+      <div class="row-actions">
+        <button class="btn ghost" data-act="task-add">+ Tarea</button>
         <span class="spacer"></span>
-        <button class="btn ghost small" data-action="edit">Editar</button>
-        <button class="btn small" data-action="close">Cerrar</button>
+        <button class="btn" data-act="close-week">Cerrar semana</button>
       </div>`;
   }
 
-  // ---------- formulario de objetivo ----------
-  const form = $('#goalForm');
-  const F = form.elements;
+  function closeWeek() {
+    const done = state.tasks.filter(t => t.d).length;
+    const total = state.tasks.length;
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    const pending = total - done;
+    if (!confirm(`Cerrar la semana del ${fmtDay(state.week)}: ${done} de ${total} (${pct}%).\n${pending} ${pending === 1 ? 'tarea pasa' : 'tareas pasan'} a la siguiente semana.\nNo se puede deshacer.`)) return;
 
-  function syncKindFields() {
-    const isTarget = F.kind.value === 'target';
-    $('#targetFields').hidden = !isTarget;
-    F.target.required = isTarget;
-  }
-
-  function openGoalForm(g) {
-    form.reset();
-    F.id.value = g ? g.id : '';
-    F.title.value = g ? g.title : '';
-    F.kind.value = g ? g.kind : 'habit';
-    F.target.value = g && g.target != null ? g.target : '';
-    F.unit.value = g ? g.unit || '' : '';
-    F.deadline.value = g ? g.deadline || '' : '';
-    $('#goalFormTitle').textContent = g ? 'Editar objetivo' : 'Nuevo objetivo';
-    syncKindFields();
-    $('#goalDialog').showModal();
-    if (!g) F.title.focus();
-  }
-
-  form.addEventListener('change', e => { if (e.target.name === 'kind') syncKindFields(); });
-
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    const title = F.title.value.trim();
-    if (!title) return;
-    const kind = F.kind.value === 'target' ? 'target' : 'habit';
-    const data = {
-      title,
-      kind,
-      target: kind === 'target' ? Number(F.target.value) || 0 : null,
-      unit: kind === 'target' ? F.unit.value.trim() : '',
-      deadline: F.deadline.value || null
-    };
-    const existing = F.id.value && findGoal(F.id.value);
-    if (existing) Object.assign(existing, data);
-    else state.goals.push({ id: uid(), createdAt: new Date().toISOString(), archived: false, entries: [], ...data });
-    $('#goalDialog').close();
+    state.hist.push({ week: state.week, done, total });
+    state.tasks.filter(t => t.d).forEach(t => tombstone(t.id));
+    state.tasks = state.tasks.filter(t => !t.d);
+    // Semanas que pasaron sin cerrarse cuentan como 0 hechas sobre lo que seguía pendiente.
+    const current = weekStart(dayKey());
+    let next = addDays(state.week, 7);
+    while (next < current) {
+      state.hist.push({ week: next, done: 0, total: state.tasks.length });
+      next = addDays(next, 7);
+    }
+    state.week = next;
     save();
+    toast(`Semana archivada: ${pct}%`);
+  }
+
+  // ---------- 3. Contadores ----------
+  function renderCounters() {
+    const hasCap = state.capital != null;
+    const paid = hasCap && state.capital0 > 0 ? Math.max(0, Math.min(100, Math.round(((state.capital0 - state.capital) / state.capital0) * 100))) : null;
+    const counter = (k, label) => `
+      <div class="card counter">
+        <span class="label">${label}</span>
+        <b class="big">${state[k]}</b>
+        <div class="stepper"><button data-act="dec" data-k="${k}" aria-label="Restar">−</button><button data-act="inc" data-k="${k}" aria-label="Sumar">+</button></div>
+      </div>`;
+    $('#counters').innerHTML = `
+      <div class="block-head"><h2>Contadores</h2></div>
+      <div class="counters">
+        ${counter('apps', 'Aplicaciones')}
+        ${counter('interviews', 'Entrevistas')}
+        <button class="card capital" data-act="capital-edit">
+          <span class="label">Capital (saldo de deuda)</span>
+          ${hasCap ? `
+            <span class="figs num"><b class="big">${money(state.capital)}</b>${state.capital0 != null ? `<span class="small soft">de ${money(state.capital0)}${paid != null ? ` · pagado ${paid}%` : ''}</span>` : ''}</span>
+            ${paid != null ? `<span class="bar"><span style="width:${paid}%"></span></span>` : ''}`
+          : '<span class="small soft">Toca para registrar el saldo inicial y actual.</span>'}
+        </button>
+      </div>`;
+  }
+
+  // ---------- 4. Pendientes de terceros ----------
+  function renderWaiting() {
+    const today = dayKey();
+    const list = [...state.waiting].sort((a, b) => a.since.localeCompare(b.since));
+    $('#waiting').innerHTML = `
+      <div class="block-head"><h2>Pendientes de terceros</h2><span class="small soft num">${list.length}</span></div>
+      ${list.length ? `<ul class="list">${list.map(x => {
+        const days = daysBetween(x.since, today);
+        return `<li data-id="${x.id}">
+          <button class="item" data-act="wait-edit"><span class="t">${esc(x.t)}</span></button>
+          <span class="since num${days > 14 ? ' late' : ''}">${days === 0 ? 'hoy' : days + ' d'}</span>
+          <button class="x" data-act="wait-done" aria-label="Resuelto">×</button>
+        </li>`;
+      }).join('')}</ul>` : ''}
+      <form class="inline" data-form="wait">
+        <input type="text" name="t" maxlength="140" placeholder="Qué esperas y de quién" required autocomplete="off" aria-label="Nuevo pendiente">
+        <button class="btn" type="submit">Añadir</button>
+      </form>`;
+  }
+
+  // ---------- 5. Cumplimiento semanal ----------
+  function renderHistory() {
+    const hist = state.hist.slice(-16);
+    const avg = hist.length ? Math.round(hist.reduce((a, h) => a + (h.total ? h.done / h.total : 0), 0) / hist.length * 100) : null;
+    $('#history').innerHTML = `
+      <div class="block-head"><h2>Cumplimiento semanal</h2>${avg != null ? `<span class="small soft num">Promedio ${avg}%</span>` : ''}</div>
+      ${hist.length ? `<div class="hist">${hist.map(h => {
+        const pct = h.total ? Math.round((h.done / h.total) * 100) : 0;
+        return `<div class="hcol" title="Semana del ${fmtDay(h.week)}: ${h.done}/${h.total}">
+          <div class="hbar"><span class="${pct < 50 ? 'low' : ''}" style="height:${pct}%"></span></div>
+          <span class="hpct">${pct}%</span><span class="hwk">${fmtShort(h.week)}</span>
+        </div>`;
+      }).join('')}</div>` : '<p class="empty-line">Aún no has cerrado ninguna semana.</p>'}`;
+  }
+
+  // ---------- 6. Hoja de ruta ----------
+  function renderRoadmap() {
+    $('#roadmap').innerHTML = `
+      <div class="block-head"><h2>Hoja de ruta</h2><span class="small soft">12 meses · 1–3 h/semana</span></div>
+      ${state.roadmap.length ? `<ol class="list">${state.roadmap.map(x => `
+        <li class="${x.d ? 'is-done' : ''}" data-id="${x.id}">
+          <button class="tick${x.d ? ' on' : ''}" data-act="rm-toggle" aria-pressed="${x.d}" aria-label="Cumplida">${checkSvg}</button>
+          <button class="item" data-act="rm-edit">${x.m ? `<span class="m">${esc(x.m)}</span>` : ''}<span class="t">${esc(x.t)}</span></button>
+        </li>`).join('')}</ol>` : ''}
+      <div class="row-actions"><button class="btn ghost" data-act="rm-add">+ Etapa</button></div>`;
+  }
+
+  // ---------- render ----------
+  function render() {
+    const today = dayKey();
+    const n = Math.floor(daysBetween(weekStart(state.started), weekStart(today)) / 7) + 1;
+    $('#weekInfo').textContent = `Semana ${n} de 52 · desde ${fmtDay(state.started)}`;
+    renderEnglish();
+    renderTasks();
+    renderCounters();
+    renderWaiting();
+    renderHistory();
+    renderRoadmap();
+    const notes = $('#notes');
+    if (document.activeElement !== notes) notes.value = state.notes;
+  }
+
+  // ---------- diálogo genérico ----------
+  const dlg = $('#dlg');
+  const dlgForm = $('#dlgForm');
+  let dlgHandlers = null;
+
+  function openForm({ title, fields, onSubmit, onDelete, deleteLabel = 'Eliminar' }) {
+    dlgHandlers = { onSubmit, onDelete };
+    dlgForm.innerHTML = `
+      <h2>${esc(title)}</h2>
+      ${fields.map((f, i) => `
+        <div class="field">
+          <label for="fd-${i}">${esc(f.label)}</label>
+          ${f.type === 'select'
+            ? `<select id="fd-${i}" name="${f.name}">${f.options.map(o => `<option value="${o[0]}"${String(o[0]) === String(f.value) ? ' selected' : ''}>${esc(o[1])}</option>`).join('')}</select>`
+            : f.type === 'textarea'
+              ? `<textarea id="fd-${i}" name="${f.name}" ${f.required ? 'required' : ''}>${esc(f.value ?? '')}</textarea>`
+              : `<input id="fd-${i}" name="${f.name}" type="${f.type || 'text'}" value="${esc(f.value ?? '')}" ${f.required ? 'required' : ''} ${f.type === 'number' ? 'step="any" inputmode="decimal"' : 'autocomplete="off"'} ${f.placeholder ? `placeholder="${esc(f.placeholder)}"` : ''}>`}
+        </div>`).join('')}
+      <div class="actions">
+        ${onDelete ? `<button type="button" class="btn danger small" data-dlg="delete">${esc(deleteLabel)}</button>` : ''}
+        <span class="spacer"></span>
+        <button type="button" class="btn ghost small" data-dlg="cancel">Cancelar</button>
+        <button type="submit" class="btn small">Guardar</button>
+      </div>`;
+    dlg.showModal();
+  }
+
+  dlgForm.addEventListener('submit', e => {
+    e.preventDefault();
+    if (!dlgForm.reportValidity()) return;
+    const values = Object.fromEntries(new FormData(dlgForm).entries());
+    dlg.close();
+    if (dlgHandlers && dlgHandlers.onSubmit) dlgHandlers.onSubmit(values);
   });
 
+  dlgForm.addEventListener('click', e => {
+    const b = e.target.closest('[data-dlg]');
+    if (!b) return;
+    dlg.close();
+    if (b.dataset.dlg === 'delete' && dlgHandlers && dlgHandlers.onDelete) dlgHandlers.onDelete();
+  });
+
+  const prioOptions = [[1, 'P1 · alta'], [2, 'P2 · media'], [3, 'P3 · baja']];
+
+  function taskForm(t) {
+    openForm({
+      title: t ? 'Editar tarea' : 'Nueva tarea',
+      fields: [
+        { name: 't', label: 'Tarea', value: t && t.t, required: true, placeholder: 'Qué vas a hacer' },
+        { name: 'w', label: 'Por qué', value: t && t.w, placeholder: 'Para qué sirve en el plan' },
+        { name: 'p', label: 'Prioridad', type: 'select', value: t ? t.p : 2, options: prioOptions }
+      ],
+      onSubmit: v => {
+        const data = { t: v.t.trim(), w: v.w.trim(), p: +v.p || 2 };
+        if (!data.t) return;
+        if (t) Object.assign(t, data);
+        else state.tasks.push({ id: uid(), ...data, d: false });
+        save();
+      },
+      onDelete: t ? () => {
+        if (!confirm('¿Eliminar esta tarea? No contará en el cierre de semana.')) return;
+        tombstone(t.id);
+        state.tasks = state.tasks.filter(x => x.id !== t.id);
+        save();
+      } : null
+    });
+  }
+
+  function roadmapForm(x) {
+    openForm({
+      title: x ? 'Editar etapa' : 'Nueva etapa',
+      fields: [
+        { name: 'm', label: 'Periodo', value: x && x.m, placeholder: 'Meses 1–3' },
+        { name: 't', label: 'Qué se logra', type: 'textarea', value: x && x.t, required: true }
+      ],
+      onSubmit: v => {
+        const data = { m: v.m.trim(), t: v.t.trim() };
+        if (!data.t) return;
+        if (x) Object.assign(x, data);
+        else state.roadmap.push({ id: uid(), ...data, d: false });
+        save();
+      },
+      onDelete: x ? () => {
+        tombstone(x.id);
+        state.roadmap = state.roadmap.filter(r => r.id !== x.id);
+        save();
+      } : null
+    });
+  }
+
   // ---------- acciones ----------
-  function toggleDay(g, k) {
-    const hit = g.entries.filter(e => e.date === k);
-    if (hit.length) {
-      hit.forEach(e => tombstone(e.id));
-      g.entries = g.entries.filter(e => e.date !== k);
-    } else {
-      g.entries.push({ id: uid(), date: k, amount: 1, note: '', at: new Date().toISOString() });
-    }
-    save();
-  }
-
-  function openDetail(g) {
-    const dd = $('#detailDialog');
-    dd.dataset.id = g.id;
-    renderDetail(g);
-    if (!dd.open) dd.showModal();
-  }
-
   document.addEventListener('click', e => {
-    const el = e.target.closest('[data-action]');
+    const el = e.target.closest('[data-act]');
     if (!el) return;
-    const host = el.closest('[data-id]');
-    const g = host ? findGoal(host.dataset.id) : null;
+    const id = el.closest('[data-id]') && el.closest('[data-id]').dataset.id;
 
-    switch (el.dataset.action) {
-      case 'new': openGoalForm(null); break;
-      case 'close': el.closest('dialog').close(); break;
-      case 'toggle-day': if (g) toggleDay(g, el.dataset.day); break;
-      case 'open': if (g) openDetail(g); break;
-      case 'edit': {
-        const d = findGoal($('#detailDialog').dataset.id);
-        $('#detailDialog').close();
-        if (d) openGoalForm(d);
-        break;
-      }
-      case 'archive': {
-        const d = findGoal($('#detailDialog').dataset.id);
-        if (!d) break;
-        d.archived = !d.archived;
-        $('#detailDialog').close();
-        save();
-        toast(d.archived ? 'Archivado' : 'Restaurado');
-        break;
-      }
-      case 'delete': {
-        const d = findGoal($('#detailDialog').dataset.id);
-        if (!d || !confirm(`¿Eliminar "${d.title}" y todos sus registros?`)) break;
-        tombstone(d.id);
-        d.entries.forEach(x => tombstone(x.id));
-        state.goals = state.goals.filter(x => x.id !== d.id);
-        $('#detailDialog').close();
+    switch (el.dataset.act) {
+      case 'en-toggle': {
+        const k = el.dataset.day;
+        if (state.english[k]) { delete state.english[k]; tombstone('en:' + k); }
+        else { state.english[k] = 1; delete state.deleted['en:' + k]; }
         save();
         break;
       }
-      case 'del-entry': {
-        const d = findGoal($('#detailDialog').dataset.id);
-        if (!d) break;
-        tombstone(el.dataset.entry);
-        d.entries = d.entries.filter(x => x.id !== el.dataset.entry);
-        save();
+      case 'task-toggle': {
+        const t = state.tasks.find(x => x.id === id);
+        if (t) { t.d = !t.d; save(); }
         break;
       }
+      case 'task-edit': taskForm(state.tasks.find(x => x.id === id)); break;
+      case 'task-add': taskForm(null); break;
+      case 'close-week': closeWeek(); break;
+      case 'inc': state[el.dataset.k] += 1; save(); break;
+      case 'dec': if (state[el.dataset.k] > 0) { state[el.dataset.k] -= 1; save(); } break;
+      case 'capital-edit':
+        openForm({
+          title: 'Capital',
+          fields: [
+            { name: 'capital', label: 'Saldo actual (USD)', type: 'number', value: state.capital },
+            { name: 'capital0', label: 'Saldo inicial (USD)', type: 'number', value: state.capital0 }
+          ],
+          onSubmit: v => {
+            state.capital = numOrNull(v.capital);
+            state.capital0 = numOrNull(v.capital0);
+            if (state.capital0 == null && state.capital != null) state.capital0 = state.capital;
+            save();
+          }
+        });
+        break;
+      case 'wait-edit': {
+        const x = state.waiting.find(w => w.id === id);
+        if (!x) break;
+        openForm({
+          title: 'Pendiente de terceros',
+          fields: [
+            { name: 't', label: 'Qué esperas y de quién', value: x.t, required: true },
+            { name: 'since', label: 'Desde', type: 'date', value: x.since, required: true }
+          ],
+          onSubmit: v => { x.t = v.t.trim() || x.t; if (isDay(v.since)) x.since = v.since; save(); },
+          onDelete: () => { tombstone(x.id); state.waiting = state.waiting.filter(w => w.id !== x.id); save(); },
+          deleteLabel: 'Resuelto'
+        });
+        break;
+      }
+      case 'wait-done':
+        tombstone(id);
+        state.waiting = state.waiting.filter(w => w.id !== id);
+        save();
+        break;
+      case 'rm-toggle': {
+        const x = state.roadmap.find(r => r.id === id);
+        if (x) { x.d = !x.d; save(); }
+        break;
+      }
+      case 'rm-edit': roadmapForm(state.roadmap.find(r => r.id === id)); break;
+      case 'rm-add': roadmapForm(null); break;
       case 'export': exportJson(); break;
       case 'import': $('#importFile').click(); break;
     }
   });
 
   document.addEventListener('submit', e => {
-    if (e.target.dataset.form !== 'amount') return;
+    if (e.target.dataset.form !== 'wait') return;
     e.preventDefault();
-    const g = findGoal(e.target.closest('[data-id]').dataset.id);
-    const amount = Number(e.target.amount.value);
-    if (!g || !isFinite(amount) || amount === 0) return;
-    g.entries.push({ id: uid(), date: dayKey(), amount, note: '', at: new Date().toISOString() });
+    const t = e.target.elements.t.value.trim();
+    if (!t) return;
+    state.waiting.push({ id: uid(), t, since: dayKey() });
     save();
-    toast(`Registrado: ${num(amount)}${g.unit ? ' ' + g.unit : ''}`);
+  });
+
+  let notesTimer;
+  $('#notes').addEventListener('input', e => {
+    clearTimeout(notesTimer);
+    notesTimer = setTimeout(() => { state.notes = e.target.value; save(); }, 600);
   });
 
   // ---------- copia de seguridad ----------
@@ -528,8 +698,8 @@
     if (!file) return;
     try {
       const next = normalize(JSON.parse(await file.text()));
-      if (!next) throw new Error('formato');
-      if (!confirm('Esto reemplaza los datos actuales de este dispositivo. ¿Continuar?')) return;
+      if (!next || !Array.isArray(next.tasks) || next.legacy) throw new Error('formato');
+      if (!confirm('Esto reemplaza los datos actuales. ¿Continuar?')) return;
       state = next;
       save();
       toast('Copia importada');

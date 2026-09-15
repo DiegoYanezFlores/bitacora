@@ -1,6 +1,7 @@
 // Service worker de Bitácora: red primero, caché como respaldo offline.
 // Sube CACHE (v2, v3…) si cambias la lista de archivos precargados.
-const CACHE = 'bitacora-v1';
+const CACHE = 'bitacora-v2';
+const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 const PRECACHE = [
   '/',
   '/index.html',
@@ -28,6 +29,17 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const req = event.request;
   const url = new URL(req.url);
+  // IBM Plex (Google Fonts): caché primero para que la tipografía funcione offline.
+  if (req.method === 'GET' && FONT_HOSTS.includes(url.hostname)) {
+    event.respondWith(caches.open(CACHE).then(async c => {
+      const hit = await c.match(req);
+      if (hit) return hit;
+      const res = await fetch(req);
+      if (res.ok || res.type === 'opaque') c.put(req, res.clone());
+      return res;
+    }));
+    return;
+  }
   // Solo recursos propios; las llamadas a Supabase van directo a la red.
   if (req.method !== 'GET' || url.origin !== self.location.origin) return;
 

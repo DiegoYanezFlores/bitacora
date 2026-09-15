@@ -1,7 +1,7 @@
 // Sincronización de Bitácora con Supabase, sin dependencias (Auth + REST vía fetch).
 // localStorage sigue siendo la copia local (funciona offline). Cada cambio se sube a
 // Supabase ~1 s después; al abrir o volver a la app se bajan cambios de otros dispositivos.
-// Si ambos lados cambiaron, se fusionan por id (las marcas de borrado evitan resucitar datos).
+// Si ambos lados cambiaron, se fusionan con App.merge (definido en index.html).
 (function () {
   'use strict';
 
@@ -24,15 +24,15 @@
   const style = document.createElement('style');
   style.textContent = `
     .sync-pill { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: transparent;
-      border-radius: 99px; padding: 6px 10px; font-size: 12px; color: var(--ink-2); white-space: nowrap; }
-    .sync-pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
-    .sync-synced i { background: #3F7A5A; }
-    .sync-syncing i, .sync-pending i { background: #B8892B; }
-    .sync-error i { background: var(--danger); }
-    .sync-msg { font-size: 13px; margin: 0 0 12px; color: var(--ink-2); }
-    .sync-msg.err { color: var(--danger); }
+      border-radius: 3px; padding: 6px 10px; font-size: 12px; color: var(--soft); white-space: nowrap; }
+    .sync-pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+    .sync-synced i { background: var(--done); }
+    .sync-syncing i, .sync-pending i { background: var(--soft); }
+    .sync-error i { background: var(--flag); }
+    .sync-msg { font-size: 13px; margin: 0 0 12px; color: var(--soft); }
+    .sync-msg.err { color: var(--flag); }
     .sync-kv { font-size: 14px; margin: 0 0 6px; }
-    .sync-kv span { color: var(--ink-2); }`;
+    .sync-kv span { color: var(--soft); }`;
   document.head.appendChild(style);
 
   // ---------- almacenamiento local ----------
@@ -105,7 +105,7 @@
   function startSession(tokenResponse) {
     setSession(fromToken(tokenResponse));
     // Si ya había datos en este dispositivo, se fusionan con los de la nube.
-    meta = { ...freshMeta(), dirty: App.getState().goals.length > 0 };
+    meta = { ...freshMeta(), dirty: App.hasData() };
     saveMeta();
     renderPill();
     sync();
@@ -167,41 +167,7 @@
     history.replaceState(null, '', location.pathname + location.search);
   }
 
-  // ---------- fusión ----------
-  function mergeEntries(kind, list, deleted) {
-    const byId = new Map();
-    for (const e of list) if (!deleted[e.id]) byId.set(e.id, e);
-    let out = [...byId.values()];
-    if (kind === 'habit') {
-      const byDay = new Map();
-      for (const e of out) if (!byDay.has(e.date)) byDay.set(e.date, e);
-      out = [...byDay.values()];
-    }
-    return out;
-  }
-
-  function merge(local, remote) {
-    const lt = Date.parse(local.updatedAt) || 0;
-    const rt = Date.parse(remote.updatedAt) || 0;
-    const [newer, older] = lt >= rt ? [local, remote] : [remote, local];
-    const deleted = { ...(older.deleted || {}), ...(newer.deleted || {}) };
-    const goals = new Map();
-    for (const g of older.goals || []) goals.set(g.id, g);
-    for (const g of newer.goals || []) {
-      const o = goals.get(g.id);
-      // Campos del objetivo: gana la versión más reciente; registros: unión de ambos.
-      goals.set(g.id, o ? { ...g, entries: (o.entries || []).concat(g.entries || []) } : g);
-    }
-    return {
-      ...newer,
-      deleted,
-      goals: [...goals.values()]
-        .filter(g => !deleted[g.id])
-        .map(g => ({ ...g, entries: mergeEntries(g.kind, g.entries || [], deleted) })),
-      updatedAt: new Date().toISOString()
-    };
-  }
-
+  // ---------- fusión (App.merge vive en index.html, junto al esquema) ----------
   function pruneTombstones(deleted) {
     const cutoff = Date.now() - TOMBSTONE_TTL_MS;
     const out = {};
@@ -268,7 +234,7 @@
       } else if (remote.updatedAt === meta.remoteUpdatedAt) {
         await push(local, token, userId);
       } else {
-        const merged = merge(local, remote);
+        const merged = App.merge(local, remote);
         App.replaceState(merged);
         await push(merged, token, userId);
       }
