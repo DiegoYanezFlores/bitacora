@@ -3,6 +3,6 @@
 // (ver supabase/schema.sql). NUNCA pongas aquí la service_role / secret key.
 // Si se deja vacío, la app funciona solo en este dispositivo (localStorage).
 window.BITACORA_CONFIG = {
-  supabaseUrl: '',
-  supabaseAnonKey: ''
+  supabaseUrl: 'https://mdtnlifdctobxtrvnqwp.supabase.co',
+  supabaseAnonKey: 'sb_publishable_VdrURFBt3eFNQg321dLWnQ_0vBjaBxh'
 };
