@@ -3,3 +3,4 @@
 scripts
 supabase
 README.md
+.env*
