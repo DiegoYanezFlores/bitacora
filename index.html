@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bitácora</title>
+<meta name="theme-color" content="#E9EBE6">
+<style>
+  :root {
+    --bg: #E9EBE6;
+    --ink: #1B2321;
+    --ink-2: #4A5451;
+    --muted: #7C8582;
+    --line: #D2D6CF;
+    --card: #F3F4F1;
+    --danger: #9B3B2E;
+    --radius: 14px;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+  body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+
+  .wrap { max-width: 560px; margin: 0 auto; padding: 16px 16px 112px; }
+
+  header.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 12px 0 18px; border-bottom: 1.5px solid var(--ink); }
+  h1 { font-family: var(--serif); font-weight: 600; font-size: 36px; letter-spacing: -.01em; margin: 0; line-height: 1; }
+  .date { color: var(--ink-2); font-size: 13px; margin-top: 8px; }
+  .date::first-letter { text-transform: uppercase; }
+
+  .summary { display: flex; gap: 24px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .summary:empty { display: none; }
+  .stat b { display: block; font-family: var(--serif); font-size: 26px; font-weight: 600; line-height: 1.1; }
+  .stat span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+
+  .section-title { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin: 24px 0 10px; }
+
+  .goal { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 14px 12px; margin-bottom: 12px; }
+  .goal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .goal-title { background: none; border: 0; padding: 0; text-align: left; font-family: var(--serif); font-size: 19px; font-weight: 600; line-height: 1.25; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .meta { font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+
+  .check { width: 44px; height: 44px; flex: none; border-radius: 50%; border: 1.5px solid var(--ink); background: transparent; display: grid; place-items: center; transition: background .15s; }
+  .check svg { width: 20px; height: 20px; opacity: .18; }
+  .check.is-done { background: var(--ink); color: var(--bg); }
+  .check.is-done svg { opacity: 1; }
+
+  .strip { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; margin-top: 12px; }
+  .day { aspect-ratio: 1; border: 0; padding: 0; border-radius: 4px; background: var(--line); max-width: 100%; }
+  .day.on { background: var(--ink); }
+  .day.today { outline: 1.5px solid var(--ink); outline-offset: 1px; }
+
+  .bar { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; margin-top: 12px; }
+  .bar span { display: block; height: 100%; background: var(--ink); border-radius: 99px; transition: width .25s; }
+
+  .quick { display: flex; gap: 8px; margin-top: 12px; }
+  .quick input { flex: 1; min-width: 0; }
+
+  input[type=text], input[type=number], input[type=date], input[type=email], input[type=password] {
+    width: 100%; background: #FBFBF9; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 16px;
+  }
+  input:focus { outline: 2px solid var(--ink); outline-offset: -1px; }
+
+  .btn { border: 1.5px solid var(--ink); background: var(--ink); color: var(--bg); border-radius: 10px; padding: 10px 14px; font-weight: 600; font-size: 15px; white-space: nowrap; }
+  .btn.ghost { background: transparent; color: var(--ink); }
+  .btn.danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+  .btn.small { padding: 6px 10px; font-size: 13px; }
+  .link { background: none; border: 0; padding: 0; color: var(--ink-2); text-decoration: underline; font-size: 13px; }
+
+  .fab { position: fixed; right: max(16px, calc(50% - 264px)); bottom: calc(20px + env(safe-area-inset-bottom)); height: 52px; padding: 0 20px; border-radius: 99px; border: 0; background: var(--ink); color: var(--bg); font-weight: 600; font-size: 15px; box-shadow: 0 6px 20px rgba(27,35,33,.25); }
+
+  .empty { text-align: center; padding: 48px 12px; color: var(--ink-2); }
+  .empty p { font-family: var(--serif); font-size: 20px; color: var(--ink); margin: 0 0 6px; }
+
+  details.archived summary { cursor: pointer; font-size: 13px; color: var(--ink-2); margin: 20px 0 10px; }
+  .goal.is-archived { opacity: .6; }
+
+  footer.tools { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--line); }
+
+  dialog { border: 0; border-radius: 18px; padding: 0; width: min(520px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); background: var(--bg); color: var(--ink); box-shadow: 0 20px 60px rgba(27,35,33,.3); }
+  dialog::backdrop { background: rgba(27,35,33,.45); }
+  .dlg { padding: 20px; }
+  .dlg h2 { font-family: var(--serif); font-size: 24px; margin: 0 0 16px; font-weight: 600; overflow-wrap: anywhere; }
+  .field { margin-bottom: 14px; }
+  .field label, .field .label { display: block; font-size: 13px; color: var(--ink-2); margin-bottom: 6px; }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; min-width: 0; }
+  .seg { display: flex; border: 1.5px solid var(--ink); border-radius: 10px; overflow: hidden; }
+  .seg label { flex: 1; text-align: center; padding: 9px 6px; font-size: 14px; margin: 0; color: var(--ink); cursor: pointer; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg label:has(input:checked) { background: var(--ink); color: var(--bg); }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+  .actions .spacer { flex: 1; }
+  .hint { font-size: 13px; color: var(--muted); margin: 0; }
+
+  .entries { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--line); }
+  .entries li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .entries li .when { color: var(--ink-2); width: 92px; flex: none; }
+  .entries li .what { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .entries li button { background: none; border: 0; color: var(--muted); font-size: 18px; line-height: 1; padding: 4px 6px; }
+
+  .toast { position: fixed; left: 50%; bottom: calc(88px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; max-width: calc(100vw - 32px); opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Bitácora</h1>
+      <div class="date" id="today"></div>
+    </div>
+    <div id="sync"></div>
+  </header>
+
+  <section class="summary" id="summary"></section>
+  <main id="list"></main>
+  <section id="archived"></section>
+
+  <footer class="tools">
+    <button class="link" data-action="export">Exportar copia (JSON)</button>
+    <button class="link" data-action="import">Importar copia</button>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+  </footer>
+</div>
+
+<button class="fab" data-action="new">+ Nuevo objetivo</button>
+
+<dialog id="goalDialog">
+  <form class="dlg" id="goalForm" method="dialog">
+    <h2 id="goalFormTitle">Nuevo objetivo</h2>
+    <input type="hidden" name="id">
+    <div class="field">
+      <label for="f-title">Nombre</label>
+      <input type="text" id="f-title" name="title" required maxlength="120" autocomplete="off" placeholder="Ej. Leer 20 minutos">
+    </div>
+    <div class="field">
+      <span class="label">Tipo</span>
+      <div class="seg">
+        <label><input type="radio" name="kind" value="habit" checked> Hábito diario</label>
+        <label><input type="radio" name="kind" value="target"> Meta con cantidad</label>
+      </div>
+    </div>
+    <div id="targetFields">
+      <div class="row">
+        <div class="field">
+          <label for="f-target">Objetivo</label>
+          <input type="number" id="f-target" name="target" min="0" step="any" inputmode="decimal" placeholder="100">
+        </div>
+        <div class="field">
+          <label for="f-unit">Unidad</label>
+          <input type="text" id="f-unit" name="unit" maxlength="24" autocomplete="off" placeholder="km, páginas, $">
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label for="f-deadline">Fecha límite (opcional)</label>
+      <input type="date" id="f-deadline" name="deadline">
+    </div>
+    <div class="actions">
+      <button type="button" class="btn ghost" data-action="close">Cancelar</button>
+      <button type="submit" class="btn">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="detailDialog">
+  <div class="dlg" id="detail"></div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  const STORAGE_KEY = 'bitacora:v1';
+  const $ = (s, r = document) => r.querySelector(s);
+
+  // ---------- utilidades ----------
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const pad = n => String(n).padStart(2, '0');
+  const dayKey = (d = new Date()) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  const parseDay = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const num = n => Number(n).toLocaleString('es', { maximumFractionDigits: 2 });
+  const fmtDay = k => parseDay(k).toLocaleDateString('es', { day: 'numeric', month: 'short' });
+  const daysBetween = (a, b) => Math.round((parseDay(b) - parseDay(a)) / 86400000);
+
+  let toastTimer;
+  function toast(msg) {
+    const t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // ---------- estado ----------
+  // Esquema: { version, updatedAt, goals: [{ id, title, kind: 'habit'|'target', target, unit, deadline,
+  //            createdAt, archived, entries: [{ id, date, amount, note, at }] }], deleted: { [id]: iso } }
+  // `deleted` guarda marcas de borrado para que la sincronización entre dispositivos no resucite datos.
+  const emptyState = () => ({ version: 1, updatedAt: null, goals: [], deleted: {} });
+
+  function normalize(s) {
+    if (!s || typeof s !== 'object' || !Array.isArray(s.goals)) return null;
+    s.version = 1;
+    s.deleted = s.deleted && typeof s.deleted === 'object' ? s.deleted : {};
+    s.goals.forEach(g => { if (!Array.isArray(g.entries)) g.entries = []; });
+    return s;
+  }
+
+  function load() {
+    try { return normalize(JSON.parse(localStorage.getItem(STORAGE_KEY))) || emptyState(); }
+    catch (e) { return emptyState(); }
+  }
+
+  let state = load();
+
+  function persist() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch (e) { toast('No se pudo guardar en este dispositivo'); }
+  }
+
+  function save() {
+    state.updatedAt = new Date().toISOString();
+    persist();
+    render();
+    document.dispatchEvent(new CustomEvent('bitacora:change', { detail: { updatedAt: state.updatedAt } }));
+  }
+
+  function tombstone(id) { state.deleted[id] = new Date().toISOString(); }
+  const findGoal = id => state.goals.find(g => g.id === id);
+
+  // API mínima para módulos externos (sincronización).
+  window.Bitacora = {
+    getState: () => JSON.parse(JSON.stringify(state)),
+    replaceState(next) {
+      next = normalize(JSON.parse(JSON.stringify(next)));
+      if (!next) return false;
+      state = next;
+      persist();
+      render();
+      return true;
+    },
+    toast
+  };
+
+  // ---------- métricas ----------
+  const total = g => g.entries.reduce((a, e) => a + (Number(e.amount) || 0), 0);
+  const doneOn = (g, k) => g.entries.some(e => e.date === k);
+
+  function streak(g) {
+    const days = new Set(g.entries.map(e => e.date));
+    let d = new Date();
+    if (!days.has(dayKey(d))) d = addDays(d, -1);
+    let n = 0;
+    while (days.has(dayKey(d))) { n++; d = addDays(d, -1); }
+    return n;
+  }
+
+  function deadlineText(g) {
+    if (!g.deadline) return '';
+    const left = daysBetween(dayKey(), g.deadline);
+    if (left > 1) return `faltan ${left} días`;
+    if (left === 1) return 'vence mañana';
+    if (left === 0) return 'vence hoy';
+    return `venció hace ${-left} ${left === -1 ? 'día' : 'días'}`;
+  }
+
+  // ---------- render ----------
+  const checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+
+  function habitCard(g) {
+    const today = dayKey();
+    const done = doneOn(g, today);
+    const cells = [];
+    for (let i = 13; i >= 0; i--) {
+      const k = dayKey(addDays(new Date(), -i));
+      const on = doneOn(g, k);
+      cells.push(`<button class="day${on ? ' on' : ''}${i === 0 ? ' today' : ''}" data-action="toggle-day" data-day="${k}" aria-label="${fmtDay(k)}${on ? ', hecho' : ''}"></button>`);
+    }
+    const s = streak(g);
+    const bits = [`Racha: ${s} ${s === 1 ? 'día' : 'días'}`, `Total: ${g.entries.length}`];
+    const dl = deadlineText(g);
+    if (dl) bits.push(dl);
+    return `
+      <div class="goal-head">
+        <button class="goal-title" data-action="open">${esc(g.title)}</button>
+        <button class="check${done ? ' is-done' : ''}" data-action="toggle-day" data-day="${today}" aria-pressed="${done}" aria-label="Marcar hoy">${checkIcon}</button>
+      </div>
+      <div class="strip">${cells.join('')}</div>
+      <div class="meta">${bits.join(' · ')}</div>`;
+  }
+
+  function targetCard(g) {
+    const t = total(g);
+    const target = Number(g.target) || 0;
+    const pct = target > 0 ? Math.min(100, Math.round((t / target) * 100)) : 0;
+    const unit = g.unit ? ' ' + esc(g.unit) : '';
+    const bits = [target > 0 ? `${num(t)} / ${num(target)}${unit} · ${pct}%` : `${num(t)}${unit}`];
+    const dl = deadlineText(g);
+    if (dl) bits.push(dl);
+    return `
+      <div class="goal-head">
+        <button class="goal-title" data-action="open">${esc(g.title)}</button>
+      </div>
+      <div class="bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><span style="width:${pct}%"></span></div>
+      <div class="meta">${bits.join(' · ')}</div>
+      <form class="quick" data-form="amount">
+        <input type="number" name="amount" step="any" inputmode="decimal" placeholder="Cantidad${unit}" required aria-label="Cantidad">
+        <button class="btn" type="submit">Registrar</button>
+      </form>`;
+  }
+
+  const card = g => `<article class="goal${g.archived ? ' is-archived' : ''}" data-id="${g.id}">${g.kind === 'habit' ? habitCard(g) : targetCard(g)}</article>`;
+
+  function render() {
+    const today = dayKey();
+    $('#today').textContent = new Date().toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' });
+
+    const active = state.goals.filter(g => !g.archived);
+    const archived = state.goals.filter(g => g.archived);
+    const habits = active.filter(g => g.kind === 'habit');
+    const targets = active.filter(g => g.kind === 'target');
+
+    const stats = [];
+    if (habits.length) stats.push(`<div class="stat"><b>${habits.filter(g => doneOn(g, today)).length}/${habits.length}</b><span>Hábitos hoy</span></div>`);
+    if (targets.length) {
+      const avg = Math.round(targets.reduce((a, g) => a + (g.target > 0 ? Math.min(1, total(g) / g.target) : 0), 0) / targets.length * 100);
+      stats.push(`<div class="stat"><b>${avg}%</b><span>Avance metas</span></div>`);
+    }
+    $('#summary').innerHTML = stats.join('');
+
+    let html = '';
+    if (!active.length) {
+      html = `<div class="empty"><p>Tu bitácora está vacía.</p>Añade un hábito diario o una meta para empezar.</div>`;
+    } else {
+      if (habits.length) html += `<div class="section-title">Hábitos</div>` + habits.map(card).join('');
+      if (targets.length) html += `<div class="section-title">Metas</div>` + targets.map(card).join('');
+    }
+    $('#list').innerHTML = html;
+
+    $('#archived').innerHTML = archived.length
+      ? `<details class="archived"><summary>Archivados (${archived.length})</summary>${archived.map(card).join('')}</details>`
+      : '';
+
+    const dd = $('#detailDialog');
+    if (dd.open) {
+      const g = findGoal(dd.dataset.id);
+      g ? renderDetail(g) : dd.close();
+    }
+  }
+
+  function renderDetail(g) {
+    const entries = [...g.entries].sort((a, b) => (b.date + (b.at || '')).localeCompare(a.date + (a.at || '')));
+    const unit = g.unit ? ' ' + esc(g.unit) : '';
+    const list = entries.length
+      ? `<ul class="entries">${entries.map(e => `
+          <li>
+            <span class="when">${fmtDay(e.date)}</span>
+            <span class="what">${g.kind === 'habit' ? 'Hecho' : num(e.amount) + unit}${e.note ? ' — ' + esc(e.note) : ''}</span>
+            <button data-action="del-entry" data-entry="${e.id}" aria-label="Borrar registro">×</button>
+          </li>`).join('')}</ul>`
+      : '<p class="hint">Sin registros todavía.</p>';
+    const since = g.createdAt ? `Creado el ${fmtDay(g.createdAt.slice(0, 10))}` : '';
+    $('#detail').innerHTML = `
+      <h2>${esc(g.title)}</h2>
+      <p class="hint" style="margin-bottom:14px">${g.kind === 'habit' ? 'Hábito diario' : 'Meta' + (g.target ? ` de ${num(g.target)}${unit}` : '')}${since ? ' · ' + since : ''}</p>
+      ${list}
+      <div class="actions">
+        <button class="btn danger small" data-action="delete">Eliminar</button>
+        <button class="btn ghost small" data-action="archive">${g.archived ? 'Restaurar' : 'Archivar'}</button>
+        <span class="spacer"></span>
+        <button class="btn ghost small" data-action="edit">Editar</button>
+        <button class="btn small" data-action="close">Cerrar</button>
+      </div>`;
+  }
+
+  // ---------- formulario de objetivo ----------
+  const form = $('#goalForm');
+  const F = form.elements;
+
+  function syncKindFields() {
+    const isTarget = F.kind.value === 'target';
+    $('#targetFields').hidden = !isTarget;
+    F.target.required = isTarget;
+  }
+
+  function openGoalForm(g) {
+    form.reset();
+    F.id.value = g ? g.id : '';
+    F.title.value = g ? g.title : '';
+    F.kind.value = g ? g.kind : 'habit';
+    F.target.value = g && g.target != null ? g.target : '';
+    F.unit.value = g ? g.unit || '' : '';
+    F.deadline.value = g ? g.deadline || '' : '';
+    $('#goalFormTitle').textContent = g ? 'Editar objetivo' : 'Nuevo objetivo';
+    syncKindFields();
+    $('#goalDialog').showModal();
+    if (!g) F.title.focus();
+  }
+
+  form.addEventListener('change', e => { if (e.target.name === 'kind') syncKindFields(); });
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const title = F.title.value.trim();
+    if (!title) return;
+    const kind = F.kind.value === 'target' ? 'target' : 'habit';
+    const data = {
+      title,
+      kind,
+      target: kind === 'target' ? Number(F.target.value) || 0 : null,
+      unit: kind === 'target' ? F.unit.value.trim() : '',
+      deadline: F.deadline.value || null
+    };
+    const existing = F.id.value && findGoal(F.id.value);
+    if (existing) Object.assign(existing, data);
+    else state.goals.push({ id: uid(), createdAt: new Date().toISOString(), archived: false, entries: [], ...data });
+    $('#goalDialog').close();
+    save();
+  });
+
+  // ---------- acciones ----------
+  function toggleDay(g, k) {
+    const hit = g.entries.filter(e => e.date === k);
+    if (hit.length) {
+      hit.forEach(e => tombstone(e.id));
+      g.entries = g.entries.filter(e => e.date !== k);
+    } else {
+      g.entries.push({ id: uid(), date: k, amount: 1, note: '', at: new Date().toISOString() });
+    }
+    save();
+  }
+
+  function openDetail(g) {
+    const dd = $('#detailDialog');
+    dd.dataset.id = g.id;
+    renderDetail(g);
+    if (!dd.open) dd.showModal();
+  }
+
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const host = el.closest('[data-id]');
+    const g = host ? findGoal(host.dataset.id) : null;
+
+    switch (el.dataset.action) {
+      case 'new': openGoalForm(null); break;
+      case 'close': el.closest('dialog').close(); break;
+      case 'toggle-day': if (g) toggleDay(g, el.dataset.day); break;
+      case 'open': if (g) openDetail(g); break;
+      case 'edit': {
+        const d = findGoal($('#detailDialog').dataset.id);
+        $('#detailDialog').close();
+        if (d) openGoalForm(d);
+        break;
+      }
+      case 'archive': {
+        const d = findGoal($('#detailDialog').dataset.id);
+        if (!d) break;
+        d.archived = !d.archived;
+        $('#detailDialog').close();
+        save();
+        toast(d.archived ? 'Archivado' : 'Restaurado');
+        break;
+      }
+      case 'delete': {
+        const d = findGoal($('#detailDialog').dataset.id);
+        if (!d || !confirm(`¿Eliminar "${d.title}" y todos sus registros?`)) break;
+        tombstone(d.id);
+        d.entries.forEach(x => tombstone(x.id));
+        state.goals = state.goals.filter(x => x.id !== d.id);
+        $('#detailDialog').close();
+        save();
+        break;
+      }
+      case 'del-entry': {
+        const d = findGoal($('#detailDialog').dataset.id);
+        if (!d) break;
+        tombstone(el.dataset.entry);
+        d.entries = d.entries.filter(x => x.id !== el.dataset.entry);
+        save();
+        break;
+      }
+      case 'export': exportJson(); break;
+      case 'import': $('#importFile').click(); break;
+    }
+  });
+
+  document.addEventListener('submit', e => {
+    if (e.target.dataset.form !== 'amount') return;
+    e.preventDefault();
+    const g = findGoal(e.target.closest('[data-id]').dataset.id);
+    const amount = Number(e.target.amount.value);
+    if (!g || !isFinite(amount) || amount === 0) return;
+    g.entries.push({ id: uid(), date: dayKey(), amount, note: '', at: new Date().toISOString() });
+    save();
+    toast(`Registrado: ${num(amount)}${g.unit ? ' ' + g.unit : ''}`);
+  });
+
+  // ---------- copia de seguridad ----------
+  function exportJson() {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `bitacora-${dayKey()}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  $('#importFile').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const next = normalize(JSON.parse(await file.text()));
+      if (!next) throw new Error('formato');
+      if (!confirm('Esto reemplaza los datos actuales de este dispositivo. ¿Continuar?')) return;
+      state = next;
+      save();
+      toast('Copia importada');
+    } catch (err) {
+      toast('El archivo no es una copia válida de Bitácora');
+    }
+  });
+
+  // Refresca "hoy" al volver a la app (p. ej. al día siguiente).
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+
+  render();
+})();
+</script>
+</body>
+</html>
