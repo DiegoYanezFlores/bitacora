@@ -22,19 +22,19 @@ Archivos de apoyo (no son lógica de la app):
 
 ## Sistema de diseño
 
-No es un dashboard SaaS genérico. Respeta los tokens existentes:
+Oscuro, vibrante y de recompensa inmediata (decisión del dueño, 2026-09-15): la app debe dar ganas de abrirla y premiar cada acción. Tokens:
 
 ```
---paper #E9EBE6   fondo
---card  #F3F4F0   superficies
---ink   #1B2321   texto principal
---soft  #5C6663   texto secundario
---line  #C9CDC5   bordes
---done  #2F5D50   completado
---flag  #B4491F   vencido / bloqueado
+--paper #0E1317   fondo            --done  #B8F53B   logro / acción principal (lima)
+--card  #172028   superficies      --fire  #FF7A1A → --fire-2 #FF3D7F   racha de inglés
+--ink   #F3F6F8   texto            --xp    #9B8CFF   nivel / XP        --sky #38C9FF  aplicaciones
+--soft  #94A2AF   texto secundario --sun   #FFD23F   metas / avisos    --flag #FF6B5B  borrar
+--line  #2A3541   bordes
 ```
 
-Tipografía: IBM Plex Sans, una sola familia, `tabular-nums` para cifras. Border-radius 3px. Mobile-first: el uso principal es en celular. Sin animaciones decorativas. Respeta `prefers-reduced-motion`.
+Tipografía: IBM Plex Sans (400–700), `tabular-nums` para cifras. Radios 14px (tarjetas) y 9px (controles). Mobile-first.
+
+Recompensas: XP y nivel se **calculan** del estado (`xpOf`), no se guardan. Cada acción que suma XP muestra "+N XP", confeti pequeño y vibración (Android); subir de nivel o llegar a una meta de racha (3, 7, 14, 21, 30…) lanza celebración grande. El encabezado muestra saludo, nivel y un único "siguiente paso" accionable. Tono siempre alentador (avisos en `--sun`, no en rojo). Con `prefers-reduced-motion` no hay confeti ni animaciones.
 
 ## Estructura de datos
 
