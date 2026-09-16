@@ -1,18 +1,16 @@
-// Service worker de Bitácora: red primero, caché como respaldo offline.
-// Sube CACHE (v2, v3…) si cambias la lista de archivos precargados.
-const CACHE = 'bitacora-v2';
-const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
+// Service worker de Bitácora v2.
+// Navegación y módulos: red primero con respaldo de caché (para que las actualizaciones lleguen solas).
+// Estáticos (iconos): caché primero. Supabase nunca pasa por aquí.
+const CACHE = 'bitacora-v3';
+const NETWORK_TIMEOUT_MS = 3500;
 const PRECACHE = [
-  '/',
-  '/index.html',
-  '/config.js',
-  '/sync.js',
-  '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/icons/apple-touch-icon.png'
+  '/', '/index.html', '/config.js', '/manifest.json',
+  '/app/styles.css', '/app/main.js', '/app/lib.js', '/app/db.js', '/app/store.js', '/app/model.js',
+  '/app/api.js', '/app/sync.js', '/app/ui.js', '/app/actions.js', '/app/capture.js', '/app/migrate.js',
+  '/app/views/today.js', '/app/views/projects.js', '/app/views/project.js', '/app/views/tasks.js',
+  '/app/views/log.js', '/app/views/progress.js', '/app/views/settings.js', '/app/views/auth.js', '/app/views/onboarding.js',
+  '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png'
 ];
-const NETWORK_TIMEOUT_MS = 4000;
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(c => c.addAll(PRECACHE)).then(() => self.skipWaiting()));
@@ -29,33 +27,27 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const req = event.request;
   const url = new URL(req.url);
-  // IBM Plex (Google Fonts): caché primero para que la tipografía funcione offline.
-  if (req.method === 'GET' && FONT_HOSTS.includes(url.hostname)) {
-    event.respondWith(caches.open(CACHE).then(async c => {
-      const hit = await c.match(req);
-      if (hit) return hit;
-      const res = await fetch(req);
-      if (res.ok || res.type === 'opaque') c.put(req, res.clone());
-      return res;
-    }));
-    return;
-  }
-  // Solo recursos propios; las llamadas a Supabase van directo a la red.
   if (req.method !== 'GET' || url.origin !== self.location.origin) return;
 
   const isPage = req.mode === 'navigate';
-  const cacheKey = isPage ? '/index.html' : req;
+  const isAsset = /\.(png|svg|ico|webmanifest)$/.test(url.pathname);
+  const key = isPage ? '/index.html' : req;
+
+  if (isAsset) {
+    event.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => {
+      if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
+      return res;
+    })));
+    return;
+  }
 
   event.respondWith((async () => {
     try {
       const res = await withTimeout(fetch(req), NETWORK_TIMEOUT_MS);
-      if (res.ok) {
-        const copy = res.clone();
-        caches.open(CACHE).then(c => c.put(cacheKey, copy));
-      }
+      if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(key, copy)); }
       return res;
     } catch (err) {
-      const cached = await caches.match(cacheKey, { ignoreSearch: true });
+      const cached = await caches.match(key, { ignoreSearch: true });
       if (cached) return cached;
       throw err;
     }
