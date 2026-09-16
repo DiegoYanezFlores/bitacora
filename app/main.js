@@ -275,6 +275,7 @@ async function startAfterAuth({ session = null, guest = false, isNew = false, fr
     store.session.guest = true;
     store.session.userId = null;
     db.kvSet('owner', 'guest');
+    sync.state.status = 'guest';
   } else {
     const s = session || api.getSession();
     if (!s) { showAuth('welcome'); return; }
