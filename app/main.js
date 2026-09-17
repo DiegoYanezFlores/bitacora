@@ -54,10 +54,12 @@ function syncChip() {
 
 // ---------- router ----------
 function parseHash() {
-  const h = (location.hash || '#/today').replace(/^#\/?/, '');
-  const [name, param] = h.split('/');
-  if (name === 'project' && param) return { name: 'project', params: { id: param } };
-  return { name: VIEWS[name] ? name : 'today', params: {} };
+  const raw = (location.hash || '#/today').replace(/^#\/?/, '');
+  const [path, query] = raw.split('?');
+  const [name, param] = path.split('/');
+  const q = new URLSearchParams(query || '');
+  if (name === 'project' && param) return { name: 'project', params: { id: param }, query: q };
+  return { name: VIEWS[name] ? name : 'today', params: {}, query: q };
 }
 
 let rafId = null;
@@ -92,6 +94,11 @@ function navigate() {
   const next = parseHash();
   const same = next.name === route.name && JSON.stringify(next.params) === JSON.stringify(route.params);
   route = next;
+  // Acceso directo de la PWA: /#/today?capture=1 abre la captura al entrar.
+  if (next.query.get('capture')) {
+    history.replaceState(null, '', location.pathname + location.search + '#/' + next.name);
+    setTimeout(() => openCapture(), 60);
+  }
   if (!same) { project.state.limit = 12; log.state.limit = 60; }
   render();
   const y = same ? window.scrollY : (scrolls.get(route.name + JSON.stringify(route.params)) || 0);
@@ -280,7 +287,11 @@ async function startAfterAuth({ session = null, guest = false, isNew = false, fr
     const s = session || api.getSession();
     if (!s) { showAuth('welcome'); return; }
     const prev = db.kvGet('owner');
-    if (prev && prev !== 'guest' && prev !== s.user.id) await db.wipe(); // otra cuenta en este dispositivo
+    if (prev && prev !== 'guest' && prev !== s.user.id) {
+      // Otra cuenta en este dispositivo: antes de limpiar se guarda una copia por si quedaban cambios sin subir.
+      try { localStorage.setItem(`bitacora:backup:${prev}`, exportBackup()); } catch (e) { /* sin espacio */ }
+      await db.wipe();
+    }
     const adopting = prev === 'guest';
     store.session = { userId: s.user.id, email: s.user.email, guest: false };
     db.kvSet('owner', s.user.id);

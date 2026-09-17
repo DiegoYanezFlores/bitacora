@@ -166,12 +166,15 @@ export async function fetchV1Doc() {
 
 // Programación: al volver a la app, al recuperar conexión, tras cambios y cada minuto con la app visible.
 let timer = null;
+let autoStarted = false;
 export function schedule(ms = 1200) {
   clearTimeout(timer);
   timer = setTimeout(syncNow, ms);
 }
 export function startAutoSync() {
   state.lastSync = db.kvGet('lastSync');
+  if (autoStarted) { syncNow(); return; } // ya hay temporizador y escuchas: no se duplican
+  autoStarted = true;
   window.addEventListener('online', () => syncNow());
   window.addEventListener('offline', () => setStatus('offline'));
   document.addEventListener('visibilitychange', () => { if (!document.hidden || store.pendingCount()) syncNow(); });
