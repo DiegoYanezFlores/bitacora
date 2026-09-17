@@ -239,7 +239,11 @@ function wire() {
   window.addEventListener('hashchange', navigate);
   window.addEventListener('bitacora:signedout', () => { store.session.userId = null; showAuth('signin', 'Tu sesión expiró. Vuelve a entrar.'); });
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
-  store.subscribe(() => { scheduleRender(); if (!store.session.guest) sync.schedule(); });
+  store.subscribe(() => {
+    scheduleRender();
+    if (!store.session.guest && (store.pendingCount() || db.kvGet('profileDirty'))) sync.schedule();
+  });
+  sync.setStatusListener(scheduleRender);
 }
 
 // ---------- pantallas de acceso ----------

@@ -108,7 +108,7 @@ export async function runMigration({ remoteDoc = null } = {}) {
   db.kvSet('migratedV1', true);
   if (Object.values(totals).some(Boolean)) {
     store.setProfile({ migrated_v1_at: new Date().toISOString() });
-    store.track('migrated_v1', totals);
+    store.track('migrated_legacy', totals);
   }
   return totals;
 }

@@ -12,10 +12,12 @@ const SERVER_ONLY = ['synced_at'];
 
 export const state = { status: 'idle', error: '', lastSync: null };
 
+export let onStatus = () => {};
+export function setStatusListener(fn) { onStatus = fn; }
 function setStatus(status, error = '') {
   state.status = status;
   state.error = error;
-  store.emit();
+  onStatus(); // solo repinta; no es un cambio de datos y no programa otra sincronización
 }
 
 let running = null;
@@ -137,12 +139,21 @@ async function pullProfile(t) {
   store.emit();
 }
 
+const EVENT_NAME = /^[a-z_]{2,40}$/; // misma regla que la tabla events
+
+// Las métricas son secundarias: si fallan se descartan, nunca bloquean ni reintentan en bucle.
 async function pushEvents(t) {
   const q = db.kvGet('events', []);
   if (!q.length) return;
-  if (!store.prefs().analytics) { db.kvSet('events', []); return; }
-  await api('/rest/v1/events', { method: 'POST', token: t, body: q.map(e => ({ ...e, user_id: store.session.userId })), headers: { Prefer: 'return=minimal' } });
-  db.kvSet('events', db.kvGet('events', []).slice(q.length));
+  const drop = () => db.kvSet('events', db.kvGet('events', []).slice(q.length));
+  const valid = store.prefs().analytics ? q.filter(e => EVENT_NAME.test(e.name)) : [];
+  if (!valid.length) { drop(); return; }
+  try {
+    await api('/rest/v1/events', { method: 'POST', token: t, body: valid.map(e => ({ ...e, user_id: store.session.userId })), headers: { Prefer: 'return=minimal' } });
+    drop();
+  } catch (e) {
+    if (e instanceof ApiError && e.status >= 400 && e.status < 500) drop(); // datos rechazados: no se reintentan
+  }
 }
 
 // Borra en el servidor todas las filas del usuario (derecho de supresión desde la app).
