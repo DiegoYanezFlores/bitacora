@@ -293,7 +293,7 @@ async function startAfterAuth({ session = null, guest = false, isNew = false, fr
       await db.wipe();
     }
     const adopting = prev === 'guest';
-    store.session = { userId: s.user.id, email: s.user.email, guest: false };
+    Object.assign(store.session, { userId: s.user.id, email: s.user.email, guest: false }); // las importaciones de módulo son de solo lectura
     db.kvSet('owner', s.user.id);
     db.kvSet('guest', false);
     if (adopting) store.markAllDirty(); // lo registrado sin cuenta se sube ahora
@@ -359,6 +359,19 @@ $('#navside').innerHTML = `<div class="brand">${icon('flame')}<span>Bitácora</s
   NAV.map(([k, l, ic]) => `<a data-nav="${k}" href="#/${k}">${icon(ic)}<span>${l}</span></a>`).join('') +
   `<button class="btn primary side-cap" data-act="capture">${icon('plus')}Registrar <kbd>N</kbd></button>`;
 
-boot();
+boot().catch(err => {
+  // Nunca dejar la pantalla en blanco: mostrar el error con una salida.
+  console.error('Error al arrancar', err);
+  const box = $('#overlay');
+  $('#app').hidden = true;
+  box.hidden = false;
+  box.innerHTML = `<div class="auth-card">
+    <h1>No se pudo abrir Bitácora</h1>
+    <p class="muted">Tus datos siguen guardados. Recarga la página; si el problema continúa, copia este mensaje y envíalo.</p>
+    <pre class="muted small" style="white-space:pre-wrap">${esc(String(err && (err.stack || err.message) || err))}</pre>
+    <button class="btn primary block-btn" type="button" id="boot-reload">Recargar</button>
+  </div>`;
+  document.getElementById('boot-reload').onclick = () => location.reload();
+});
 
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
