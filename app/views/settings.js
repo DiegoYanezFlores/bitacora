@@ -42,7 +42,7 @@ export function render() {
     <p class="muted small">Días por semana en los que quieres registrar algo. Tú eliges el listón; no hay castigo si no llegas.</p>
     <div class="stepper" role="group" aria-label="Meta semanal">
       <button class="icon-btn" data-act="set-goal" data-v="${Math.max(1, prefs.weeklyGoal - 1)}" aria-label="Bajar meta" ${prefs.weeklyGoal <= 1 ? 'disabled' : ''}>${icon('back')}</button>
-      <span class="stepper-n num">${prefs.weeklyGoal}<span class="stepper-l">${plural(prefs.weeklyGoal, 'día', 'días')}/semana</span></span>
+      <span class="stepper-n num">${prefs.weeklyGoal}<span class="stepper-l">${prefs.weeklyGoal === 1 ? 'día' : 'días'}/semana</span></span>
       <button class="icon-btn" data-act="set-goal" data-v="${Math.min(7, prefs.weeklyGoal + 1)}" aria-label="Subir meta" ${prefs.weeklyGoal >= 7 ? 'disabled' : ''}>${icon('arrow')}</button>
     </div>
   </section>
