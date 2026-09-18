@@ -46,6 +46,6 @@ export function render() {
         <ul class="acts">${g.items.map(a => activityRow(a)).join('')}</ul>
       </section>`).join('') + (all.length > shown.length ? `<button class="btn ghost block-btn" data-act="more-log">Cargar más (${all.length - shown.length})</button>` : '')
     : empty('list', state.q || state.kind || state.project ? 'Nada con esos filtros' : 'Tu historial empieza aquí',
-        state.q || state.kind || state.project ? 'Prueba con otra búsqueda.' : 'Cada cosa que registres queda con su fecha y su proyecto.',
-        state.q || state.kind || state.project ? '<button class="btn ghost" data-act="clear-filters">Quitar filtros</button>' : '<button class="btn primary" data-act="capture">Registrar actividad</button>')}`;
+        state.q || state.kind || state.project ? 'Prueba con otra búsqueda.' : 'Cada cosa que registres queda con su fecha y su proyecto: usa el botón de abajo.',
+        state.q || state.kind || state.project ? '<button class="btn ghost" data-act="clear-filters">Quitar filtros</button>' : '')}`;
 }

@@ -3,7 +3,9 @@ import * as model from './../model.js';
 import { esc, fmtDayShort, fmtWeekday, fmtMonth, dayKey, plural, cap, parseDay } from './../lib.js';
 import { icon, bar, empty, dot } from './../ui.js';
 
-export const state = { range: 'week', offset: 0 };
+// El lunes es el día de reflexión semanal (ver PRODUCT.md): al abrir Progreso ese día,
+// arranca en la semana anterior, que es la que hay que revisar, no la actual (casi vacía).
+export const state = { range: 'week', offset: new Date().getDay() === 1 ? -1 : 0 };
 
 const RANGES = [['week', 'Semana'], ['month', 'Mes'], ['year', 'Año']];
 
@@ -95,7 +97,7 @@ export function render() {
   <section class="block">
     <div class="block-head"><h2 class="eyebrow">Récords</h2></div>
     <ul class="records">
-      <li><span class="num">${r.currentStreak}</span><span>racha actual</span></li>
+      <li><span class="num ${r.currentStreak ? '' : 'muted'}">${r.currentStreak}</span><span>racha actual</span></li>
       <li><span class="num">${r.bestStreak}</span><span>mejor racha</span></li>
       <li><span class="num">${r.bestWeek ? r.bestWeek.count : 0}</span><span>mejor semana</span></li>
       <li><span class="num">${r.total}</span><span>actividades en total</span></li>

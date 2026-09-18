@@ -89,7 +89,7 @@ button { cursor: pointer; background: none; border: 0; padding: 0; -webkit-tap-h
 
 /* ---------- estructura ---------- */
 .app { min-height: 100dvh; }
-.main { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+.main { padding-bottom: calc(112px + env(safe-area-inset-bottom)); } /* despeja el FAB (bottom:14+alto:56=70) con margen, no solo el tabbar */
 .view { max-width: 640px; margin: 0 auto; padding: 0 var(--sp) 32px; }
 .view-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: calc(18px + env(safe-area-inset-top)) 0 14px; }
 .view-head h1 { font-size: 25px; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; }
@@ -174,7 +174,7 @@ kbd { font: 600 11px var(--font); background: color-mix(in srgb, currentColor 12
 .pill .num { font-size: 12px; opacity: .75; }
 .pill-select { min-height: 36px; border: 1px solid var(--line-2); border-radius: 999px; background: var(--surface); font-size: 13px; padding: 6px 10px; color: var(--text-2); }
 .nav-arrows { display: flex; gap: 4px; }
-.nav-arrows .icon-btn[disabled] { opacity: .35; }
+.icon-btn[disabled] { opacity: .35; pointer-events: none; }
 .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); }
 .tag .i { width: 13px; height: 13px; }
 .tag-accent { background: var(--accent-soft); color: var(--accent); }
@@ -256,7 +256,7 @@ kbd { font: 600 11px var(--font); background: color-mix(in srgb, currentColor 12
 .bar { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
 .bar.big { height: 10px; }
 .bar.thin { height: 6px; }
-.bar span { display: block; height: 100%; width: var(--p, 0%); background: var(--accent); border-radius: 999px; transition: width .45s cubic-bezier(.2, .8, .2, 1); }
+.bar span { display: block; height: 100%; width: var(--p, 0%); background: var(--accent); border-radius: 999px; }
 
 /* ---------- progreso ---------- */
 .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 18px; }
@@ -269,7 +269,7 @@ kbd { font: 600 11px var(--font); background: color-mix(in srgb, currentColor 12
 .chart { display: flex; align-items: flex-end; gap: 3px; height: 130px; padding: 10px 2px 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
 .chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; }
 .chart-bar { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
-.chart-bar span { display: block; width: min(100%, 22px); height: var(--h, 0%); min-height: 2px; background: var(--accent); border-radius: 4px 4px 2px 2px; transition: height .4s ease; }
+.chart-bar span { display: block; width: min(100%, 22px); height: var(--h, 0%); min-height: 2px; background: var(--accent); border-radius: 4px 4px 2px 2px; }
 .chart-col.now .chart-bar span { background: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
 .chart-x { font-size: 10px; color: var(--text-3); height: 12px; }
 .dist { display: grid; gap: 10px; }
@@ -310,6 +310,9 @@ kbd { font: 600 11px var(--font); background: color-mix(in srgb, currentColor 12
 .switch span { display: block; width: 22px; height: 22px; border-radius: 50%; background: var(--surface); box-shadow: var(--shadow); transition: transform .15s ease; }
 .switch.on { background: var(--accent); border-color: var(--accent); }
 .switch.on span { transform: translateX(18px); }
+.stepper { display: flex; align-items: center; gap: 14px; }
+.stepper-n { display: flex; align-items: baseline; gap: 6px; font-size: 19px; font-weight: 700; letter-spacing: -.02em; }
+.stepper-l { font-size: 13px; font-weight: 500; color: var(--text-2); }
 
 /* ---------- vacíos ---------- */
 .empty { text-align: center; padding: 26px 16px; border: 1px dashed var(--line-2); border-radius: var(--r); }

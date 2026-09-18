@@ -102,7 +102,7 @@ export function render() {
     <div class="block-head"><h2 class="eyebrow">Hoy</h2>${acts.length ? `<a class="link" href="#/log">Ver registro${icon('arrow')}</a>` : ''}</div>
     ${acts.length
       ? `<ul class="acts">${acts.map(a => activityRow(a)).join('')}</ul>`
-      : empty('plus', 'Aún no hay nada de hoy', 'Registra lo primero que hiciste: basta una línea.', '<button class="btn primary" data-act="capture">Registrar actividad</button>')}
+      : empty('plus', 'Aún no hay nada de hoy', 'Registra lo primero que hiciste: basta una línea, con el botón de abajo.')}
   </section>
 
   <section class="block">

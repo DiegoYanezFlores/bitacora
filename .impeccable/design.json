@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-18T14:55:00.000Z",
+  "title": "Design System: Bitácora",
+  "extensions": {
+    "colorMeta": {
+      "ink": { "role": "neutral", "displayName": "Tinta", "canonical": "#16201C", "tonalRamp": ["#0D1210", "#141A17", "#1B231F", "#26302B", "#55625C", "#A2AEA8", "#DFE4E0", "#F6F7F5"] },
+      "ink-soft": { "role": "neutral", "displayName": "Tinta Suave", "canonical": "#55625C" },
+      "ink-faint": { "role": "neutral", "displayName": "Tinta Tenue", "canonical": "#64706A" },
+      "paper": { "role": "neutral", "displayName": "Papel Cálido", "canonical": "#F6F7F5", "tonalRamp": ["#0D1210", "#141A17", "#1B231F", "#26302B", "#33403A", "#86938D", "#DFE4E0", "#F6F7F5"] },
+      "surface": { "role": "neutral", "displayName": "Superficie", "canonical": "#FFFFFF" },
+      "surface-sunken": { "role": "neutral", "displayName": "Superficie Hundida", "canonical": "#EFF1EE" },
+      "line": { "role": "neutral", "displayName": "Línea", "canonical": "#DFE4E0" },
+      "line-strong": { "role": "neutral", "displayName": "Línea Marcada", "canonical": "#CDD4CE" },
+      "accent": { "role": "primary", "displayName": "Verde Bitácora", "canonical": "#0B7A5C", "tonalRamp": ["#04241A", "#063829", "#0B7A5C", "#0E8A75", "#3CD3A0", "#7EE6C4", "#B9F1DD", "#E4F1EC"] },
+      "accent-ink": { "role": "primary", "displayName": "Tinta sobre Acento", "canonical": "#FFFFFF" },
+      "accent-soft": { "role": "primary", "displayName": "Verde Bitácora Suave", "canonical": "#E4F1EC" },
+      "streak": { "role": "secondary", "displayName": "Ámbar Racha", "canonical": "#C2410C", "tonalRamp": ["#2E2118", "#7A2E0C", "#A6390F", "#C2410C", "#FB923C", "#FCA96A", "#FCC79E", "#FCEDE4"] },
+      "streak-soft": { "role": "secondary", "displayName": "Ámbar Racha Suave", "canonical": "#FCEDE4" },
+      "warn": { "role": "tertiary", "displayName": "Ámbar Aviso", "canonical": "#A64B00" },
+      "warn-soft": { "role": "tertiary", "displayName": "Ámbar Aviso Suave", "canonical": "#FBF0E2" },
+      "danger": { "role": "tertiary", "displayName": "Rojo Alerta", "canonical": "#B42318" },
+      "project-teal": { "role": "categorical", "displayName": "Proyecto Teal", "canonical": "#0E8A75" },
+      "project-blue": { "role": "categorical", "displayName": "Proyecto Azul", "canonical": "#2563EB" },
+      "project-violet": { "role": "categorical", "displayName": "Proyecto Violeta", "canonical": "#7C3AED" },
+      "project-rose": { "role": "categorical", "displayName": "Proyecto Rosa", "canonical": "#BE185D" },
+      "project-orange": { "role": "categorical", "displayName": "Proyecto Naranja", "canonical": "#C2410C" },
+      "project-amber": { "role": "categorical", "displayName": "Proyecto Ámbar", "canonical": "#A16207" },
+      "project-green": { "role": "categorical", "displayName": "Proyecto Verde", "canonical": "#15803D" },
+      "project-slate": { "role": "categorical", "displayName": "Proyecto Pizarra", "canonical": "#475569" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Títulos de vista (h1) y encabezados de acceso." },
+      "headline": { "displayName": "Headline", "purpose": "Título de hoja modal y de la tarjeta de siguiente acción." },
+      "metric-sm": { "displayName": "Metric SM", "purpose": "Tarjetas pequeñas de Récords (19px)." },
+      "metric": { "displayName": "Metric", "purpose": "Mosaicos KPI de Progreso (24px)." },
+      "metric-lg": { "displayName": "Metric LG", "purpose": "Contador de registros/racha del día en Hoy (26px)." },
+      "metric-xl": { "displayName": "Metric XL", "purpose": "Porcentaje del periodo en Progreso, la cifra más grande de la app (28px)." },
+      "body": { "displayName": "Body", "purpose": "Texto de párrafo, ítems de lista, campos de formulario." },
+      "body-sm": { "displayName": "Body SM", "purpose": "Texto compacto dentro de tarjeta o fila: avisos, patrones, distribución, Cómo funciona, cuerpo del toast (14px)." },
+      "label": { "displayName": "Label", "purpose": "Eyebrows, metadatos y texto secundario de ajustes." },
+      "label-sm": { "displayName": "Label SM", "purpose": "Texto secundario más frecuente: metadatos de lista, píldoras, etiquetas de campo (13px)." },
+      "micro": { "displayName": "Micro", "purpose": "Etiqueta de la barra de navegación inferior, kbd (11px) — piso mínimo para texto que debe leerse." }
+    },
+    "shadows": [
+      { "name": "resting", "value": "0 1px 2px rgba(22,32,28,.05), 0 4px 16px rgba(22,32,28,.05)", "purpose": "Tarjetas y mosaicos en reposo; casi imperceptible, el borde hace el trabajo de separación." },
+      { "name": "overlay", "value": "0 12px 40px rgba(22,32,28,.16)", "purpose": "Hoja modal, toast, interruptor: elementos que literalmente flotan sobre el contenido." },
+      { "name": "fab-accent", "value": "0 6px 20px color-mix(in srgb, var(--accent) 35%, transparent)", "purpose": "Botón flotante de captura; única sombra que lleva el color del acento." }
+    ],
+    "motion": [
+      { "name": "press-scale", "value": "transform .1s ease (scale .975 en botones, .94 en FAB)", "purpose": "Feedback táctil inmediato al presionar." },
+      { "name": "sheet-up", "value": "translateY(18px)→0, opacity .6→1, .18s ease", "purpose": "Entrada de la hoja modal." },
+      { "name": "reduced-motion-override", "value": "animation-duration/transition-duration .001ms bajo prefers-reduced-motion: reduce", "purpose": "Toda animación se desactiva por completo si el usuario lo pide." }
+    ],
+    "breakpoints": [
+      { "name": "sheet-dialog", "value": "620px" },
+      { "name": "desktop-sidebar", "value": "1000px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal de una pantalla u hoja modal.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Guardar</button>",
+      "css": ".ds-btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:44px; padding:10px 16px; border-radius:10px; font-size:15px; font-weight:600; border:1px solid transparent; transition:transform .1s ease, background .15s ease; } .ds-btn:active { transform:scale(.975); } .ds-btn-primary { background:#0B7A5C; color:#FFFFFF; } .ds-btn-primary:hover { background:#0E8A75; } .ds-btn-primary:focus-visible { outline:2px solid #0B7A5C; outline-offset:2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Acción secundaria junto a una primaria.",
+      "html": "<button class=\"ds-btn ds-btn-ghost\">Cancelar</button>",
+      "css": ".ds-btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:44px; padding:10px 16px; border-radius:10px; font-size:15px; font-weight:600; transition:transform .1s ease, background .15s ease; } .ds-btn:active { transform:scale(.975); } .ds-btn-ghost { background:#FFFFFF; border:1px solid #CDD4CE; color:#16201C; } .ds-btn-ghost:hover { background:#EFF1EE; } .ds-btn-ghost:focus-visible { outline:2px solid #0B7A5C; outline-offset:2px; }"
+    },
+    {
+      "name": "Task Card",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Fila de tarea con casilla circular, título y metadatos.",
+      "html": "<div class=\"ds-task\"><span class=\"ds-tick\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"/></svg></span><div class=\"ds-task-body\"><span class=\"ds-task-title\">Escribir informe semanal</span></div></div>",
+      "css": ".ds-task { display:flex; align-items:center; gap:10px; background:#FFFFFF; border:1px solid #DFE4E0; border-radius:14px; padding:6px 12px 6px 8px; box-shadow:0 1px 2px rgba(22,32,28,.05), 0 4px 16px rgba(22,32,28,.05); } .ds-tick { width:26px; height:26px; border:1.8px solid #CDD4CE; border-radius:8px; display:grid; place-items:center; color:transparent; transition:background .15s ease, border-color .15s ease; } .ds-tick:hover { border-color:#0B7A5C; } .ds-task-body { flex:1; padding:8px 0; } .ds-task-title { color:#16201C; font-size:15px; }"
+    },
+    {
+      "name": "Filter Pill",
+      "kind": "chip",
+      "refersTo": "pill",
+      "description": "Píldora de filtro con estado activo/inactivo.",
+      "html": "<span class=\"ds-pill\">Todos</span> <span class=\"ds-pill ds-pill-on\">Activos</span>",
+      "css": ".ds-pill { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:6px 13px; border:1px solid #CDD4CE; border-radius:999px; background:#FFFFFF; font-size:13px; font-weight:500; color:#55625C; } .ds-pill-on { background:#E4F1EC; border-color:rgba(11,122,92,.45); color:#0B7A5C; font-weight:600; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo de texto estándar con foco en acento.",
+      "html": "<div class=\"ds-field\"><span class=\"ds-field-label\">Nombre del proyecto</span><input class=\"ds-input\" type=\"text\" placeholder=\"Ej. Tesis de maestría\"></div>",
+      "css": ".ds-field { display:grid; gap:5px; } .ds-field-label { font-size:13px; color:#55625C; } .ds-input { width:100%; min-height:44px; background:#FFFFFF; color:#16201C; border:1px solid #CDD4CE; border-radius:10px; padding:11px 13px; font-size:16px; } .ds-input::placeholder { color:#64706A; } .ds-input:focus { outline:2px solid #0B7A5C; outline-offset:-1px; border-color:transparent; }"
+    },
+    {
+      "name": "Next Action Card",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Tarjeta protagonista de Hoy: siguiente tarea sugerida con motivo explicado.",
+      "html": "<div class=\"ds-next\"><div class=\"ds-next-head\"><span class=\"ds-eyebrow\">Siguiente</span></div><p class=\"ds-next-title\">Terminar la sección de resultados</p><div class=\"ds-next-why\"><span class=\"ds-tag\">Vence hoy</span><span class=\"ds-tag\">3 días sin avanzar</span></div></div>",
+      "css": ".ds-next { background:linear-gradient(180deg, #E4F1EC 0%, #FFFFFF 55%); border:1px solid rgba(11,122,92,.3); border-radius:14px; padding:16px; } .ds-eyebrow { font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:#55625C; } .ds-next-title { font-size:18px; font-weight:700; line-height:1.3; margin:8px 0 10px; color:#16201C; } .ds-next-why { display:flex; flex-wrap:wrap; gap:6px; } .ds-tag { display:inline-flex; align-items:center; gap:4px; font-size:12px; padding:2px 8px; border-radius:999px; background:#EFF1EE; color:#55625C; }"
+    },
+    {
+      "name": "Stepper",
+      "kind": "input",
+      "refersTo": "button-ghost",
+      "description": "Valor numérico corto y acotado (ej. meta semanal 1–7); dos icon-btn enmarcan el número, nunca una lista plana de botones.",
+      "html": "<div class=\"ds-stepper\"><button class=\"ds-icon-btn\" aria-label=\"Bajar\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 12H5M11 6l-6 6 6 6\"/></svg></button><span class=\"ds-stepper-n\">4<span class=\"ds-stepper-l\">días/semana</span></span><button class=\"ds-icon-btn\" aria-label=\"Subir\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14M13 6l6 6-6 6\"/></svg></button></div>",
+      "css": ".ds-stepper { display:flex; align-items:center; gap:14px; } .ds-icon-btn { display:inline-grid; place-items:center; width:40px; height:40px; border-radius:10px; color:#55625C; background:none; border:0; cursor:pointer; } .ds-icon-btn:hover { background:#EFF1EE; color:#16201C; } .ds-stepper-n { display:flex; align-items:baseline; gap:6px; font-size:19px; font-weight:700; letter-spacing:-.02em; color:#16201C; } .ds-stepper-l { font-size:13px; font-weight:500; color:#55625C; }"
+    },
+    {
+      "name": "Toast",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Confirmación flotante con acción de deshacer.",
+      "html": "<div class=\"ds-toast\"><span class=\"ds-toast-icon\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"/></svg></span><div class=\"ds-toast-body\"><strong>Guardado</strong><span>Actividad registrada</span></div><button class=\"ds-toast-undo\">Deshacer</button></div>",
+      "css": ".ds-toast { display:flex; align-items:center; gap:11px; max-width:min(460px, calc(100vw - 24px)); background:#FFFFFF; border:1px solid #DFE4E0; border-radius:14px; padding:11px 14px; box-shadow:0 12px 40px rgba(22,32,28,.16); } .ds-toast-icon { display:grid; place-items:center; width:28px; height:28px; border-radius:50%; background:#E4F1EC; color:#0B7A5C; } .ds-toast-body { display:grid; gap:1px; font-size:13px; color:#55625C; } .ds-toast-body strong { font-size:14px; color:#16201C; } .ds-toast-undo { color:#0B7A5C; font-weight:600; font-size:13px; background:none; border:0; padding:8px; cursor:pointer; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El Cuaderno de Campo",
+    "overview": "Bitácora se ve como una herramienta de trabajo, no como un producto de consumo. La superficie es un papel cálido casi blanco, no un blanco de laboratorio; el texto es tinta oscura de alto contraste; y hay exactamente una tinta de color —un verde profundo— reservada para lo que importa: la acción principal y el estado positivo. Todo lo demás vive en grises cálidos. No hay gradientes decorativos, ilustraciones ni imágenes de marca: la jerarquía se construye con tipografía del sistema, espacio y ese único acento, nunca con adornos.\n\nEl sistema es deliberadamente plano y silencioso. Las tarjetas se separan del fondo con un borde de 1px, no con sombra teatral; la sombra fuerte se reserva para lo que literalmente flota sobre el contenido (hoja modal, toast, botón flotante). La app rechaza activamente el lenguaje visual de los juegos —sin XP, niveles, confeti ni recompensas variables— y aplica la misma regla a la propia paleta: el color comunica estado y jerarquía, nunca 'premia' ni 'castiga' emocionalmente.\n\nEs una interfaz para usarse en segundos, muchas veces al día, con una mano, y para leerse en una sesión de reflexión más larga los lunes. Por eso las densidades cambian por vista pero el vocabulario visual —tarjeta, borde, acento único— nunca cambia.",
+    "keyCharacteristics": [
+      "Neutros cálidos (no grises fríos ni blanco puro) + una sola tinta de acento.",
+      "Plano en reposo; el borde de 1px hace el trabajo de separación, no la sombra.",
+      "Tipografía exclusivamente del sistema operativo — cero fuentes de terceros, cero KB de red.",
+      "Radios que crecen con el tamaño del elemento: 3px en celdas fijas diminutas, 7px en detalles pequeños, 8px en la casilla de tarea, 10px en controles, 14px en superficies grandes, 999px en píldoras y controles circulares.",
+      "Un color por proyecto (paleta categórica de 8 tonos) es la única superficie donde el color se usa libremente; en el resto de la interfaz es escaso a propósito.",
+      "Claro/oscuro nativos vía prefers-color-scheme, con anulación manual (data-theme); cada token tiene su par exacto en ambos modos."
+    ],
+    "rules": [
+      { "name": "La Regla de Estado, No Emoción", "body": "El color comunica estado y jerarquía — nunca gamificación ni recompensa emocional. Si un nuevo color no responde a \"¿qué estado señala?\", no se agrega.", "section": "colors" },
+      { "name": "La Regla de la Sola Voz", "body": "El acento verde aparece en un solo lugar por vista como máximo la mayoría de las veces (una acción primaria, un tab activo, una barra). Su escasez es lo que lo hace legible como \"esto importa\".", "section": "colors" },
+      { "name": "La Regla de la Familia Única", "body": "Cero fuentes de terceros, cero KB de red, cero huella de IP enviada a un proveedor de fuentes — decisión de privacidad tomada explícitamente tras auditar la v1 del producto.", "section": "typography" },
+      { "name": "La Regla del Borde Hace el Trabajo", "body": "Ninguna tarjeta en reposo depende de la sombra para leerse como superficie separada; si el borde de 1px se quitara, la sombra sola no bastaría. Reserva la sombra fuerte para lo que de verdad flota.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do limitar el acento verde a una acción o estado por vista; su escasez es la señal (La Regla de la Sola Voz).",
+      "Do separar tarjetas del fondo con borde de 1px + sombra casi invisible; reservar sombra fuerte (--shadow-lg) solo para overlays reales (hoja, toast, FAB).",
+      "Do escalar el radio con el tamaño del elemento (3 → 7 → 8 → 10 → 14px) y usar radio completo (999px) solo en controles seleccionables de un toque.",
+      "Do usar la Paleta de Proyectos libremente para distinguir proyectos — es la única zona categórica del sistema.",
+      "Do mantener objetivos táctiles ≥44px en controles primarios (mínimo 24px en elementos secundarios) y respetar prefers-reduced-motion apagando toda animación no funcional.",
+      "Do escapar (esc()) todo contenido de usuario antes de insertarlo en HTML."
+    ],
+    "donts": [
+      "Don't introducir una segunda tipografía, un CDN de fuentes, o cualquier fuente que no sea la del sistema operativo.",
+      "Don't usar color para premiar o \"gamificar\" — sin XP, niveles, clasificaciones, recompensas variables, confeti ni notificaciones diseñadas para inflar métricas.",
+      "Don't mostrar un número, barra o estadística que no se pueda explicar en Ajustes → Cómo funciona.",
+      "Don't añadir sombra decorativa a una tarjeta en reposo; si necesita más separación, sube el contraste de borde antes que la sombra.",
+      "Don't usar --danger (rojo) fuera de acciones destructivas o errores reales.",
+      "Don't requerir un framework, build o dependencia para un cambio visual — si algo lo exige, se replantea el enfoque."
+    ]
+  }
+}
