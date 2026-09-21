@@ -145,6 +145,8 @@ const ACTIONS = {
   'set-notices': el => store.setPrefs({ notices: el.dataset.v }),
   'toggle-pref': el => store.setPrefs({ [el.dataset.k]: !store.prefs()[el.dataset.k] }),
   'sync-now': el => busy(el, () => sync.syncNow()),
+  'sync-retry': el => busy(el, () => sync.retryRejected()),
+  'sync-dismiss': () => sync.dismissRejected(),
   'edit-name': () => openSheet(`<form class="form"><h2 class="sheet-title">Tu nombre</h2>
       <label class="field"><span>Nombre</span><input name="n" maxlength="80" value="${esc(store.profile().display_name)}" autofocus></label>
       <div class="sheet-actions"><button class="btn ghost" type="button" data-sheet="close">Cancelar</button><button class="btn primary" type="submit">Guardar</button></div></form>`,

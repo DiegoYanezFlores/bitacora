@@ -1,7 +1,10 @@
 // Lógica de dominio derivada de los datos (sin IA, sin red). Todo lo que se muestra se explica en "Cómo funciona".
 import * as db from './db.js';
 import * as store from './store.js';
-import { dayKey, addDays, weekStart, daysBetween, parseDay, time, clamp, plural, fmtDayShort, cap } from './lib.js';
+import { dayKey, addDays, weekStart, daysBetween, parseDay, time, plural, fmtDayShort, cap } from './lib.js';
+import { countByDay, streakOf, weekOf, heatmapOf } from './domain/days.js';
+import { projectProgress, fmtNum } from './domain/progress.js';
+import { periodOf } from './domain/period.js';
 
 // ---------- memo por revisión de datos ----------
 const memo = new Map();
@@ -15,7 +18,8 @@ function cached(key, fn) {
 
 // ---------- colecciones ----------
 export const projects = () => cached('projects', () => db.live('projects').sort((a, b) => a.name.localeCompare(b.name, 'es')));
-export const project = id => (id ? db.get('projects', id) : null);
+// Un proyecto borrado no existe para la interfaz (antes aparecía como chip con nombre vacío).
+export const project = id => { const p = id ? db.get('projects', id) : null; return p && !p.deleted_at ? p : null; };
 export const tasks = () => cached('tasks', () => db.live('tasks'));
 export const milestones = () => cached('milestones', () => db.live('milestones'));
 export const activities = () => cached('activities', () => db.live('activities').sort((a, b) => time(b.occurred_at) - time(a.occurred_at)));
@@ -36,107 +40,20 @@ export function sortTasks(list) {
 }
 
 // ---------- días activos y racha ----------
-export const activeDays = () => cached('activeDays', () => {
-  const m = new Map();
-  for (const a of activities()) { const k = actDay(a); m.set(k, (m.get(k) || 0) + 1); }
-  return m;
-});
+export const activeDays = () => cached('activeDays', () => countByDay(activities(), actDay));
 
-export function streak() {
-  return cached('streak', () => {
-    const days = activeDays();
-    const today = dayKey();
-    let k = days.has(today) ? today : addDays(today, -1);
-    let current = 0;
-    while (days.has(k)) { current++; k = addDays(k, -1); }
-    let best = 0, run = 0, prev = null;
-    for (const d of [...days.keys()].sort()) {
-      run = prev && daysBetween(prev, d) === 1 ? run + 1 : 1;
-      best = Math.max(best, run);
-      prev = d;
-    }
-    return { current, best, today: days.has(today) };
-  });
-}
+export const streak = () => cached('streak', () => streakOf(activeDays(), dayKey()));
 
-export function week(ws = weekStart(dayKey())) {
-  const days = activeDays();
-  const list = Array.from({ length: 7 }, (_, i) => { const k = addDays(ws, i); return { key: k, count: days.get(k) || 0 }; });
-  const active = list.filter(d => d.count).length;
-  return { start: ws, days: list, active, goal: store.prefs().weeklyGoal, total: list.reduce((a, d) => a + d.count, 0) };
-}
+export const week = (ws = weekStart(dayKey())) => weekOf(activeDays(), ws, store.prefs().weeklyGoal);
 
 // ---------- periodos ----------
-export function period(range, offset = 0) {
-  const today = dayKey();
-  let start, end, buckets;
-  if (range === 'week') {
-    start = addDays(weekStart(today), 7 * offset);
-    end = addDays(start, 6);
-    buckets = Array.from({ length: 7 }, (_, i) => { const k = addDays(start, i); return { key: k, from: k, to: k }; });
-  } else if (range === 'month') {
-    const d = parseDay(today); d.setDate(1); d.setMonth(d.getMonth() + offset);
-    start = dayKey(d);
-    end = dayKey(new Date(d.getFullYear(), d.getMonth() + 1, 0));
-    const n = daysBetween(start, end) + 1;
-    buckets = Array.from({ length: n }, (_, i) => { const k = addDays(start, i); return { key: k, from: k, to: k }; });
-  } else {
-    const y = parseDay(today).getFullYear() + offset;
-    start = `${y}-01-01`; end = `${y}-12-31`;
-    buckets = Array.from({ length: 12 }, (_, i) => {
-      const from = `${y}-${String(i + 1).padStart(2, '0')}-01`;
-      return { key: from, from, to: dayKey(new Date(y, i + 1, 0)) };
-    });
-  }
-  const acts = activities().filter(a => { const k = actDay(a); return k >= start && k <= end; });
-  const inRange = iso => { if (!iso) return false; const k = dayKey(new Date(iso)); return k >= start && k <= end; };
-  const counts = new Map();
-  acts.forEach(a => { const k = actDay(a); counts.set(k, (counts.get(k) || 0) + 1); });
-  const series = buckets.map(b => {
-    let c = 0;
-    if (b.from === b.to) c = counts.get(b.from) || 0;
-    else for (const [k, v] of counts) if (k >= b.from && k <= b.to) c += v;
-    return { ...b, count: c };
-  });
-  const perProject = new Map();
-  acts.forEach(a => perProject.set(a.project_id || '', (perProject.get(a.project_id || '') || 0) + 1));
-  return {
-    range, start, end, series,
-    activities: acts.length,
-    activeDays: counts.size,
-    tasksDone: tasks().filter(t => t.status === 'done' && inRange(t.completed_at)).length,
-    milestonesDone: milestones().filter(m => inRange(m.done_at)).length,
-    wins: acts.filter(a => a.kind === 'win').length,
-    byProject: [...perProject.entries()].sort((a, b) => b[1] - a[1]).map(([id, n]) => ({ project: project(id), count: n }))
-  };
-}
+export const period = (range, offset = 0) =>
+  periodOf(range, offset, { today: dayKey(), activities: activities(), tasks: tasks(), milestones: milestones(), project, dayOf: actDay });
 
 // ---------- proyectos ----------
-export function progress(p) {
-  if (!p) return { pct: 0, mode: 'none', label: '' };
-  const num = v => (v === null || v === undefined || v === '' ? null : Number(v));
-  const [s, c, t] = [num(p.metric_start), num(p.metric_current), num(p.metric_target)];
-  if (s !== null && c !== null && t !== null && t !== s) {
-    const pct = Math.round(clamp(((c - s) / (t - s)) * 100, 0, 100));
-    const unit = p.metric_unit ? ' ' + p.metric_unit : '';
-    return { pct, mode: 'metric', label: `${fmtNum(c)} → ${fmtNum(t)}${unit}` };
-  }
-  const ms = byProject(milestones(), p.id);
-  const ts = byProject(tasks(), p.id);
-  if (ms.length || ts.length) {
-    const doneMs = ms.filter(m => m.done_at).length;
-    const doneTs = ts.filter(x => x.status === 'done').length;
-    const pct = p.status === 'done' ? 100 : Math.round(((doneMs * 2 + doneTs) / (ms.length * 2 + ts.length)) * 100);
-    const parts = [];
-    if (ts.length) parts.push(`${doneTs}/${ts.length} tareas`);
-    if (ms.length) parts.push(`${doneMs}/${ms.length} hitos`);
-    return { pct, mode: 'auto', label: parts.join(' · ') };
-  }
-  if (p.progress_manual !== null && p.progress_manual !== undefined) return { pct: p.progress_manual, mode: 'manual', label: 'Manual' };
-  return { pct: p.status === 'done' ? 100 : 0, mode: 'none', label: 'Sin tareas ni hitos' };
-}
+export const progress = p => (p ? projectProgress(p, byProject(milestones(), p.id), byProject(tasks(), p.id)) : projectProgress(null));
 
-export const fmtNum = n => Number(n).toLocaleString('es', { maximumFractionDigits: 2 });
+export { fmtNum };
 
 export function projectInfo(p) {
   const acts = byProject(activities(), p.id);
@@ -350,22 +267,7 @@ export function newAchievements() {
 export function markAchievementsSeen() { db.kvSet('seenAch', achievements().filter(a => a.unlocked).map(a => a.id)); }
 
 // ---------- mapa de actividad ----------
-export function heatmap(weeks = 18) {
-  const days = activeDays();
-  const today = dayKey();
-  const first = addDays(weekStart(today), -7 * (weeks - 1));
-  const cols = [];
-  for (let w = 0; w < weeks; w++) {
-    const col = [];
-    for (let i = 0; i < 7; i++) {
-      const k = addDays(first, w * 7 + i);
-      const c = days.get(k) || 0;
-      col.push({ key: k, count: c, future: k > today, level: c === 0 ? 0 : c === 1 ? 1 : c <= 3 ? 2 : c <= 5 ? 3 : 4 });
-    }
-    cols.push(col);
-  }
-  return cols;
-}
+export const heatmap = (weeks = 18) => heatmapOf(activeDays(), dayKey(), weeks);
 
 export const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches'; };
 export const firstName = () => cap((store.profile().display_name || '').trim().split(/\s+/)[0] || '');

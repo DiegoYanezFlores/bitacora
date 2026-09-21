@@ -2,6 +2,7 @@
 import * as store from './../store.js';
 import * as model from './../model.js';
 import * as db from './../db.js';
+import * as sync from './../sync.js';
 import { syncState } from './../main.js';
 import { esc, plural, ago } from './../lib.js';
 import { icon } from './../ui.js';
@@ -13,6 +14,15 @@ const toggle = (key, label, on, help = '') => `<li class="set-row">
   <div><span>${esc(label)}</span>${help ? `<small class="muted">${esc(help)}</small>` : ''}</div>
   <button class="switch ${on ? 'on' : ''}" data-act="toggle-pref" data-k="${key}" role="switch" aria-checked="${on}" aria-label="${esc(label)}"><span></span></button>
 </li>`;
+
+// Solo aparece si el servidor rechazó algún cambio: nunca se pierde en silencio.
+function rejectedRow() {
+  const bad = sync.rejected();
+  if (!bad.length || store.session.guest) return '';
+  return `<li class="set-row col"><div><span>${plural(bad.length, 'cambio no se pudo subir', 'cambios no se pudieron subir')}</span>
+    <small class="muted">Siguen guardados en este dispositivo. Motivo: ${esc(bad[bad.length - 1].error || 'rechazado por el servidor')}</small></div>
+    <div class="filters"><button class="btn ghost small" data-act="sync-retry">Reintentar</button><button class="btn ghost small" data-act="sync-dismiss">Ocultar aviso</button></div></li>`;
+}
 
 export function render() {
   const p = store.profile();
@@ -29,6 +39,7 @@ export function render() {
         <button class="btn ghost small" data-act="edit-name">${esc(p.display_name || 'Añadir')}</button></li>
       <li class="set-row"><div><span>Sincronización</span><small class="muted">${esc(s.text)}${s.lastSync ? ` · ${ago(s.lastSync)}` : ''}</small></div>
         ${store.session.guest ? '<button class="btn primary small" data-act="signup-from-guest">Crear cuenta</button>' : `<button class="btn ghost small" data-act="sync-now">Sincronizar</button>`}</li>
+      ${rejectedRow()}
     </ul>
   </section>
 

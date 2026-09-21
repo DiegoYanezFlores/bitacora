@@ -15,7 +15,10 @@ app/db.js           IndexedDB + memoria (lecturas instantáneas)
 app/store.js        mutaciones, cola de cambios (outbox), perfil y preferencias
 app/sync.js         subida/bajada por filas con Supabase
 app/api.js          Auth + REST de Supabase con fetch (sin SDK)
-app/model.js        dominio derivado: progreso, racha, periodos, siguiente acción, patrones, logros
+app/model.js        fachada memorizada: lee db y delega en app/domain/*
+app/domain/*.js     lógica pura y probada (días/racha/mapa, periodos, progreso)
+tests/*.test.js     node --test (entorno mínimo en tests/setup.js)
+scripts/check-precache.mjs  verifica la precaché del service worker
 app/actions.js      acciones con feedback y deshacer + formularios
 app/capture.js      captura rápida y detección local (tipo, #proyecto, "ayer", tarea parecida)
 app/migrate.js      conversión v1 → v2 (determinista), exportar/importar
@@ -33,6 +36,7 @@ docs/               auditoría, investigación, diseño, informe final, métrica
 - **Nada de patrones oscuros**: sin culpa, sin miedo a perder rachas, sin recompensas variables, sin notificaciones para inflar métricas, sin scroll infinito. Ver `docs/02-investigacion.md`.
 - **Todo lo que se muestra se explica** (Ajustes → Cómo funciona). Si un número no se puede explicar, no se muestra.
 - **Escapa siempre** el contenido del usuario con `esc()` antes de insertarlo en HTML.
+- **Pruebas antes de cada deploy** (sin dependencias, Node ≥ 22): `node --test "tests/*.test.js"` y `node scripts/check-precache.mjs` (todo archivo nuevo de `app/` debe estar en `PRECACHE` de `sw.js`; sube también `CACHE`). La lógica derivada nueva va en `app/domain/` como funciones puras con su prueba.
 - **Verifica antes de decir que está listo.** El servidor local de Python se bloquea por el permiso de macOS a Documentos; usa el de Node (`.claude/launch.json` → `bitacora`) o prueba en la URL de Vercel.
 - Respuestas cortas en el chat.
 

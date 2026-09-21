@@ -47,6 +47,12 @@ export function clearPending(keys) {
   keys.forEach(k => o.delete(k));
   db.kvSet('outbox', [...o]);
 }
+// Vuelve a poner en cola claves concretas (p. ej. cambios rechazados que el usuario reintenta).
+export function requeue(keys) {
+  const o = outbox();
+  keys.forEach(k => o.add(k));
+  db.kvSet('outbox', [...o]);
+}
 export function markAllDirty() {
   const o = outbox();
   for (const t of db.TABLES) db.raw(t).forEach(r => o.add(`${t}:${r.id}`));

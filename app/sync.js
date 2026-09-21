@@ -5,10 +5,16 @@ import * as db from './db.js';
 import * as store from './store.js';
 import { api, token, ENABLED, ApiError } from './api.js';
 
+// Transporte inyectable: las pruebas lo sustituyen por uno falso (tests/sync.test.js).
+export const deps = { api, token };
+
 const ORDER = ['projects', 'milestones', 'tasks', 'activities']; // respeta las claves foráneas
 const CHUNK = 200;
 const OVERLAP_MS = 30000; // solapamiento de seguridad para commits concurrentes
 const SERVER_ONLY = ['synced_at'];
+// Un 409 (p. ej. la fila padre aún no llegó al servidor) se reintenta en las siguientes pasadas
+// en lugar de descartarse; solo tras RETRY_LIMIT pasadas se aparta como rechazada.
+const RETRY_LIMIT = 5;
 
 export const state = { status: 'idle', error: '', lastSync: null };
 
@@ -37,7 +43,7 @@ async function run() {
   if (!navigator.onLine) { setStatus('offline'); return; }
   setStatus('syncing');
   try {
-    const t = await token();
+    const t = await deps.token();
     if (!t) return;
     await pushProfile(t);
     await push(t);
@@ -61,7 +67,7 @@ const payload = row => {
 };
 
 async function upsert(t, table, rows) {
-  await api(`/rest/v1/${table}?on_conflict=id`, {
+  await deps.api(`/rest/v1/${table}?on_conflict=id`, {
     method: 'POST', token: t, body: rows.map(payload),
     headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }
   });
@@ -72,28 +78,66 @@ async function push(t) {
   if (!keys.length) return;
   for (const table of ORDER) {
     const mine = keys.filter(k => k.startsWith(table + ':'));
+    // Claves sin fila local (no deberían existir) salen de la cola para no dejarla atascada.
+    store.clearPending(mine.filter(k => !db.get(table, k.slice(table.length + 1))));
     for (let i = 0; i < mine.length; i += CHUNK) {
       const batch = mine.slice(i, i + CHUNK).map(k => [k, db.get(table, k.slice(table.length + 1))]).filter(([, r]) => r);
       if (!batch.length) continue;
       const sent = batch.map(([k, r]) => [k, r.updated_at]);
+      const keep = new Set(); // se quedan en la cola para la siguiente pasada
       try {
         await upsert(t, table, batch.map(([, r]) => r));
       } catch (e) {
         if (!(e instanceof ApiError) || e.status === 401 || e.status === 404 || e.status >= 500) throw e;
-        // Un registro inválido no debe bloquear la cola: se reintenta uno a uno y se aparta el que falle.
+        // Un registro inválido no debe bloquear la cola: se reintenta uno a uno.
         for (const [k, r] of batch) {
           try { await upsert(t, table, [r]); } catch (err) {
             if (!(err instanceof ApiError) || err.status >= 500 || err.status === 401) throw err;
-            const bad = db.kvGet('syncRejected', []);
-            bad.push({ key: k, error: err.message, at: new Date().toISOString() });
-            db.kvSet('syncRejected', bad.slice(-50));
+            if (err.status === 409 && bumpRetry(k) < RETRY_LIMIT) { keep.add(k); continue; }
+            reject(k, err);
           }
         }
       }
-      // Solo sale de la cola lo que no cambió mientras se subía.
-      store.clearPending(sent.filter(([k, at]) => { const r = db.get(table, k.slice(table.length + 1)); return r && r.updated_at === at; }).map(([k]) => k));
+      // Sale de la cola lo enviado (o rechazado) que no cambió mientras se subía.
+      const done = sent.filter(([k, at]) => { if (keep.has(k)) return false; const r = db.get(table, k.slice(table.length + 1)); return r && r.updated_at === at; }).map(([k]) => k);
+      store.clearPending(done);
+      clearRetries(done);
     }
   }
+}
+
+function bumpRetry(key) {
+  const r = db.kvGet('syncRetries', {});
+  r[key] = (r[key] || 0) + 1;
+  db.kvSet('syncRetries', r);
+  return r[key];
+}
+function clearRetries(keys) {
+  const r = db.kvGet('syncRetries', {});
+  if (!keys.some(k => k in r)) return;
+  keys.forEach(k => delete r[k]);
+  db.kvSet('syncRetries', r);
+}
+function reject(key, err) {
+  const bad = db.kvGet('syncRejected', []).filter(b => b.key !== key);
+  bad.push({ key, error: err.message, status: err.status, at: new Date().toISOString() });
+  db.kvSet('syncRejected', bad.slice(-50));
+}
+
+// Cambios que el servidor rechazó: siguen en este dispositivo y se muestran en Ajustes.
+export const rejected = () => db.kvGet('syncRejected', []);
+export function retryRejected() {
+  const keys = rejected().map(b => b.key);
+  db.kvSet('syncRejected', []);
+  const r = db.kvGet('syncRetries', {});
+  keys.forEach(k => delete r[k]);
+  db.kvSet('syncRetries', r);
+  store.requeue(keys);
+  return syncNow();
+}
+export function dismissRejected() {
+  db.kvSet('syncRejected', []);
+  onStatus();
 }
 
 async function pull(t) {
@@ -103,7 +147,7 @@ async function pull(t) {
     let cursor = db.kvGet(`cursor:${table}`, '1970-01-01T00:00:00Z');
     for (;;) {
       const since = new Date(Date.parse(cursor) - OVERLAP_MS).toISOString();
-      const rows = await api(`/rest/v1/${table}?select=*&synced_at=gt.${encodeURIComponent(since)}&order=synced_at.asc&limit=1000`, { token: t });
+      const rows = await deps.api(`/rest/v1/${table}?select=*&synced_at=gt.${encodeURIComponent(since)}&order=synced_at.asc&limit=1000`, { token: t });
       for (const r of rows) if (store.applyRemote(table, r, pending)) changed = true;
       if (rows.length) cursor = rows[rows.length - 1].synced_at;
       db.kvSet(`cursor:${table}`, cursor);
@@ -121,12 +165,12 @@ async function pushProfile(t) {
   const body = { id: store.session.userId };
   PROFILE_FIELDS.forEach(k => { if (p[k] !== undefined) body[k] = p[k]; });
   if (!body.updated_at) body.updated_at = new Date().toISOString();
-  await api('/rest/v1/profiles?on_conflict=id', { method: 'POST', token: t, body, headers: { Prefer: 'resolution=merge-duplicates,return=minimal' } });
+  await deps.api('/rest/v1/profiles?on_conflict=id', { method: 'POST', token: t, body, headers: { Prefer: 'resolution=merge-duplicates,return=minimal' } });
   if (store.profile().updated_at === body.updated_at) db.kvSet('profileDirty', false);
 }
 
 async function pullProfile(t) {
-  const rows = await api(`/rest/v1/profiles?select=*&id=eq.${store.session.userId}`, { token: t });
+  const rows = await deps.api(`/rest/v1/profiles?select=*&id=eq.${store.session.userId}`, { token: t });
   const remote = rows[0];
   if (!remote) return;
   const local = store.profile();
@@ -149,7 +193,7 @@ async function pushEvents(t) {
   const valid = store.prefs().analytics ? q.filter(e => EVENT_NAME.test(e.name)) : [];
   if (!valid.length) { drop(); return; }
   try {
-    await api('/rest/v1/events', { method: 'POST', token: t, body: valid.map(e => ({ ...e, user_id: store.session.userId })), headers: { Prefer: 'return=minimal' } });
+    await deps.api('/rest/v1/events', { method: 'POST', token: t, body: valid.map(e => ({ ...e, user_id: store.session.userId })), headers: { Prefer: 'return=minimal' } });
     drop();
   } catch (e) {
     if (e instanceof ApiError && e.status >= 400 && e.status < 500) drop(); // datos rechazados: no se reintentan
@@ -158,19 +202,19 @@ async function pushEvents(t) {
 
 // Borra en el servidor todas las filas del usuario (derecho de supresión desde la app).
 export async function deleteRemoteData() {
-  const t = await token();
+  const t = await deps.token();
   if (!t) return;
   for (const table of [...ORDER].reverse().concat('events')) {
-    await api(`/rest/v1/${table}?user_id=eq.${store.session.userId}`, { method: 'DELETE', token: t, headers: { Prefer: 'return=minimal' } });
+    await deps.api(`/rest/v1/${table}?user_id=eq.${store.session.userId}`, { method: 'DELETE', token: t, headers: { Prefer: 'return=minimal' } });
   }
 }
 
 // Lee el documento v1 del servidor (solo para la migración).
 export async function fetchV1Doc() {
-  const t = await token();
+  const t = await deps.token();
   if (!t) return null;
   try {
-    const rows = await api(`/rest/v1/bitacora_state?select=data&user_id=eq.${store.session.userId}`, { token: t });
+    const rows = await deps.api(`/rest/v1/bitacora_state?select=data&user_id=eq.${store.session.userId}`, { token: t });
     return rows && rows[0] ? rows[0].data : null;
   } catch (e) { return null; }
 }
