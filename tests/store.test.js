@@ -69,3 +69,29 @@ test('captura: tipo, #proyecto, "ayer" y tarea parecida', () => {
   assert.equal(m.kind, 'done');
   assert.equal(m.taskId, t.id);
 });
+
+test('migración local v3: respeta la meta semanal, guarda copia y es idempotente', async () => {
+  const { migrateV3 } = await import('../app/migrate.js');
+  db.kvSet('migratedV3', false);
+  store.setProfile({ prefs: { weeklyGoal: 5 } });
+  assert.equal(migrateV3(), true);
+  assert.equal(store.prefs().activeWeekDays, 5);
+  assert.ok(localStorage.getItem('bitacora:backup:pre-v3:u1'));
+  store.setPrefs({ activeWeekDays: 3 });
+  assert.equal(migrateV3(), false);
+  assert.equal(store.prefs().activeWeekDays, 3);
+});
+
+test('copia de seguridad v3: incluye tablas nuevas y se puede reimportar', async () => {
+  const { exportBackup, importBackup } = await import('../app/migrate.js');
+  const p = store.create('projects', { name: 'P' });
+  store.create('stages', { goal_id: p.id, title: 'Etapa' });
+  store.create('day_marks', { day: '2026-09-20' });
+  const json = exportBackup();
+  assert.equal(JSON.parse(json).version, 3);
+  await db.wipe();
+  const totals = await importBackup(json);
+  assert.equal(totals.projects, 1);
+  assert.equal(totals.stages, 1);
+  assert.equal(totals.day_marks, 1);
+});

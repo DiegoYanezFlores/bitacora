@@ -29,6 +29,7 @@ beforeEach(async () => {
   db.kvSet('syncRetries', {});
   calls = [];
   fail = () => null;
+  sync.schema.v3 = null;
   fakeServer();
 });
 
@@ -116,4 +117,45 @@ test('ocultar el aviso vacía la lista sin tocar los datos locales', async () =>
   sync.dismissRejected();
   assert.equal(sync.rejected().length, 0);
   assert.equal(db.get('activities', a.id).title, 'x');
+});
+
+// Servidor sin la migración 003: la app sigue sincronizando lo de siempre sin romper nada.
+const noV3 = () => {
+  const inner = sync.deps.api;
+  sync.deps.api = async (path, opts = {}) => {
+    if (/^\/rest\/v1\/(stages|criteria|evidence|reflections|achievements|day_marks|goal_log|recaps)/.test(path)) {
+      calls.push({ path, method: opts.method || 'GET', body: opts.body });
+      throw new ApiError('Could not find the table', 404, 'PGRST205');
+    }
+    return inner(path, opts);
+  };
+};
+
+test('sin 003 en el servidor: columnas nuevas fuera del envío y tablas nuevas en espera', async () => {
+  noV3();
+  const p = store.create('projects', { name: 'P' });
+  const st = store.create('stages', { goal_id: p.id, title: 'Etapa' });
+  store.create('milestones', { project_id: p.id, stage_id: st.id, title: 'H', weight: 3 });
+  await sync.syncNow();
+  assert.equal(sync.schema.v3, false);
+  const ms = calls.find(c => c.path.startsWith('/rest/v1/milestones') && c.method === 'POST');
+  assert.ok(ms, 'los hitos se suben');
+  assert.equal('weight' in ms.body[0], false);
+  assert.equal('stage_id' in ms.body[0], false);
+  assert.ok(!calls.some(c => c.path.startsWith('/rest/v1/stages') && c.method === 'POST'), 'las etapas no se suben');
+  assert.deepEqual(store.pendingKeys(), [`stages:${st.id}`]);
+  assert.equal(sync.state.status, 'pending');
+});
+
+test('con 003: se suben las tablas nuevas en orden de dependencias', async () => {
+  const p = store.create('projects', { name: 'P' });
+  const st = store.create('stages', { goal_id: p.id, title: 'Etapa' });
+  const m = store.create('milestones', { project_id: p.id, stage_id: st.id, title: 'H', weight: 3 });
+  store.create('criteria', { milestone_id: m.id, title: 'C' });
+  await sync.syncNow();
+  assert.equal(sync.schema.v3, true);
+  const order = calls.filter(c => c.method === 'POST').map(c => c.path.split('?')[0].replace('/rest/v1/', ''));
+  assert.deepEqual(order, ['projects', 'stages', 'milestones', 'criteria']);
+  assert.equal(calls.find(c => c.path.startsWith('/rest/v1/milestones') && c.method === 'POST').body[0].weight, 3);
+  assert.equal(store.pendingCount(), 0);
 });
