@@ -24,7 +24,8 @@ app/capture.js      captura rápida y detección local (tipo, #proyecto, "ayer",
 app/migrate.js      conversión v1 → v2 (determinista), exportar/importar
 app/ui.js           iconos, hoja modal, toast, filas, barras
 app/views/*.js      Hoy, Proyectos, Proyecto, Tareas, Registro, Progreso, Ajustes, Acceso, Onboarding
-supabase/migrations 001_v1.sql (modelo viejo, intacto), 002_v2.sql, 002_v2_down.sql
+supabase/migrations 001_v1.sql (modelo viejo, intacto), 002_v2.sql (+down), 003_impacable.sql (+down): etapas, criterios, evidencia, reflexiones, logros, descansos, cambios de rumbo, recaps
+supabase/tests      00_supabase_stub.sql (simula roles y auth.uid en Postgres local) + 003_test.sql
 docs/               auditoría, investigación, diseño, informe final, métricas.sql
 ```
 
@@ -37,6 +38,7 @@ docs/               auditoría, investigación, diseño, informe final, métrica
 - **Todo lo que se muestra se explica** (Ajustes → Cómo funciona). Si un número no se puede explicar, no se muestra.
 - **Escapa siempre** el contenido del usuario con `esc()` antes de insertarlo en HTML.
 - **Pruebas antes de cada deploy** (sin dependencias, Node ≥ 22): `node --test "tests/*.test.js"` y `node scripts/check-precache.mjs` (todo archivo nuevo de `app/` debe estar en `PRECACHE` de `sw.js`; sube también `CACHE`). La lógica derivada nueva va en `app/domain/` como funciones puras con su prueba.
+- **Migraciones SQL:** pruébalas en un Postgres local antes de pedir que se apliquen: base nueva → `00_supabase_stub.sql` → 001 → 002 → 003 (dos veces, idempotencia) → `003_test.sql` (debe terminar en `OK`) → down → 003 otra vez. La app detecta si el servidor aún no tiene 003 (`sync.schema.v3`) y no envía tablas ni columnas nuevas hasta entonces.
 - **Verifica antes de decir que está listo.** El servidor local de Python se bloquea por el permiso de macOS a Documentos; usa el de Node (`.claude/launch.json` → `bitacora`) o prueba en la URL de Vercel.
 - Respuestas cortas en el chat.
 

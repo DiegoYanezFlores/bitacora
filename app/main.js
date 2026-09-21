@@ -6,7 +6,7 @@ import * as sync from './sync.js';
 import * as model from './model.js';
 import * as actions from './actions.js';
 import { openCapture } from './capture.js';
-import { runMigration, exportBackup, importBackup } from './migrate.js';
+import { runMigration, migrateV3, exportBackup, importBackup } from './migrate.js';
 import { icon, initSheet, openSheet, closeSheet, confirmSheet, feedback, busy, hideToast } from './ui.js';
 import { esc, debounce, plural, dayKey } from './lib.js';
 
@@ -315,6 +315,7 @@ async function startAfterAuth({ session = null, guest = false, isNew = false, fr
     const remote = guest ? null : await sync.fetchV1Doc();
     migrated = await runMigration({ remoteDoc: remote });
   } catch (e) { console.warn('migración v1', e); }
+  try { migrateV3(); } catch (e) { console.warn('migración v3', e); }
   model.markAchievementsSeen();
 
   const empty = db.counts().activities === 0 && db.counts().projects === 0;

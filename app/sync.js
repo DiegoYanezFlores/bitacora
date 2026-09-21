@@ -8,7 +8,32 @@ import { api, token, ENABLED, ApiError } from './api.js';
 // Transporte inyectable: las pruebas lo sustituyen por uno falso (tests/sync.test.js).
 export const deps = { api, token };
 
-const ORDER = ['projects', 'milestones', 'tasks', 'activities']; // respeta las claves foráneas
+const ORDER = db.TABLES; // padres antes que hijos: respeta las claves foráneas
+
+// Tablas y columnas de la migración 003. Mientras el servidor no la tenga, no se suben ni se bajan
+// (se quedan en la cola) y las columnas nuevas se quitan de lo que se envía.
+const V3_TABLES = ['stages', 'criteria', 'evidence', 'reflections', 'achievements', 'day_marks', 'goal_log', 'recaps'];
+const V3_COLUMNS = {
+  projects: ['template', 'completed_at', 'success_indicator'],
+  milestones: ['stage_id', 'weight', 'description', 'expected_evidence', 'status'],
+  tasks: ['milestone_id'],
+  activities: ['milestone_id', 'criterion_id', 'duration_min'],
+  profiles: ['vision']
+};
+export const schema = { v3: null }; // null = sin comprobar en esta sesión
+const tables = () => (schema.v3 ? ORDER : ORDER.filter(t => !V3_TABLES.includes(t)));
+
+async function detectSchema(t) {
+  if (schema.v3 !== null) return;
+  try {
+    await deps.api('/rest/v1/stages?select=id&limit=1', { token: t });
+    schema.v3 = true;
+  } catch (e) {
+    if (e instanceof ApiError && (e.status === 404 || e.code === 'PGRST205')) schema.v3 = false;
+    else throw e;
+  }
+}
+const stripV3 = (table, row) => { if (!schema.v3) (V3_COLUMNS[table] || []).forEach(k => delete row[k]); return row; };
 const CHUNK = 200;
 const OVERLAP_MS = 30000; // solapamiento de seguridad para commits concurrentes
 const SERVER_ONLY = ['synced_at'];
@@ -45,6 +70,7 @@ async function run() {
   try {
     const t = await deps.token();
     if (!t) return;
+    await detectSchema(t);
     await pushProfile(t);
     await push(t);
     await pull(t);
@@ -60,15 +86,15 @@ async function run() {
   }
 }
 
-const payload = row => {
+const payload = (table, row) => {
   const out = { ...row, user_id: store.session.userId };
   SERVER_ONLY.forEach(k => delete out[k]);
-  return out;
+  return stripV3(table, out);
 };
 
 async function upsert(t, table, rows) {
   await deps.api(`/rest/v1/${table}?on_conflict=id`, {
-    method: 'POST', token: t, body: rows.map(payload),
+    method: 'POST', token: t, body: rows.map(r => payload(table, r)),
     headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }
   });
 }
@@ -76,7 +102,7 @@ async function upsert(t, table, rows) {
 async function push(t) {
   const keys = store.pendingKeys();
   if (!keys.length) return;
-  for (const table of ORDER) {
+  for (const table of tables()) {
     const mine = keys.filter(k => k.startsWith(table + ':'));
     // Claves sin fila local (no deberían existir) salen de la cola para no dejarla atascada.
     store.clearPending(mine.filter(k => !db.get(table, k.slice(table.length + 1))));
@@ -143,7 +169,7 @@ export function dismissRejected() {
 async function pull(t) {
   const pending = new Set(store.pendingKeys());
   let changed = false;
-  for (const table of ORDER) {
+  for (const table of tables()) {
     let cursor = db.kvGet(`cursor:${table}`, '1970-01-01T00:00:00Z');
     for (;;) {
       const since = new Date(Date.parse(cursor) - OVERLAP_MS).toISOString();
@@ -157,7 +183,7 @@ async function pull(t) {
   if (changed) store.emit();
 }
 
-const PROFILE_FIELDS = ['display_name', 'timezone', 'focus_areas', 'prefs', 'onboarded_at', 'migrated_v1_at', 'updated_at'];
+const PROFILE_FIELDS = ['display_name', 'timezone', 'focus_areas', 'prefs', 'onboarded_at', 'migrated_v1_at', 'vision', 'updated_at'];
 
 async function pushProfile(t) {
   if (!db.kvGet('profileDirty')) return;
@@ -165,6 +191,7 @@ async function pushProfile(t) {
   const body = { id: store.session.userId };
   PROFILE_FIELDS.forEach(k => { if (p[k] !== undefined) body[k] = p[k]; });
   if (!body.updated_at) body.updated_at = new Date().toISOString();
+  stripV3('profiles', body);
   await deps.api('/rest/v1/profiles?on_conflict=id', { method: 'POST', token: t, body, headers: { Prefer: 'resolution=merge-duplicates,return=minimal' } });
   if (store.profile().updated_at === body.updated_at) db.kvSet('profileDirty', false);
 }
@@ -176,7 +203,7 @@ async function pullProfile(t) {
   const local = store.profile();
   if (db.kvGet('profileDirty') && Date.parse(local.updated_at) > Date.parse(remote.updated_at)) return;
   const next = {};
-  PROFILE_FIELDS.forEach(k => { next[k] = remote[k]; });
+  PROFILE_FIELDS.forEach(k => { if (k in remote) next[k] = remote[k]; });
   // El nombre de Google/registro solo se usa si el usuario no ha puesto uno.
   if (!next.display_name && local.display_name) next.display_name = local.display_name;
   db.kvSet('profile', { ...local, ...next });
@@ -204,7 +231,8 @@ async function pushEvents(t) {
 export async function deleteRemoteData() {
   const t = await deps.token();
   if (!t) return;
-  for (const table of [...ORDER].reverse().concat('events')) {
+  await detectSchema(t);
+  for (const table of [...tables()].reverse().concat('events')) {
     await deps.api(`/rest/v1/${table}?user_id=eq.${store.session.userId}`, { method: 'DELETE', token: t, headers: { Prefer: 'return=minimal' } });
   }
 }
