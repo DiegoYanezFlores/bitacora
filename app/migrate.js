@@ -116,7 +116,7 @@ export async function runMigration({ remoteDoc = null } = {}) {
 // Importación manual de una copia (v1 o v2) desde Ajustes.
 export async function importBackup(json) {
   const data = JSON.parse(json);
-  if (data && data.version === 2 && data.rows) {
+  if (data && data.version >= 2 && data.rows) {
     const totals = {};
     for (const table of db.TABLES) totals[table] = store.insertIfMissing(table, (data.rows[table] || []).filter(r => r && r.id));
     if (data.profile) store.setProfile({ ...data.profile, migrated_v1_at: store.profile().migrated_v1_at });
@@ -128,9 +128,20 @@ export async function importBackup(json) {
   return totals;
 }
 
+// Preparación local para la migración 003 (una vez por dispositivo). No cambia datos de otros
+// dispositivos: solo guarda una copia de seguridad y fija la preferencia de constancia semanal.
+export function migrateV3() {
+  if (db.kvGet('migratedV3')) return false;
+  try { localStorage.setItem(`bitacora:backup:pre-v3:${store.session.userId || 'guest'}`, exportBackup()); } catch (e) { /* sin espacio: no bloquea */ }
+  const raw = store.profile().prefs || {};
+  if (raw.activeWeekDays === undefined) store.setPrefs({ activeWeekDays: raw.weeklyGoal ?? 2 });
+  db.kvSet('migratedV3', true);
+  return true;
+}
+
 export function exportBackup() {
   return JSON.stringify({
-    version: 2,
+    version: 3,
     exported_at: new Date().toISOString(),
     profile: store.profile(),
     rows: Object.fromEntries(db.TABLES.map(t => [t, db.raw(t)]))
