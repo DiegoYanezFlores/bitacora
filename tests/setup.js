@@ -3,6 +3,11 @@
 globalThis.window = globalThis.window || { BITACORA_CONFIG: { supabaseUrl: 'https://test.supabase.co', supabaseAnonKey: 'test-key' }, addEventListener() {}, dispatchEvent() {} };
 Object.defineProperty(globalThis, 'navigator', { value: { onLine: true }, configurable: true, writable: true });
 
+// DOM mínimo: feedback() escribe en #toast; aquí basta con que exista y guarde lo último mostrado.
+const fakeEl = () => ({ className: '', innerHTML: '', hidden: false, classList: { add() {}, remove() {}, toggle() {} }, querySelector: () => fakeEl(), addEventListener() {}, setAttribute() {}, set onclick(f) { globalThis.__lastUndo = f; } });
+globalThis.document = globalThis.document || { getElementById: () => fakeEl(), querySelector: () => fakeEl(), querySelectorAll: () => [] };
+globalThis.matchMedia = globalThis.matchMedia || (() => ({ matches: false, addEventListener() {} }));
+
 const mem = new Map();
 globalThis.localStorage = globalThis.localStorage || {
   getItem: k => (mem.has(k) ? mem.get(k) : null),

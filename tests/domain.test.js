@@ -5,7 +5,6 @@ import assert from 'node:assert/strict';
 import { dayKey, addDays, weekStart, daysBetween, esc, stableUuid, plural } from '../app/lib.js';
 import { countByDay, streakOf, weekOf, heatLevel, heatmapOf } from '../app/domain/days.js';
 import { periodOf } from '../app/domain/period.js';
-import { projectProgress } from '../app/domain/progress.js';
 
 const days = keys => new Map(keys.map(k => [k, 1]));
 
@@ -90,8 +89,4 @@ test('periodo: hitos y tareas cerrados dentro del rango', () => {
   assert.equal(r.wins, 1);
   assert.equal(r.tasksDone, 1);
   assert.equal(r.milestonesDone, 1);
-});
-
-test('progreso v2 sin proyecto', () => {
-  assert.deepEqual(projectProgress(null), { pct: 0, mode: 'none', label: '' });
 });

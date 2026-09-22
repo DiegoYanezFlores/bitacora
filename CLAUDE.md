@@ -16,7 +16,8 @@ app/store.js        mutaciones, cola de cambios (outbox), perfil y preferencias
 app/sync.js         subida/bajada por filas con Supabase
 app/api.js          Auth + REST de Supabase con fetch (sin SDK)
 app/model.js        fachada memorizada: lee db y delega en app/domain/*
-app/domain/*.js     lógica pura y probada (días/racha/mapa, periodos, progreso)
+app/domain/*.js     lógica pura y probada: days (racha/mapa), period, progress (motor de avance §8), templates
+app/structure.js    etapas, hitos con criterios, panel y cierre de hito, evidencia (nota/enlace), plantillas, goal_log
 tests/*.test.js     node --test (entorno mínimo en tests/setup.js)
 scripts/check-precache.mjs  verifica la precaché del service worker
 app/actions.js      acciones con feedback y deshacer + formularios
@@ -54,11 +55,13 @@ Blanco frío + **cobalto vivo como color protagonista**: bloques enteros donde e
 | `--block` (bloque protagonista, texto blanco) | #2F4BF5 | #3551F2 |
 | `--milestone` / `--milestone-ink` | #FFA826 / #A35A00 | #FFB547 |
 
-Navegación: móvil y tablet con barra inferior Inicio · Proyectos · + · Historia · Tú; rail de 72 px entre 1024 y 1199; barra lateral de 240 px desde 1200. Contenido centrado (máx. 1200, 1320 desde 1728; 760 en vistas de lista). Rutas: `#/home`, `#/projects`, `#/project/:id`, `#/next`, `#/history` (Actividad) y `#/history/log` (Registro), `#/you`; las antiguas redirigen.
+Navegación: móvil y tablet con barra inferior Inicio · Objetivos · + · Historia · Tú; rail de 72 px entre 1024 y 1199; barra lateral de 240 px desde 1200. Contenido centrado (máx. 1200, 1320 desde 1728; 760 en vistas de lista). Rutas: `#/home`, `#/goals`, `#/goal/:id`, `#/next`, `#/history` (Actividad) y `#/history/log` (Registro), `#/you`; las antiguas redirigen.
 
 ## Modelo de datos (Supabase, todo con RLS por usuario)
 
-`profiles` (perfil + preferencias en `prefs` jsonb) · `projects` (estado, objetivo, color, etiquetas, fechas, métrica opcional) · `milestones` · `tasks` (todo/doing/waiting/done) · `activities` (done/progress/note/win + `occurred_at`) · `events` (métricas internas) · vista `daily_stats`.
+`profiles` · `projects` (en la interfaz: **Objetivos**; `goal` = porqué, métrica = indicador aparte) · `stages` · `milestones` (peso 1/2/3 = S/M/L, `status` open/done/skipped) · `criteria` (criterios de "hecho", máx. 8) · `tasks` · `activities` (acciones; `milestone_id` opcional) · `evidence` · `reflections` · `achievements` · `day_marks` · `goal_log` (pausas, cierres, ajustes de alcance) · `recaps` · `events` · vista `daily_stats`. FK compuestas `(user_id, padre)`.
+
+**Avance (app/domain/progress.js):** solo criterios e hitos lo mueven; hito = criterios cumplidos / totales (cerrado = 100 %), objetivo = media ponderada por peso de sus hitos no omitidos. Las acciones y tareas **nunca** suben el %: son constancia. Borrar u omitir un hito se registra como `scope_changed`.
 
 Cada fila: `id` UUID del cliente, `updated_at` (edición), `deleted_at` (borrado lógico que vacía el contenido) y `synced_at` (servidor, para bajadas incrementales). Conflictos: gana la edición más reciente, aplicado también por trigger en el servidor.
 

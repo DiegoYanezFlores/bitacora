@@ -1,4 +1,4 @@
-// Lista de proyectos con filtro por estado.
+// Lista de objetivos con filtro por estado.
 import * as model from './../model.js';
 import { icon, empty, projectCard, PROJECT_STATUS } from './../ui.js';
 
@@ -11,8 +11,8 @@ export function render() {
   const list = all.filter(p => p.status === state.filter);
   return `
   <header class="view-head">
-    <div><h1>Proyectos</h1><p class="date">${all.length ? `${all.length} en total` : 'Agrupa lo que haces y mide su avance'}</p></div>
-    <button class="icon-btn" data-act="new-project" aria-label="Nuevo proyecto">${icon('plus')}</button>
+    <div><h1>Objetivos</h1><p class="date">${all.length ? `${all.length} en total` : 'Lo que quieres construir, paso a paso'}</p></div>
+    <button class="icon-btn" data-act="new-project" aria-label="Nuevo objetivo">${icon('plus')}</button>
   </header>
   <div class="filters" role="tablist">
     ${FILTERS.filter(([k]) => counts[k] || k === state.filter || k === 'active').map(([k, l]) =>
@@ -21,7 +21,7 @@ export function render() {
   ${list.length
     ? `<div class="pcards">${list.map(p => projectCard(p)).join('')}</div>`
     : empty('folder',
-        state.filter === 'active' ? 'Sin proyectos activos' : `Nada en ${PROJECT_STATUS[state.filter].toLowerCase()}`,
-        state.filter === 'active' ? 'Crea uno con lo que tengas entre manos: un curso, un cliente, una meta personal.' : '',
-        state.filter === 'active' ? '<button class="btn primary" data-act="new-project">Crear proyecto</button>' : '')}`;
+        state.filter === 'active' ? 'Aquí verás lo que estás construyendo' : `Nada en ${PROJECT_STATUS[state.filter].toLowerCase()}`,
+        state.filter === 'active' ? 'Empieza con una idea: aprender algo, terminar algo, crear algo.' : '',
+        state.filter === 'active' ? '<button class="btn primary" data-act="new-project">Crear mi primer objetivo</button>' : '')}`;
 }

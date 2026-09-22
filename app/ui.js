@@ -1,5 +1,5 @@
 // Componentes de interfaz compartidos: iconos, hojas modales, feedback, filas y barras.
-import { esc, fmtTime, ago, fmtDayShort, dayKey, daysBetween } from './lib.js';
+import { esc, fmtTime, ago, fmtDayShort, dayKey, daysBetween, plural } from './lib.js';
 import * as store from './store.js';
 import * as model from './model.js';
 
@@ -23,6 +23,9 @@ const P = {
   pause: 'M9 6v12M15 6v12',
   star: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z',
   note: 'M5 4h14v11l-5 5H5zM14 20v-5h5',
+  diamond: 'M12 3.5 20.5 12 12 20.5 3.5 12z',
+  up: 'M12 19V5M6 11l6-6 6 6',
+  link: 'M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1',
   calendar: 'M4 6h16v14H4zM4 10h16M9 3v4M15 3v4',
   trend: 'M3 17l6-6 4 4 8-8M15 7h6v6',
   target: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
@@ -67,7 +70,7 @@ export const dot = color => `<span class="pdot c-${esc(color || 'teal')}" aria-h
 
 export function projectChip(p) {
   if (!p) return '';
-  return `<a class="chip" href="#/project/${p.id}">${dot(p.color)}${esc(p.name)}</a>`;
+  return `<a class="chip" href="#/goal/${p.id}">${dot(p.color)}${esc(p.name)}</a>`;
 }
 
 export function empty(iconName, title, text, action = '') {
@@ -97,6 +100,7 @@ export function taskRow(t, { showProject = true } = {}) {
     t.status === 'waiting' ? `<span class="tag">${icon('wait')}En espera${t.waiting_on ? ' · ' + esc(t.waiting_on) : ''}</span>` : '',
     t.priority === 1 && t.status !== 'done' ? '<span class="tag tag-warn">Alta</span>' : '',
     dueTxt && t.status !== 'done' ? `<span class="tag ${due < 0 ? 'tag-warn' : ''}">${icon('calendar')}${dueTxt}</span>` : '',
+    t.milestone_id && model.milestone(t.milestone_id) ? `<span class="tag">${icon('diamond')}${esc(model.milestone(t.milestone_id).title)}</span>` : '',
     p ? projectChip(p) : ''
   ].join('');
   return `<li class="task ${t.status === 'done' ? 'is-done' : ''}" data-id="${t.id}">
@@ -108,14 +112,27 @@ export function taskRow(t, { showProject = true } = {}) {
   </li>`;
 }
 
+// Barra segmentada por etapas: cada tramo pesa lo que sus hitos (UX §10) y se llena con su avance.
+export function segBar(segments, key = '', cls = '') {
+  if (!segments.length) return '';
+  const total = segments.reduce((a, s) => a + s.weight, 0) || 1;
+  const pct = Math.round(segments.reduce((a, s) => a + s.weight * (s.p || 0), 0) / total * 100);
+  return `<div class="segbar ${cls}" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Avance ${pct}%">${segments.map(s => {
+    const v = Math.round((s.p || 0) * 100);
+    return `<span class="segbar-seg" style="flex:${s.weight}" title="${esc(s.title)}: ${v}%"><i style="--p:${v}%"${key ? ` data-motion="${esc(key)}:${s.id || 'x'}" data-value="${v}"` : ''}></i></span>`;
+  }).join('')}</div>`;
+}
+
 export function projectCard(p) {
   const info = model.projectInfo(p);
-  const sinMeta = info.progress.mode === 'none';
-  return `<a class="pcard" href="#/project/${p.id}">
+  const g = info.progress;
+  const none = g.mode === 'none';
+  return `<a class="pcard" href="#/goal/${p.id}">
     <div class="pcard-head">${dot(p.color)}<span class="pcard-name">${esc(p.name)}</span>${p.status !== 'active' ? `<span class="tag">${PROJECT_STATUS[p.status]}</span>` : ''}
-      <span class="pcard-pct num">${sinMeta ? `${info.activityCount} reg.` : info.progress.pct + '%'}</span></div>
-    ${sinMeta ? '' : bar(info.progress.pct, '', `project:${p.id}`)}
+      <span class="pcard-pct num">${none ? 'Sin hitos' : g.pct + '%'}</span></div>
+    ${none ? (g.metric ? bar(g.metric.pct, 'thin', `metric:${p.id}`) : '') : segBar(g.segments, `project:${p.id}`, 'thin')}
     <div class="pcard-meta">
+      ${none ? '' : `<span>${icon('diamond')}<span class="trunc">${g.milestones.done} de ${plural(g.milestones.total, 'hito', 'hitos')}${g.nextMilestone ? ` · siguiente: ${esc(g.nextMilestone.title)}` : ''}</span></span>`}
       ${info.last ? `<span>${icon('clock')}<span class="trunc">${esc(info.last.title)}</span> · ${ago(info.last.occurred_at)}</span>` : '<span class="muted">Sin actividad todavía</span>'}
       ${info.next ? `<span>${icon('arrow')}<span class="trunc">${esc(info.next.title)}</span></span>` : ''}
     </div>
@@ -128,7 +145,7 @@ export function feedback({ title, lines = [], undo = null, tone = 'ok' }) {
   const el = document.getElementById('toast');
   el.className = `toast show t-${tone}`;
   el.innerHTML = `
-    <span class="toast-icon">${tone === 'ok' ? '<svg viewBox="0 0 24 24" class="i draw" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : icon('info')}</span>
+    <span class="toast-icon">${tone === 'ok' ? '<svg viewBox="0 0 24 24" class="i draw" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : tone === 'milestone' ? icon('diamond') : icon('info')}</span>
     <div class="toast-body"><strong>${esc(title)}</strong>${lines.filter(Boolean).map(l => `<span>${esc(l)}</span>`).join('')}</div>
     ${undo ? '<button class="toast-undo" type="button">Deshacer</button>' : ''}`;
   if (undo) el.querySelector('.toast-undo').onclick = () => { hideToast(); undo(); };
@@ -179,7 +196,13 @@ let current = null;
 // panel: en escritorio se abre como panel lateral derecho; en móvil sigue siendo hoja inferior.
 export function openSheet(html, { onSubmit, onClick, onClose, onOpen, wide = false, panel = false } = {}) {
   const el = sheet();
-  if (el.open) el.close();
+  if (el.open) {
+    // Se cierra la hoja anterior ya (su onClose incluido): el evento close puede llegar tarde (según el navegador).
+    const prev = current;
+    current = null;
+    el.close();
+    if (prev && prev.onClose) prev.onClose();
+  }
   el.className = 'sheet' + (wide ? ' wide' : '') + (panel ? ' panel' : '');
   el.innerHTML = `<div class="sheet-inner">${html}</div>`;
   current = { onSubmit, onClick, onClose };
@@ -207,6 +230,7 @@ export function initSheet() {
     if (current && current.onSubmit) current.onSubmit(new FormData(e.target), e.target, el);
   });
   el.addEventListener('close', () => {
+    if (el.open) return; // cierre tardío de una hoja anterior: ya hay otra abierta, no se toca
     const c = current;
     current = null;
     el.innerHTML = '';

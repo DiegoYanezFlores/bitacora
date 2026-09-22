@@ -3,7 +3,7 @@ import * as db from './db.js';
 import * as store from './store.js';
 import { dayKey, addDays, weekStart, daysBetween, parseDay, time, plural, fmtDayShort, cap } from './lib.js';
 import { countByDay, streakOf, weekOf, heatmapOf } from './domain/days.js';
-import { projectProgress, fmtNum } from './domain/progress.js';
+import { goalProgress, metricIndicator, milestoneProgress, fmtNum } from './domain/progress.js';
 import { periodOf } from './domain/period.js';
 
 // ---------- memo por revisión de datos ----------
@@ -18,10 +18,41 @@ function cached(key, fn) {
 
 // ---------- colecciones ----------
 export const projects = () => cached('projects', () => db.live('projects').sort((a, b) => a.name.localeCompare(b.name, 'es')));
-// Un proyecto borrado no existe para la interfaz (antes aparecía como chip con nombre vacío).
+// Un objetivo (tabla projects) borrado no existe para la interfaz (antes aparecía como chip con nombre vacío).
 export const project = id => { const p = id ? db.get('projects', id) : null; return p && !p.deleted_at ? p : null; };
 export const tasks = () => cached('tasks', () => db.live('tasks'));
 export const milestones = () => cached('milestones', () => db.live('milestones'));
+export const stages = () => cached('stages', () => db.live('stages'));
+export const criteria = () => cached('criteria', () => db.live('criteria'));
+export const evidence = () => cached('evidence', () => db.live('evidence').sort((a, b) => time(b.captured_at) - time(a.captured_at)));
+export const reflections = () => cached('reflections', () => db.live('reflections'));
+export const milestone = id => { const m = id ? db.get('milestones', id) : null; return m && !m.deleted_at ? m : null; };
+export const stage = id => { const s = id ? db.get('stages', id) : null; return s && !s.deleted_at ? s : null; };
+
+// Índices por padre (una pasada por revisión de datos).
+const indexBy = (key, list, field) => cached(key, () => {
+  const m = new Map();
+  for (const r of list()) { const k = r[field]; if (!m.has(k)) m.set(k, []); m.get(k).push(r); }
+  return m;
+});
+export const criteriaByMilestone = () => indexBy('criteriaByMilestone', criteria, 'milestone_id');
+export const criteriaOf = id => (criteriaByMilestone().get(id) || []).slice().sort((a, b) => (a.sort || 0) - (b.sort || 0) || time(a.created_at) - time(b.created_at));
+export const evidenceOf = id => evidence().filter(e => e.milestone_id === id);
+
+// Hitos con evidencia de nivel ≥2 (en el hito, en uno de sus criterios o en una de sus acciones).
+export const backedIds = () => cached('backed', () => {
+  const critMs = new Map(criteria().map(c => [c.id, c.milestone_id]));
+  const actMs = new Map(db.live('activities').filter(a => a.milestone_id).map(a => [a.id, a.milestone_id]));
+  const out = new Set();
+  for (const e of evidence()) {
+    if ((e.level ?? 1) < 2) continue;
+    const id = e.milestone_id || critMs.get(e.criterion_id) || actMs.get(e.activity_id);
+    if (id) out.add(id);
+  }
+  return out;
+});
+
+export const msProgress = m => milestoneProgress(m, criteriaByMilestone().get(m.id) || []);
 export const activities = () => cached('activities', () => db.live('activities').sort((a, b) => time(b.occurred_at) - time(a.occurred_at)));
 export const actDay = a => dayKey(new Date(a.occurred_at));
 
@@ -50,8 +81,15 @@ export const week = (ws = weekStart(dayKey())) => weekOf(activeDays(), ws, store
 export const period = (range, offset = 0) =>
   periodOf(range, offset, { today: dayKey(), activities: activities(), tasks: tasks(), milestones: milestones(), project, dayOf: actDay });
 
-// ---------- proyectos ----------
-export const progress = p => (p ? projectProgress(p, byProject(milestones(), p.id), byProject(tasks(), p.id)) : projectProgress(null));
+// ---------- objetivos (tabla projects) ----------
+// Avance de un objetivo (motor de progreso §8) + indicador de éxito si tiene métrica.
+const EMPTY_PROGRESS = { p: null, pct: null, mode: 'none', milestones: { done: 0, total: 0 }, stages: { done: 0, total: 0 }, segments: [], chapters: [], backed: { with: 0, total: 0 }, nextMilestone: null, metric: null, criteriaMet: 0 };
+export const progress = p => (p ? cached('goal:' + p.id, () => {
+  const g = goalProgress(p, stages(), milestones(), criteriaByMilestone(), backedIds());
+  const mine = new Set(milestones().filter(m => m.project_id === p.id).map(m => m.id));
+  const criteriaMet = criteria().filter(c => mine.has(c.milestone_id) && c.met_at).length;
+  return { ...g, metric: metricIndicator(p), criteriaMet };
+}) : EMPTY_PROGRESS);
 
 export { fmtNum };
 
@@ -59,9 +97,10 @@ export function projectInfo(p) {
   const acts = byProject(activities(), p.id);
   const last = acts[0] || null;
   const open = sortTasks(byProject(openTasks(), p.id));
-  const nextMs = byProject(milestones(), p.id).filter(m => !m.done_at).sort((a, b) => (a.due_date || '9999').localeCompare(b.due_date || '9999') || a.sort - b.sort)[0] || null;
+  const prog = progress(p);
+  const nextMs = prog.nextMilestone;
   return {
-    progress: progress(p),
+    progress: prog,
     last,
     idle: last ? daysBetween(actDay(last), dayKey()) : null,
     next: open.find(t => t.status !== 'waiting') || null,
@@ -92,7 +131,7 @@ export function nextActions() {
         else if (d <= 3) { score += 2; reasons.push(`Vence en ${d} días`); }
       }
       const idle = idleOf(t.project_id);
-      if (idle !== null && idle >= 2) { score += 1; reasons.push(`Proyecto sin avances hace ${idle} días`); }
+      if (idle !== null && idle >= 2) { score += 1; reasons.push(`Objetivo sin actividad hace ${idle} días`); }
       items.push({ type: 'task', id: t.id, title: t.title, projectId: t.project_id, score, reasons });
     }
 
@@ -108,7 +147,7 @@ export function nextActions() {
     for (const p of activeProjects()) {
       const info = projectInfo(p);
       if (info.open || (info.idle !== null && info.idle < 3)) continue;
-      items.push({ type: 'define', id: p.id, title: `Define el siguiente paso de ${p.name}`, projectId: p.id, score: 2, reasons: [info.idle === null ? 'Proyecto sin actividad todavía' : `Sin tareas abiertas ni avances hace ${info.idle} días`] });
+      items.push({ type: 'define', id: p.id, title: `Define el siguiente paso de ${p.name}`, projectId: p.id, score: 2, reasons: [info.idle === null ? 'Objetivo sin actividad todavía' : `Sin tareas abiertas ni avances hace ${info.idle} días`] });
     }
 
     items.sort((a, b) => b.score - a.score);
@@ -134,7 +173,7 @@ export function notices() {
     const d = daysBetween(today, m.due_date);
     const p = project(m.project_id);
     if (d < 0 || d > 3 || !p || p.status !== 'active') continue;
-    out.push({ id: `ms:${m.id}:${m.due_date}`, prio: 3, icon: 'flag', text: `Hito “${m.title}” (${p.name}) ${d === 0 ? 'es hoy' : `en ${plural(d, 'día', 'días')}`}.`, action: { label: 'Ver proyecto', href: `#/project/${p.id}` } });
+    out.push({ id: `ms:${m.id}:${m.due_date}`, prio: 3, icon: 'flag', text: `Hito “${m.title}” (${p.name}) ${d === 0 ? 'es hoy' : `en ${plural(d, 'día', 'días')}`}.`, action: { label: 'Ver objetivo', href: `#/goal/${p.id}` } });
   }
 
   const dow = (parseDay(today).getDay() + 6) % 7;
@@ -149,7 +188,7 @@ export function notices() {
     for (const p of activeProjects()) {
       const info = projectInfo(p);
       if (info.idle === null || info.idle < 5) continue;
-      out.push({ id: `stale:${p.id}:${weekStart(today)}`, prio: 1, icon: 'pause', text: `“${p.name}” lleva ${info.idle} días sin avances. ¿Lo retomas o lo pausas por ahora?`, action: { label: 'Abrir', href: `#/project/${p.id}` }, secondary: { label: 'Pausar', act: 'pause-project', id: p.id } });
+      out.push({ id: `stale:${p.id}:${weekStart(today)}`, prio: 1, icon: 'pause', text: `“${p.name}” lleva ${info.idle} días sin avances. ¿Lo retomas o lo pausas por ahora?`, action: { label: 'Abrir', href: `#/goal/${p.id}` }, secondary: { label: 'Pausar', act: 'pause-project', id: p.id } });
     }
   }
   return out.filter(n => !dismissed[n.id]).sort((a, b) => b.prio - a.prio);
@@ -248,7 +287,7 @@ export function achievements() {
       ['goal1', 'Meta semanal cumplida', 'Alcanzaste tus días activos de la semana.', r.weeksMet, 1],
       ['goal4', '4 semanas en meta', 'Un mes cumpliendo tu meta semanal.', r.weeksMet, 4],
       ['tasks25', '25 tareas cerradas', 'Cosas terminadas, no solo empezadas.', done, 25],
-      ['milestone1', 'Primer hito', 'Alcanzaste un hito de proyecto.', msDone, 1],
+      ['milestone1', 'Primer hito', 'Cerraste tu primer hito.', msDone, 1],
       ['win1', 'Primer logro anotado', 'Registraste un logro.', wins, 1],
       ['project1', 'Proyecto completado', 'Llevaste un proyecto hasta el final.', projDone, 1]
     ];

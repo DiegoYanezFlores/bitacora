@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-22T00:49:06.539Z",
+  "generatedAt": "2026-09-22T01:54:00.000Z",
   "title": "Design System: Bitácora",
   "extensions": {
     "colorMeta": {
@@ -672,11 +672,11 @@
       },
       "numeral": {
         "displayName": "Numeral",
-        "purpose": "Daily stats in tabular figures; scales to 28/24/19px for percentages, tiles and records."
+        "purpose": "Daily stats in tabular figures; scales to 28px for the goal percentage, 24px tiles, 19px records and steppers."
       },
       "title": {
         "displayName": "Title",
-        "purpose": "Sheet and panel titles."
+        "purpose": "Sheet and panel titles, the empty goal-progress title; milestone names 550 and stage titles 650/15px sit below it."
       },
       "body": {
         "displayName": "Body",
@@ -688,11 +688,11 @@
       },
       "meta": {
         "displayName": "Meta",
-        "purpose": "Dates, sub-lines, links, pill text."
+        "purpose": "Dates, sub-lines, milestone status lines, links, pill text; the S/M/L weight chip is 11px/700."
       },
       "section-label": {
         "displayName": "Section Label",
-        "purpose": "Uppercase heading of a home section; the section's only heading, never a line above another heading."
+        "purpose": "Uppercase heading of a section (Hoy, Pendientes, Objetivos, Camino, Tareas, Evidencia); the section's only heading, never a line above another heading."
       }
     },
     "shadows": [
@@ -700,13 +700,13 @@
         "name": "ambient",
         "value": "0 1px 2px rgba(15,23,51,.05), 0 4px 16px rgba(15,23,51,.05)",
         "dark": "0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3)",
-        "purpose": "Cards, project cards, selected segmented option, switch knob."
+        "purpose": "Cards, goal cards, selected segmented option, switch knob. Stage cards stay flat (hairline only)."
       },
       {
         "name": "block",
         "value": "0 10px 28px rgba(15,23,51,.16)",
         "dark": "0 12px 32px rgba(0,0,0,.5)",
-        "purpose": "The next-action card and the bottom-bar + only."
+        "purpose": "The next-action card, the next-milestone card and the bottom-bar + only."
       },
       {
         "name": "overlay",
@@ -724,7 +724,7 @@
       {
         "name": "value-change",
         "value": "400ms width from previous value to new value",
-        "purpose": "Keyed progress bars (data-motion) animate from their previous width after each render; skipped under prefers-reduced-motion."
+        "purpose": "Keyed progress bars and every segmented-bar segment (data-motion) animate from their previous width after each render; skipped under prefers-reduced-motion."
       },
       {
         "name": "press",
@@ -734,12 +734,12 @@
       {
         "name": "sheet-in",
         "value": "translateY(18px) 180ms ease; panel translateX(24px) 200ms ease-out",
-        "purpose": "Bottom sheet and desktop side panel entry."
+        "purpose": "Bottom sheet (docked below 620px) and desktop milestone side panel entry."
       },
       {
         "name": "toast",
         "value": "opacity + translate 180ms ease; 8s dwell with undo, 3.2s without, paused on hover",
-        "purpose": "Feedback toast with undo."
+        "purpose": "Feedback toast (ok, info, milestone tones) with undo."
       },
       {
         "name": "check-draw",
@@ -754,19 +754,24 @@
     ],
     "breakpoints": [
       {
+        "name": "sheet",
+        "value": "620px",
+        "purpose": "Below: sheets dock full-width to the bottom edge (margin auto 0 0, 16px top corners). From: centred, max 560px, full corners."
+      },
+      {
         "name": "tablet",
         "value": "640px",
-        "purpose": "Gutter 20px; stats in three columns; card grids."
+        "purpose": "Gutter 20px; stats in three columns; goal cards in an auto-fit grid (min 280px) that fills the row."
       },
       {
         "name": "rail",
         "value": "1024px",
-        "purpose": "Gutter 24px; 72px icons-only rail replaces the bottom bar; Registrar as 44px outlined circle; home 8fr/4fr grid; side panel."
+        "purpose": "Gutter 24px; 72px icons-only rail replaces the bottom bar; Registrar as 44px outlined circle; home 8fr/4fr grid; toast bottom right; milestone panel as 420px right side panel."
       },
       {
         "name": "sidebar",
         "value": "1200px",
-        "purpose": "240px sidebar with brand, labels, Registrar and Tú at the bottom."
+        "purpose": "240px sidebar with brand, Inicio / Objetivos / Historia, Registrar and Tú at the bottom."
       },
       {
         "name": "wide",
@@ -783,14 +788,24 @@
         "activity",
         "tasks",
         "settings",
-        "project"
+        "goal"
       ],
       "rail": "72px",
       "sidebar": "240px",
-      "homeGrid": "minmax(0,8fr) minmax(0,4fr), gap 28px, from 1024px"
+      "homeGrid": "minmax(0,8fr) minmax(0,4fr), gap 28px, from 1024px",
+      "goalCards": "repeat(auto-fit, minmax(280px, 1fr)), gap 10px, from 640px",
+      "sidePanel": "420px, full height, left hairline, from 1024px",
+      "sheetMobile": "full width, docked to the bottom edge below 620px, max-height 92dvh",
+      "captureRhythm": "16px between groups (type / goal / milestone / when), 7px between pills in a group",
+      "toastWidth": "max-content, max-width min(460px, 100vw - 24px)"
     },
     "verification": {
       "contrast": "node scripts/contrast.mjs (29 pairs, AA in light and dark)"
+    },
+    "routes": {
+      "nav": "Inicio · Objetivos · + · Historia · Tú",
+      "goals": "#/goals",
+      "goal": "#/goal/:id"
     }
   },
   "components": [
@@ -823,7 +838,7 @@
       "kind": "nav",
       "refersTo": "nav-destination-active",
       "description": "Desktop sidebar: active destination as the only solid cobalt block; Registrar outlined in cobalt with its N key.",
-      "html": "<nav class=\"ds-side\"><div class=\"ds-brand\"><span class=\"ds-logo\">B</span>Bitácora</div><a class=\"ds-nav on\" href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z\"/></svg>Inicio</a><a class=\"ds-nav\" href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/></svg>Proyectos</a><a class=\"ds-nav\" href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 20h16M7 16v-5M12 16V8M17 16v-8\"/></svg>Historia</a><button class=\"ds-cap\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg>Registrar<kbd>N</kbd></button></nav>",
+      "html": "<nav class=\"ds-side\"><div class=\"ds-brand\"><span class=\"ds-logo\">B</span>Bitácora</div><a class=\"ds-nav on\" href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z\"/></svg>Inicio</a><a class=\"ds-nav\" href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z\"/></svg>Objetivos</a><a class=\"ds-nav\" href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 20h16M7 16v-5M12 16V8M17 16v-8\"/></svg>Historia</a><button class=\"ds-cap\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg>Registrar<kbd>N</kbd></button></nav>",
       "css": ".ds-side{display:flex;flex-direction:column;gap:4px;width:240px;padding:20px 14px;background:var(--surface,#FFFFFF);border-right:1px solid var(--line,#E1E6F0);font-family:var(--font,system-ui);} .ds-brand{display:flex;align-items:center;gap:10px;font-weight:750;font-size:17px;padding:4px 6px 18px;color:var(--text,#0F1733);} .ds-logo{width:30px;height:30px;border-radius:9px;background:var(--block,#2F4BF5);color:#FFFFFF;display:grid;place-items:center;font-size:16px;} .ds-nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:10px 12px;border-radius:10px;color:var(--text-2,#4A5470);font-weight:550;text-decoration:none;transition:background .12s ease,color .12s ease;} .ds-nav svg{width:20px;height:20px;} .ds-nav:hover{background:var(--surface-2,#EDF0F7);color:var(--text,#0F1733);} .ds-nav.on{background:var(--block,#2F4BF5);color:var(--block-ink,#FFFFFF);font-weight:700;} .ds-nav:focus-visible,.ds-cap:focus-visible{outline:2px solid var(--accent,#2F4BF5);outline-offset:2px;} .ds-cap{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:10px 16px;border-radius:10px;font:600 15px var(--font,system-ui);border:1px solid transparent;cursor:pointer;transition:transform .1s ease,background .15s ease;margin-top:14px;justify-content:flex-start;gap:10px;background:transparent;color:var(--accent,#2F4BF5);border:1.5px solid var(--accent,#2F4BF5);} .ds-cap:hover{background:var(--accent-soft,#E6EBFF);} .ds-cap kbd{margin-left:auto;font:600 11px var(--font,system-ui);background:var(--accent-soft,#E6EBFF);border-radius:4px;padding:1px 5px;}"
     },
     {
@@ -831,7 +846,7 @@
       "kind": "nav",
       "refersTo": "tab-add",
       "description": "Mobile and tablet navigation: active item cobalt with a top indicator; centre + as a solid cobalt rounded square.",
-      "html": "<nav class=\"ds-tabbar\"><a class=\"on\" href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z\"/></svg><span>Inicio</span></a><a href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/></svg><span>Proyectos</span></a><button class=\"ds-tab-add\" aria-label=\"Registrar actividad\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg></button><a href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 20h16M7 16v-5M12 16V8M17 16v-8\"/></svg><span>Historia</span></a><a href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20a8 8 0 0 1 16 0\"/></svg><span>Tú</span></a></nav>",
+      "html": "<nav class=\"ds-tabbar\"><a class=\"on\" href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z\"/></svg><span>Inicio</span></a><a href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z\"/></svg><span>Objetivos</span></a><button class=\"ds-tab-add\" aria-label=\"Registrar actividad\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg></button><a href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 20h16M7 16v-5M12 16V8M17 16v-8\"/></svg><span>Historia</span></a><a href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20a8 8 0 0 1 16 0\"/></svg><span>Tú</span></a></nav>",
       "css": ".ds-tabbar{display:grid;grid-template-columns:repeat(5,1fr);align-items:end;width:390px;background:color-mix(in srgb,var(--surface,#FFFFFF) 94%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line,#E1E6F0);font-family:var(--font,system-ui);} .ds-tabbar a{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 8px;min-height:56px;font-size:11px;font-weight:550;color:var(--text-2,#4A5470);text-decoration:none;} .ds-tabbar a svg{width:22px;height:22px;} .ds-tabbar a.on{color:var(--accent,#2F4BF5);font-weight:700;} .ds-tabbar a.on::before{content:\"\";position:absolute;top:0;left:28%;right:28%;height:3px;border-radius:0 0 3px 3px;background:var(--accent,#2F4BF5);} .ds-tabbar a:focus-visible{outline:2px solid var(--accent,#2F4BF5);outline-offset:-2px;} .ds-tab-add{justify-self:center;align-self:center;width:52px;height:52px;margin:4px 0;border:0;border-radius:16px;background:var(--block,#2F4BF5);color:#FFFFFF;display:grid;place-items:center;box-shadow:0 10px 28px rgba(15,23,51,.16);cursor:pointer;transition:transform .12s cubic-bezier(.2,.8,.2,1);} .ds-tab-add svg{width:24px;height:24px;stroke-width:2.2;} .ds-tab-add:active{transform:scale(.94);} .ds-tab-add:focus-visible{outline:2px solid var(--accent,#2F4BF5);outline-offset:2px;}"
     },
     {
@@ -859,20 +874,45 @@
       "css": ".ds-field{display:grid;gap:5px;font-family:var(--font,system-ui);max-width:360px;} .ds-field span{font-size:13px;color:var(--text-2,#4A5470);} .ds-input{width:100%;min-height:44px;background:var(--surface,#FFFFFF);color:var(--text,#0F1733);border:1px solid var(--line-2,#CBD3E1);border-radius:10px;padding:11px 13px;font:16px var(--font,system-ui);} .ds-input::placeholder{color:var(--text-3,#5B6580);} .ds-input:focus{outline:2px solid var(--accent,#2F4BF5);outline-offset:-1px;border-color:transparent;}"
     },
     {
-      "name": "Project Card with Progress Bar",
+      "name": "Goal Card with Segmented Bar",
       "kind": "card",
-      "refersTo": "card",
-      "description": "Hairline surface card with ambient shadow; the cobalt bar fill animates from its previous value.",
-      "html": "<a class=\"ds-card\" href=\"#\"><div class=\"ds-card-head\"><span class=\"ds-dot2\"></span><span class=\"ds-card-name\">Certificación AWS</span><span class=\"ds-card-pct\">40%</span></div><div class=\"ds-bar\" role=\"progressbar\" aria-valuenow=\"40\" aria-valuemin=\"0\" aria-valuemax=\"100\"><span style=\"width:40%\"></span></div></a>",
-      "css": ".ds-card{display:block;max-width:360px;background:var(--surface,#FFFFFF);border:1px solid var(--line,#E1E6F0);border-radius:16px;padding:14px;box-shadow:0 1px 2px rgba(15,23,51,.05),0 4px 16px rgba(15,23,51,.05);color:var(--text,#0F1733);text-decoration:none;font-family:var(--font,system-ui);} .ds-card:hover{border-color:var(--line-2,#CBD3E1);} .ds-card:focus-visible{outline:2px solid var(--accent,#2F4BF5);outline-offset:2px;} .ds-card-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;} .ds-dot2{width:8px;height:8px;border-radius:50%;background:#7C3AED;} .ds-card-name{flex:1;font-weight:600;} .ds-card-pct{font-size:13px;color:var(--text-2,#4A5470);font-variant-numeric:tabular-nums;} .ds-bar{height:8px;border-radius:999px;background:var(--surface-2,#EDF0F7);overflow:hidden;} .ds-bar span{display:block;height:100%;background:var(--accent,#2F4BF5);border-radius:999px;transition:width .4s cubic-bezier(.2,.8,.2,1);} @media (prefers-reduced-motion:reduce){.ds-bar span{transition:none;}}"
+      "refersTo": "segbar-thin",
+      "description": "Goal card in the auto-fit grid: thin segmented bar, one track per stage with flex = stage weight, cobalt fill = stage progress; animates from the previous value.",
+      "html": "<a class=\"ds-card\" href=\"#\"><div class=\"ds-card-head\"><span class=\"ds-dot2\"></span><span class=\"ds-card-name\">Inglés B2</span><span class=\"ds-card-pct\">8%</span></div><div class=\"ds-segbar\" role=\"progressbar\" aria-valuenow=\"8\" aria-valuemin=\"0\" aria-valuemax=\"100\" aria-label=\"Avance 8%\"><span class=\"ds-seg\" style=\"flex:3\"><i style=\"width:22%\"></i></span><span class=\"ds-seg\" style=\"flex:4\"><i style=\"width:0%\"></i></span><span class=\"ds-seg\" style=\"flex:4\"><i style=\"width:0%\"></i></span></div><div class=\"ds-card-meta\"><span><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3.5 20.5 12 12 20.5 3.5 12z\"/></svg>1 de 6 hitos · siguiente: Base de vocabulario</span></div></a>",
+      "css": ".ds-card{display:block;max-width:360px;background:var(--surface,#FFFFFF);border:1px solid var(--line,#E1E6F0);border-radius:16px;padding:14px;box-shadow:0 1px 2px rgba(15,23,51,.05),0 4px 16px rgba(15,23,51,.05);color:var(--text,#0F1733);text-decoration:none;font-family:var(--font,system-ui);} .ds-card:hover{border-color:var(--line-2,#CBD3E1);} .ds-card:focus-visible{outline:2px solid var(--accent,#2F4BF5);outline-offset:2px;} .ds-card-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;} .ds-dot2{width:8px;height:8px;border-radius:50%;background:#0F9D84;} .ds-card-name{flex:1;font-weight:600;} .ds-card-pct{font-size:13px;color:var(--text-2,#4A5470);font-variant-numeric:tabular-nums;} .ds-segbar{display:flex;gap:3px;height:6px;} .ds-seg{min-width:8px;background:var(--surface-2,#EDF0F7);border-radius:999px;overflow:hidden;} .ds-seg i{display:block;height:100%;background:var(--accent,#2F4BF5);border-radius:999px;transition:width .4s cubic-bezier(.2,.8,.2,1);} .ds-card-meta{display:grid;gap:4px;margin-top:9px;font-size:13px;color:var(--text-2,#4A5470);} .ds-card-meta span{display:flex;align-items:center;gap:6px;} .ds-card-meta svg{width:14px;height:14px;flex:none;} @media (prefers-reduced-motion:reduce){.ds-seg i{transition:none;}}"
+    },
+    {
+      "name": "Next-Milestone Block",
+      "kind": "card",
+      "refersTo": "next-milestone-card",
+      "description": "The goal detail's single cobalt block: milestone title as the heading, white-wash tags, white-on-cobalt criteria mini bar, one white primary button.",
+      "html": "<section class=\"ds-gnext\" aria-label=\"Siguiente hito\"><h2>Base de vocabulario y gramática</h2><div class=\"ds-gnext-why\"><span class=\"ds-gnext-tag\">Fundamentos</span><span class=\"ds-gnext-tag\">Tamaño M</span><span class=\"ds-gnext-tag\">1 de 3 criterios</span></div><div class=\"ds-crit\" aria-hidden=\"true\"><span class=\"on\"></span><span></span><span></span></div><button><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3.5 20.5 12 12 20.5 3.5 12z\"/></svg>Ver criterios</button></section>",
+      "css": ".ds-gnext{background:var(--block,#2F4BF5);color:var(--block-ink,#FFFFFF);border-radius:16px;padding:22px;box-shadow:0 10px 28px rgba(15,23,51,.16);font-family:var(--font,system-ui);} .ds-gnext h2{margin:0 0 14px;font-size:27px;font-weight:750;line-height:1.15;letter-spacing:-.025em;} .ds-gnext-why{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;} .ds-gnext-tag{font-size:12px;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.14);} .ds-crit{display:flex;gap:3px;margin:-4px 0 16px;max-width:320px;} .ds-crit span{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.14);} .ds-crit span.on{background:var(--block-ink,#FFFFFF);} .ds-gnext button{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:10px 16px;border-radius:10px;border:0;font:600 15px var(--font,system-ui);background:var(--block-ink,#FFFFFF);color:var(--block,#2F4BF5);cursor:pointer;transition:transform .1s ease,background .15s ease;} .ds-gnext button:hover{background:var(--block-ink-2,#DDE4FF);} .ds-gnext button:active{transform:scale(.975);} .ds-gnext :focus-visible{outline:2px solid #FFFFFF;outline-offset:2px;}"
+    },
+    {
+      "name": "Stage Card with Milestone Rows",
+      "kind": "custom",
+      "refersTo": "milestone-row",
+      "description": "Collapsible flat stage card with a single edit button; milestones as hairline-divided rows (never nested cards): diamond (outline open, amber fill closed), name, status line, criteria mini bar, S/M/L chip.",
+      "html": "<details class=\"ds-stage\" open><summary><span class=\"ds-stage-title\">Fundamentos</span><span class=\"ds-muted\">1 de 2 hitos</span><button class=\"ds-edit\" aria-label=\"Editar etapa\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4\"/></svg></button></summary><ul class=\"ds-ms\"><li><button><span class=\"ds-dia on\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3.5 20.5 12 12 20.5 3.5 12z\"/></svg></span><span class=\"ds-ms-main\"><span class=\"ds-ms-name\">Conocer mi nivel actual</span><span class=\"ds-ms-meta\">Cerrado · 1/3</span></span><span class=\"ds-w\">S</span></button></li><li><button><span class=\"ds-dia\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3.5 20.5 12 12 20.5 3.5 12z\"/></svg></span><span class=\"ds-ms-main\"><span class=\"ds-ms-name\">Base de vocabulario y gramática</span><span class=\"ds-ms-meta\">1 de 3 criterios</span></span><span class=\"ds-mini\" aria-hidden=\"true\"><span class=\"on\"></span><span></span><span></span></span><span class=\"ds-w\">M</span></button></li></ul></details>",
+      "css": ".ds-stage{max-width:640px;background:var(--surface,#FFFFFF);border:1px solid var(--line,#E1E6F0);border-radius:16px;padding:0 14px 12px;font-family:var(--font,system-ui);color:var(--text,#0F1733);} .ds-stage summary{display:flex;align-items:center;gap:10px;min-height:50px;list-style:none;cursor:pointer;} .ds-stage summary::-webkit-details-marker{display:none;} .ds-stage summary::before{content:\"\";width:7px;height:7px;border-right:1.8px solid var(--text-3,#5B6580);border-bottom:1.8px solid var(--text-3,#5B6580);transform:rotate(45deg);flex:none;} .ds-stage-title{font-size:15px;font-weight:650;} .ds-muted{font-size:13px;color:var(--text-2,#4A5470);} .ds-edit{margin-left:auto;width:30px;height:30px;display:grid;place-items:center;border:0;background:none;border-radius:10px;color:var(--text-2,#4A5470);cursor:pointer;} .ds-edit:hover{background:var(--surface-2,#EDF0F7);} .ds-ms{list-style:none;margin:0;padding:0;} .ds-ms button{width:100%;display:flex;align-items:center;gap:12px;padding:10px 8px;min-height:52px;border:0;border-bottom:1px solid var(--line,#E1E6F0);background:none;text-align:left;font:16px var(--font,system-ui);color:inherit;cursor:pointer;transition:background .12s ease;} .ds-ms li:last-child button{border-bottom:0;} .ds-ms button:hover{background:var(--surface-2,#EDF0F7);border-radius:6px;} .ds-ms button:focus-visible,.ds-edit:focus-visible{outline:2px solid var(--accent,#2F4BF5);outline-offset:2px;} .ds-dia{width:24px;height:24px;display:grid;place-items:center;color:var(--text-3,#5B6580);flex:none;} .ds-dia svg{width:20px;height:20px;} .ds-dia.on{color:var(--milestone-ink,#A35A00);} .ds-dia.on path{fill:var(--milestone,#FFA826);} .ds-ms-main{flex:1;min-width:0;} .ds-ms-name{display:block;font-weight:550;} .ds-ms-meta{display:block;font-size:13px;color:var(--text-2,#4A5470);} .ds-mini{display:flex;gap:3px;width:64px;flex:none;} .ds-mini span{flex:1;height:6px;border-radius:3px;background:var(--surface-2,#EDF0F7);} .ds-mini span.on{background:var(--accent,#2F4BF5);} .ds-w{display:grid;place-items:center;min-width:24px;height:22px;padding:0 5px;border-radius:6px;background:var(--surface-2,#EDF0F7);color:var(--text-2,#4A5470);font-size:11px;font-weight:700;flex:none;}"
+    },
+    {
+      "name": "Feedback Toast Tones",
+      "kind": "custom",
+      "refersTo": "toast",
+      "description": "ok (cobalt check), info (neutral) and milestone (amber diamond on milestone-soft, the one toast allowed amber); width max-content up to min(460px, 100vw - 24px).",
+      "html": "<div class=\"ds-toasts\"><div class=\"ds-toast\"><span class=\"ds-ticon\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"/></svg></span><div class=\"ds-tbody\"><strong>Registrado</strong><span>Inglés B2 · hoy</span></div><button class=\"ds-undo\">Deshacer</button></div><div class=\"ds-toast ds-t-info\"><span class=\"ds-ticon\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 11v5M12 8h.01\"/></svg></span><div class=\"ds-tbody\"><strong>Hito reabierto</strong></div></div><div class=\"ds-toast ds-t-milestone\"><span class=\"ds-ticon\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3.5 20.5 12 12 20.5 3.5 12z\"/></svg></span><div class=\"ds-tbody\"><strong>Hito cerrado</strong><span>Inglés B2 3% → 8% · +1 hito</span><span>Siguiente: Base de vocabulario y gramática</span></div><button class=\"ds-undo\">Deshacer</button></div></div>",
+      "css": ".ds-toasts{display:grid;gap:10px;justify-items:start;font-family:var(--font,system-ui);} .ds-toast{display:flex;align-items:center;gap:11px;width:max-content;max-width:min(460px,calc(100vw - 24px));background:var(--surface,#FFFFFF);border:1px solid var(--line,#E1E6F0);border-radius:16px;padding:11px 14px;box-shadow:0 12px 40px rgba(15,23,51,.18);} .ds-ticon{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--accent-soft,#E6EBFF);color:var(--accent,#2F4BF5);flex:none;} .ds-ticon svg{width:16px;height:16px;stroke-width:2.4;} .ds-t-info .ds-ticon{background:var(--surface-2,#EDF0F7);color:var(--text-2,#4A5470);} .ds-t-milestone .ds-ticon{background:var(--milestone-soft,#FFF1DC);color:var(--milestone-ink,#A35A00);} .ds-t-milestone .ds-ticon path{fill:var(--milestone,#FFA826);} .ds-tbody{display:grid;gap:1px;font-size:13px;color:var(--text-2,#4A5470);} .ds-tbody strong{font-size:14px;color:var(--text,#0F1733);} .ds-undo{border:0;background:none;color:var(--accent,#2F4BF5);font:600 13px var(--font,system-ui);padding:8px;cursor:pointer;} .ds-undo:hover{text-decoration:underline;} .ds-undo:focus-visible{outline:2px solid var(--accent,#2F4BF5);outline-offset:2px;}"
     }
   ],
   "narrative": {
     "northStar": "The Build Instrument",
-    "overview": "Bitácora is an instrument for building something over months with a few hours a week. The screen answers three questions in seconds: what to do now, how far it has come, where to log. Cobalt marks what moves forward and occupies whole blocks where the focus is; everything else is quiet neutral surface on a cool white ground. There is exactly one loud thing per view, and it is always the next step.\n\nDensity is calm and even: white cards with a 1 px hairline, generous 28 px gaps between sections, system type with tabular numerals, and no decoration that does not carry information. Progress is shown, not celebrated: a bar that fills from where it was, a count of active days, a streak that never punishes. Amber is kept back for milestones and real achievements so that it still means something when it appears.\n\nThe world rejects the grey dashboard with a timid accent, and the narrow column pinned to the left edge. Content is always centred in its region. The product commitments that bind the visuals: system fonts only (no third-party font requests), no dark patterns (no guilt colours, no loss framing), and every number shown must be explainable.",
+    "overview": "Bitácora is an instrument for building something over months with a few hours a week. The screen answers three questions in seconds: what to do now, how far it has come, where to log. Cobalt marks what moves forward and occupies whole blocks where the focus is; everything else is quiet neutral surface on a cool white ground. There is exactly one loud thing per view, and it is always the next step: the next action on Inicio, the next milestone on a goal.\n\nDensity is calm and even: white cards with a 1 px hairline, generous 28 px gaps between sections, system type with tabular numerals, and no decoration that does not carry information. Progress is shown, not celebrated: a bar that fills from where it was, a count of active days, a streak that never punishes. A goal's progress moves only with criteria and milestones, and its bar is cut into stages so the path is legible at a glance. Amber is kept back for milestones and real achievements so that it still means something when it appears.\n\nThe world rejects the grey dashboard with a timid accent, and the narrow column pinned to the left edge. Content is always centred in its region. The product commitments that bind the visuals: system fonts only (no third-party font requests), no dark patterns (no guilt colours, no loss framing), and every number shown must be explainable.",
     "keyCharacteristics": [
       "Committed colour strategy on cool white: cobalt as solid blocks, not as a thin accent.",
-      "One solid cobalt block per region: the next-action card in content, the active destination in navigation.",
+      "One solid cobalt block per region: the next-action card (Inicio) or the next-milestone card (goal detail) in content, the active destination in navigation.",
+      "Goal progress as a segmented bar: one track per stage, sized by the stage's milestone weight.",
       "Flat hairline cards with a whisper of ambient shadow; the cobalt block alone carries a deeper shadow.",
       "System font stack, heavy (750) tight headlines, tabular numerals for every count.",
       "Motion only when a value changes, and never under reduced motion.",
@@ -881,12 +921,12 @@
     "rules": [
       {
         "name": "The One Block Rule",
-        "body": "Each region has at most one solid cobalt block: the next-action card in the content, the active destination in the navigation. Anything else that needs cobalt uses it as text, outline, fill of a small control, or a wash. That is why the desktop \"Registrar\" is outlined.",
+        "body": "Each region has at most one solid cobalt block: the next-action card on Inicio or the next-milestone card on a goal in the content, the active destination in the navigation. Anything else that needs cobalt uses it as text, outline, fill of a small control, or a wash. That is why the desktop \"Registrar\" is outlined.",
         "section": "colors"
       },
       {
         "name": "The Earned Amber Rule",
-        "body": "Amber marks milestones and real achievements, nothing else. High priority and past-due dates get ink weight (semibold `text` on Mist), not amber; notices are neutral surfaces with a cobalt icon.",
+        "body": "Amber marks milestones and real achievements, nothing else. The only amber fill is the closed-milestone diamond, and the milestone-close toast is the one toast allowed amber. High priority and past-due dates get ink weight (semibold `text` on Mist), not amber; notices are neutral surfaces with a cobalt icon.",
         "section": "colors"
       },
       {
@@ -923,11 +963,15 @@
       "Do set every changing number in tabular figures and animate progress from its previous value (400ms, `cubic-bezier(.2,.8,.2,1)`), off under reduced motion.",
       "Do centre content in its region: 1200px max (1320px from 1728px), 760px for list and reading views.",
       "Do run `node scripts/contrast.mjs` after touching any colour token, and add the pair for any new one.",
-      "Do keep touch targets at 44px or more."
+      "Do keep touch targets at 44px or more.",
+      "Do show a goal's progress as the segmented bar (one track per stage, flex = stage weight) and move it only with criteria and milestones.",
+      "Do render milestones inside a stage card as hairline-divided rows with the diamond, name, status line, criteria mini bar and weight chip.",
+      "Do make \"Cerrar hito\" primary only when every criterion is met or none exist; otherwise offer a ghost \"Cerrar igualmente\" and label the result \"Cerrado con N de M\"."
     ],
     "donts": [
       "Don't place a second solid cobalt block next to the focus card or the active destination; the desktop \"Registrar\" stays outlined.",
-      "Don't use amber for priority, deadlines, notices or streaks.",
+      "Don't use amber for priority, deadlines, notices or streaks, and don't fill amber anywhere but the closed-milestone diamond and the milestone-close toast icon.",
+      "Don't nest cards inside the stage card, or put stage actions other than edit on the card itself.",
       "Don't use red for inactivity, missed days or overdue work; red is only for destructive actions and errors.",
       "Don't load web fonts or any third-party font.",
       "Don't pin the content column to the left or narrow the home view to a single reading column on desktop.",

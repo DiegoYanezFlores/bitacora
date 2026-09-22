@@ -63,14 +63,14 @@ export function render() {
     <ul class="set">
       ${toggle('haptics', 'Vibración al completar', prefs.haptics, 'Solo en Android; iOS no lo permite en la web')}
       ${toggle('sound', 'Sonido al completar', prefs.sound)}
-      <li class="set-row col"><div><span>Avisos dentro de la app</span><small class="muted">Resumen semanal, hitos cercanos y proyectos parados. Nunca notificaciones para que vuelvas porque sí.</small></div>
+      <li class="set-row col"><div><span>Avisos dentro de la app</span><small class="muted">Resumen semanal, hitos cercanos y objetivos parados. Nunca notificaciones para que vuelvas porque sí.</small></div>
         <div class="filters">${NOTICES.map(([k, l]) => `<button class="pill ${prefs.notices === k ? 'on' : ''}" data-act="set-notices" data-v="${k}">${l}</button>`).join('')}</div></li>
     </ul>
   </section>
 
   <section class="block">
     <div class="block-head"><h2 class="eyebrow">Tus datos</h2></div>
-    <p class="muted small">${plural(c.activities, 'actividad', 'actividades')} · ${plural(c.projects, 'proyecto', 'proyectos')} · ${plural(c.tasks, 'tarea', 'tareas')} · ${plural(c.milestones, 'hito', 'hitos')}</p>
+    <p class="muted small">${plural(c.activities, 'actividad', 'actividades')} · ${plural(c.projects, 'objetivo', 'objetivos')} · ${plural(c.tasks, 'tarea', 'tareas')} · ${plural(c.milestones, 'hito', 'hitos')}</p>
     <ul class="set">
       <li class="set-row"><div><span>Exportar copia</span><small class="muted">Archivo JSON con todo tu historial</small></div><button class="btn ghost small" data-act="export">${icon('download')}Exportar</button></li>
       <li class="set-row"><div><span>Importar copia</span><small class="muted">Acepta copias de esta versión y de la anterior</small></div><button class="btn ghost small" data-act="import">${icon('upload')}Importar</button></li>

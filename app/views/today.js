@@ -1,4 +1,4 @@
-// Pantalla Hoy: orientación inmediata (siguiente acción, estado del día, lo hecho, pendientes, proyectos).
+// Inicio: orientación inmediata (siguiente acción, estado del día, lo hecho, pendientes, objetivos).
 import * as model from './../model.js';
 import * as store from './../store.js';
 import { esc, dayKey, plural, fmtDayLong, cap } from './../lib.js';
@@ -17,7 +17,7 @@ function nextCard() {
     : n.type === 'milestone' ? `data-act="toggle-milestone" data-id="${n.id}"`
     : n.type === 'define' ? `data-act="new-task" data-project="${n.projectId}"`
     : `data-act="capture"`;
-  // El título es el encabezado (sin etiqueta encima); el proyecto es un enlace dentro de los motivos.
+  // El título es el encabezado (sin etiqueta encima); el objetivo es un enlace dentro de los motivos.
   return `<section class="card next" aria-label="Siguiente acción">
     <div class="next-head"><h2 class="next-title">${esc(n.title)}</h2>${items.length > 1 ? `<button class="link" data-act="next-other" aria-label="Ver otra recomendación">Otra${icon('arrow')}</button>` : ''}</div>
     <div class="next-why">${n.reasons.map(r => `<span class="tag">${esc(r)}</span>`).join('')}${p ? `<a class="tag" href="#/project/${p.id}">${dot(p.color)}${esc(p.name)}${icon('arrow')}</a>` : ''}</div>
@@ -117,10 +117,10 @@ export function render() {
   </section>
 
   <section class="block">
-    <div class="block-head"><h2 class="eyebrow">Proyectos</h2><a class="link" href="#/projects">Ver todos${icon('arrow')}</a></div>
+    <div class="block-head"><h2 class="eyebrow">Objetivos</h2><a class="link" href="#/goals">Ver todos${icon('arrow')}</a></div>
     ${projects.length
       ? `<div class="pcards">${projects.map(({ p }) => projectCard(p)).join('')}</div>`
-      : empty('folder', 'Sin proyectos activos', 'Un proyecto agrupa lo que haces y muestra tu avance.', '<button class="btn ghost" data-act="new-project">Crear proyecto</button>')}
+      : empty('target', 'Aquí verás lo que estás construyendo', 'Empieza con una idea: aprender algo, terminar algo, crear algo.', '<button class="btn ghost" data-act="new-project">Crear mi primer objetivo</button>')}
   </section>
   </div>
   </div>`;

@@ -43,29 +43,36 @@ test('mapa: niveles por conteo y días futuros', () => {
   assert.ok(cells.filter(c => c.key > today).every(c => c.future));
 });
 
-test('progreso: métrica', () => {
+test('avance: sale de hitos y criterios; las tareas completadas no lo mueven', () => {
+  const p = store.create('projects', { name: 'P' });
+  const m = store.create('milestones', { project_id: p.id, title: 'H', weight: 2 });
+  const c1 = store.create('criteria', { milestone_id: m.id, title: 'a' });
+  store.create('criteria', { milestone_id: m.id, title: 'b' });
+  for (let i = 0; i < 50; i++) store.create('tasks', { project_id: p.id, title: 't' + i, status: 'done' });
+  assert.equal(model.progress(p).pct, 0);
+  store.update('criteria', c1.id, { met_at: new Date().toISOString() });
+  const r = model.progress(p);
+  assert.equal(r.pct, 50);
+  assert.equal(r.criteriaMet, 1);
+  assert.equal(r.nextMilestone.id, m.id);
+});
+
+test('avance: sin hitos no hay %, la métrica es un indicador aparte', () => {
   const p = store.create('projects', { name: 'Capital', metric_start: 100, metric_current: 60, metric_target: 0, metric_unit: 'USD' });
   const r = model.progress(p);
-  assert.equal(r.mode, 'metric');
-  assert.equal(r.pct, 40);
-  assert.match(r.label, /USD$/);
+  assert.equal(r.mode, 'none');
+  assert.equal(r.pct, null);
+  assert.deepEqual(r.metric, { pct: 40, label: '60 → 0 USD' });
 });
 
-test('progreso: hitos pesan el doble que tareas (fórmula v2)', () => {
+test('respaldo: evidencia de nivel ≥2 en el hito o en una de sus acciones', () => {
   const p = store.create('projects', { name: 'P' });
-  store.create('milestones', { project_id: p.id, title: 'H', done_at: new Date().toISOString() });
-  store.create('tasks', { project_id: p.id, title: 'a', status: 'done' });
-  store.create('tasks', { project_id: p.id, title: 'b' });
-  const r = model.progress(p);
-  assert.equal(r.mode, 'auto');
-  assert.equal(r.pct, 75); // (1·2 + 1) / (1·2 + 2)
-  assert.equal(r.label, '1/2 tareas · 1/1 hitos');
-});
-
-test('progreso: manual, sin datos y completado', () => {
-  assert.equal(model.progress(store.create('projects', { name: 'M', progress_manual: 30 })).pct, 30);
-  assert.equal(model.progress(store.create('projects', { name: 'N' })).mode, 'none');
-  assert.equal(model.progress(store.create('projects', { name: 'D', status: 'done' })).pct, 100);
+  const m1 = store.create('milestones', { project_id: p.id, title: 'A' });
+  const m2 = store.create('milestones', { project_id: p.id, title: 'B' });
+  const a = store.create('activities', { title: 'x', project_id: p.id, milestone_id: m2.id });
+  store.create('evidence', { goal_id: p.id, milestone_id: m1.id, type: 'link', url: 'https://x.dev', level: 2 });
+  store.create('evidence', { goal_id: p.id, activity_id: a.id, type: 'note', title: 'nota', level: 1 });
+  assert.deepEqual(model.progress(p).backed, { with: 1, total: 2 });
 });
 
 test('periodo semanal: actividades, días activos y por proyecto', () => {
