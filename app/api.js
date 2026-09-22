@@ -39,6 +39,7 @@ export function humanError(e) {
   if (m.includes('already registered') || m.includes('already exists')) return 'Ese correo ya tiene cuenta. Entra con tu contraseña.';
   if (m.includes('password') && (m.includes('6') || m.includes('weak') || m.includes('short'))) return 'La contraseña debe tener al menos 6 caracteres.';
   if (m.includes('same') && m.includes('password')) return 'La nueva contraseña debe ser distinta de la anterior.';
+  if (m.includes('email') && m.includes('rate limit')) return 'La app alcanzó su límite de correos por hora. Inténtalo más tarde o avisa a quien la administra.';
   if (m.includes('rate limit') || e.status === 429) return 'Demasiados intentos. Espera un minuto.';
   if (m.includes('email') && m.includes('invalid')) return 'Revisa el formato del correo.';
   if (e.code === 'PGRST205' || m.includes('schema cache')) return 'Falta aplicar la migración de la base de datos.';
