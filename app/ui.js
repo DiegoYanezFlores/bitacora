@@ -56,9 +56,11 @@ export const PROJECT_STATUS = { active: 'Activo', paused: 'Pausado', done: 'Comp
 export const COLORS = ['teal', 'blue', 'violet', 'rose', 'orange', 'amber', 'green', 'slate'];
 
 // ---------- piezas ----------
-export function bar(pct, cls = '') {
+// key: clave estable para animar el cambio desde el valor anterior (ver motion.js).
+export function bar(pct, cls = '', key = '') {
   const p = Math.max(0, Math.min(100, Math.round(pct)));
-  return `<div class="bar ${cls}" role="progressbar" aria-valuenow="${p}" aria-valuemin="0" aria-valuemax="100"><span style="--p:${p}%"></span></div>`;
+  const motion = key ? ` data-motion="${esc(key)}" data-value="${p}"` : '';
+  return `<div class="bar ${cls}" role="progressbar" aria-valuenow="${p}" aria-valuemin="0" aria-valuemax="100"><span style="--p:${p}%"${motion}></span></div>`;
 }
 
 export const dot = color => `<span class="pdot c-${esc(color || 'teal')}" aria-hidden="true"></span>`;
@@ -112,7 +114,7 @@ export function projectCard(p) {
   return `<a class="pcard" href="#/project/${p.id}">
     <div class="pcard-head">${dot(p.color)}<span class="pcard-name">${esc(p.name)}</span>${p.status !== 'active' ? `<span class="tag">${PROJECT_STATUS[p.status]}</span>` : ''}
       <span class="pcard-pct num">${sinMeta ? `${info.activityCount} reg.` : info.progress.pct + '%'}</span></div>
-    ${sinMeta ? '' : bar(info.progress.pct)}
+    ${sinMeta ? '' : bar(info.progress.pct, '', `project:${p.id}`)}
     <div class="pcard-meta">
       ${info.last ? `<span>${icon('clock')}<span class="trunc">${esc(info.last.title)}</span> · ${ago(info.last.occurred_at)}</span>` : '<span class="muted">Sin actividad todavía</span>'}
       ${info.next ? `<span>${icon('arrow')}<span class="trunc">${esc(info.next.title)}</span></span>` : ''}
@@ -131,7 +133,7 @@ export function feedback({ title, lines = [], undo = null, tone = 'ok' }) {
     ${undo ? '<button class="toast-undo" type="button">Deshacer</button>' : ''}`;
   if (undo) el.querySelector('.toast-undo').onclick = () => { hideToast(); undo(); };
   clearTimeout(toastTimer);
-  const hide = () => { toastTimer = setTimeout(hideToast, undo ? 5000 : 3200); };
+  const hide = () => { toastTimer = setTimeout(hideToast, undo ? 8000 : 3200); }; // 8 s para deshacer (UX §8)
   el.onmouseenter = () => clearTimeout(toastTimer);
   el.onmouseleave = hide;
   hide();
@@ -174,10 +176,11 @@ export function celebrate() { haptic(10); chime(); }
 const sheet = () => document.getElementById('sheet');
 let current = null;
 
-export function openSheet(html, { onSubmit, onClick, onClose, onOpen, wide = false } = {}) {
+// panel: en escritorio se abre como panel lateral derecho; en móvil sigue siendo hoja inferior.
+export function openSheet(html, { onSubmit, onClick, onClose, onOpen, wide = false, panel = false } = {}) {
   const el = sheet();
   if (el.open) el.close();
-  el.className = 'sheet' + (wide ? ' wide' : '');
+  el.className = 'sheet' + (wide ? ' wide' : '') + (panel ? ' panel' : '');
   el.innerHTML = `<div class="sheet-inner">${html}</div>`;
   current = { onSubmit, onClick, onClose };
   el.showModal();

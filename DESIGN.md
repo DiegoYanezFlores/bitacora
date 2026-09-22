@@ -1,298 +1,367 @@
 ---
 name: Bitácora
-description: Cuaderno de campo digital para el registro de trabajo personal — cálido, plano y sin ruido de gamificación.
+description: Registro de trabajo personal. Blanco frío y cobalto vivo en bloques enteros donde está el foco; todo lo demás calla.
 colors:
-  ink: "#16201C"
-  ink-soft: "#55625C"
-  ink-faint: "#64706A"
-  paper: "#F6F7F5"
+  cobalt: "#2F4BF5"
+  cobalt-strong: "#2238D1"
+  cobalt-soft: "#E6EBFF"
+  block: "#2F4BF5"
+  block-ink: "#FFFFFF"
+  block-ink-2: "#DDE4FF"
+  milestone: "#FFA826"
+  milestone-ink: "#A35A00"
+  milestone-soft: "#FFF1DC"
+  warn: "#9A5200"
+  warn-soft: "#FFF3DF"
+  danger: "#D1242F"
+  bg: "#F5F7FB"
   surface: "#FFFFFF"
-  surface-sunken: "#EFF1EE"
-  line: "#DFE4E0"
-  line-strong: "#CDD4CE"
-  accent: "#0B7A5C"
-  accent-ink: "#FFFFFF"
-  accent-soft: "#E4F1EC"
-  streak: "#C2410C"
-  streak-soft: "#FCEDE4"
-  warn: "#A64B00"
-  warn-soft: "#FBF0E2"
-  danger: "#B42318"
-  project-teal: "#0E8A75"
-  project-blue: "#2563EB"
+  surface-2: "#EDF0F7"
+  text: "#0F1733"
+  text-2: "#4A5470"
+  text-3: "#5B6580"
+  line: "#E1E6F0"
+  line-2: "#CBD3E1"
+  viz-1: "#C7D0FF"
+  viz-2: "#8C9DFF"
+  viz-3: "#5670FA"
+  viz-4: "#2F4BF5"
+  project-teal: "#0F9D84"
+  project-blue: "#0284C7"
   project-violet: "#7C3AED"
-  project-rose: "#BE185D"
-  project-orange: "#C2410C"
+  project-rose: "#DB2777"
+  project-orange: "#EA580C"
   project-amber: "#A16207"
-  project-green: "#15803D"
-  project-slate: "#475569"
+  project-green: "#16A34A"
+  project-slate: "#64748B"
+  dark-bg: "#0B1020"
+  dark-surface: "#121833"
+  dark-surface-2: "#1A2244"
+  dark-text: "#EEF1FA"
+  dark-text-2: "#A9B2CC"
+  dark-cobalt: "#8FA2FF"
+  dark-block: "#3551F2"
+  dark-milestone: "#FFB547"
+  dark-danger: "#FF7B7B"
 typography:
   display:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
-    fontSize: "25px"
-    fontWeight: 700
-    lineHeight: 1.2
-    letterSpacing: "-0.02em"
+    fontFamily: "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+    fontSize: "27px"
+    fontWeight: 750
+    lineHeight: 1.15
+    letterSpacing: "-0.025em"
   headline:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
-    fontSize: "18px"
-    fontWeight: 700
-    lineHeight: 1.3
-  metric-sm:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
-    fontSize: "19px"
-    fontWeight: 700
-    lineHeight: 1
-  metric:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
-    fontSize: "24px"
-    fontWeight: 700
-    lineHeight: 1
-    letterSpacing: "-0.02em"
-  metric-lg:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+    fontFamily: "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+    fontSize: "26px"
+    fontWeight: 750
+    lineHeight: 1.2
+    letterSpacing: "-0.025em"
+  numeral:
+    fontFamily: "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
     fontSize: "26px"
     fontWeight: 700
     lineHeight: 1
     letterSpacing: "-0.02em"
-  metric-xl:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
-    fontSize: "28px"
+    fontFeature: "tnum"
+  title:
+    fontFamily: "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+    fontSize: "18px"
     fontWeight: 700
-    lineHeight: 1
-    letterSpacing: "-0.02em"
-  label-sm:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
-    fontSize: "13px"
-    fontWeight: 500
-    lineHeight: 1.4
-  micro:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
-    fontSize: "11px"
-    fontWeight: 600
-    lineHeight: 1.2
+    lineHeight: 1.3
   body:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
-    fontSize: "15px"
+    fontFamily: "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+    fontSize: "16px"
     fontWeight: 400
     lineHeight: 1.5
-  body-sm:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
-    fontSize: "14px"
-    fontWeight: 400
-    lineHeight: 1.4
-  label:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
-    fontSize: "12px"
+  button:
+    fontFamily: "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+    fontSize: "15px"
     fontWeight: 600
-    lineHeight: 1
+  meta:
+    fontFamily: "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+    fontSize: "13px"
+    fontWeight: 400
+  section-label:
+    fontFamily: "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+    fontSize: "12px"
+    fontWeight: 650
     letterSpacing: "0.06em"
 rounded:
-  hairline: "3px"
-  xs: "7px"
-  tick: "8px"
+  xs: "6px"
   sm: "10px"
-  md: "14px"
+  md: "16px"
   pill: "999px"
 spacing:
-  xs: "4px"
-  sm: "8px"
-  md: "12px"
-  base: "16px"
-  lg: "26px"
-  xl: "32px"
+  gutter-mobile: "16px"
+  gutter-tablet: "20px"
+  gutter-desktop: "24px"
+  card: "16px"
+  section: "28px"
+  tap: "44px"
 components:
   button-primary:
-    backgroundColor: "{colors.accent}"
-    textColor: "{colors.accent-ink}"
+    backgroundColor: "{colors.cobalt}"
+    textColor: "{colors.block-ink}"
+    typography: "{typography.button}"
     rounded: "{rounded.sm}"
     padding: "10px 16px"
     height: "44px"
+  button-primary-hover:
+    backgroundColor: "{colors.cobalt-strong}"
   button-ghost:
     backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink}"
+    textColor: "{colors.text}"
+    typography: "{typography.button}"
     rounded: "{rounded.sm}"
     padding: "10px 16px"
     height: "44px"
-  button-danger:
-    backgroundColor: "{colors.danger}"
-    textColor: "#FFFFFF"
+  button-ghost-hover:
+    backgroundColor: "{colors.surface-2}"
+  button-small:
     rounded: "{rounded.sm}"
-    padding: "10px 16px"
+    padding: "6px 12px"
+    height: "36px"
+  next-action-card:
+    backgroundColor: "{colors.block}"
+    textColor: "{colors.block-ink}"
+    typography: "{typography.display}"
+    rounded: "{rounded.md}"
+    padding: "22px"
+  next-action-primary:
+    backgroundColor: "{colors.block-ink}"
+    textColor: "{colors.block}"
+    rounded: "{rounded.sm}"
     height: "44px"
+  nav-destination-active:
+    backgroundColor: "{colors.block}"
+    textColor: "{colors.block-ink}"
+    rounded: "{rounded.sm}"
+    padding: "10px 12px"
+    height: "44px"
+  nav-capture-outlined:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.cobalt}"
+    rounded: "{rounded.sm}"
+    height: "44px"
+  tab-add:
+    backgroundColor: "{colors.block}"
+    textColor: "{colors.block-ink}"
+    rounded: "{rounded.md}"
+    size: "52px"
   card:
     backgroundColor: "{colors.surface}"
     rounded: "{rounded.md}"
     padding: "16px"
+  tag:
+    backgroundColor: "{colors.surface-2}"
+    textColor: "{colors.text-2}"
+    rounded: "{rounded.pill}"
+    padding: "2px 8px"
+  tag-emphasis:
+    backgroundColor: "{colors.surface-2}"
+    textColor: "{colors.text}"
+    rounded: "{rounded.pill}"
+    padding: "2px 8px"
   pill:
     backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink-soft}"
+    textColor: "{colors.text-2}"
     rounded: "{rounded.pill}"
     padding: "6px 13px"
+    height: "36px"
   pill-selected:
-    backgroundColor: "{colors.accent-soft}"
-    textColor: "{colors.accent}"
-    rounded: "{rounded.pill}"
-    padding: "6px 13px"
+    backgroundColor: "{colors.cobalt-soft}"
+    textColor: "{colors.cobalt}"
   input:
     backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink}"
+    textColor: "{colors.text}"
+    typography: "{typography.body}"
     rounded: "{rounded.sm}"
     padding: "11px 13px"
     height: "44px"
+  progress-bar:
+    backgroundColor: "{colors.surface-2}"
+    rounded: "{rounded.pill}"
+    height: "8px"
 ---
 
 # Design System: Bitácora
 
 ## Overview
 
-**Creative North Star: "El Cuaderno de Campo"**
+**Creative North Star: "The Build Instrument"**
 
-Bitácora se ve como una herramienta de trabajo, no como un producto de consumo. La superficie es un papel cálido casi blanco, no un blanco de laboratorio; el texto es tinta oscura de alto contraste; y hay exactamente una tinta de color —un verde profundo— reservada para lo que importa: la acción principal y el estado positivo. Todo lo demás vive en grises cálidos. No hay gradientes decorativos, ilustraciones ni imágenes de marca: la jerarquía se construye con tipografía del sistema, espacio y ese único acento, nunca con adornos.
+Bitácora is an instrument for building something over months with a few hours a week. The screen answers three questions in seconds: what to do now, how far it has come, where to log. Cobalt marks what moves forward and occupies whole blocks where the focus is; everything else is quiet neutral surface on a cool white ground. There is exactly one loud thing per view, and it is always the next step.
 
-El sistema es deliberadamente plano y silencioso. Las tarjetas se separan del fondo con un borde de 1px, no con sombra teatral; la sombra fuerte se reserva para lo que literalmente flota sobre el contenido (hoja modal, toast, botón flotante). La app rechaza activamente el lenguaje visual de los juegos —sin XP, niveles, confeti ni recompensas variables— y aplica la misma regla a la propia paleta: el color comunica estado y jerarquía, nunca "premia" ni "castiga" emocionalmente. Este comentario está escrito literalmente en el CSS fuente del proyecto y es la ley del sistema.
+Density is calm and even: white cards with a 1 px hairline, generous 28 px gaps between sections, system type with tabular numerals, and no decoration that does not carry information. Progress is shown, not celebrated: a bar that fills from where it was, a count of active days, a streak that never punishes. Amber is kept back for milestones and real achievements so that it still means something when it appears.
 
-Es una interfaz para usarse en segundos, muchas veces al día, con una mano, y para leerse en una sesión de reflexión más larga los lunes. Por eso las densidades cambian por vista (una tarjeta grande de "siguiente acción" arriba; listas compactas de actividad debajo) pero el vocabulario visual —tarjeta, borde, acento único— nunca cambia.
+The world rejects the grey dashboard with a timid accent, and the narrow column pinned to the left edge. Content is always centred in its region. The product commitments that bind the visuals: system fonts only (no third-party font requests), no dark patterns (no guilt colours, no loss framing), and every number shown must be explainable.
 
 **Key Characteristics:**
-- Neutros cálidos (no grises fríos ni blanco puro) + una sola tinta de acento.
-- Plano en reposo; el borde de 1px hace el trabajo de separación, no la sombra.
-- Tipografía exclusivamente del sistema operativo — cero fuentes de terceros, cero KB de red.
-- Radios que crecen con el tamaño del elemento: 7px en detalles pequeños, 10px en controles, 14px en superficies grandes, 999px en píldoras y controles circulares.
-- Un color por proyecto (paleta categórica de 8 tonos) es la única superficie donde el color se usa libremente; en el resto de la interfaz es escaso a propósito.
-- Claro/oscuro nativos vía `prefers-color-scheme`, con anulación manual (`data-theme`); cada token tiene su par exacto en ambos modos.
+- Committed colour strategy on cool white: cobalt as solid blocks, not as a thin accent.
+- One solid cobalt block per region: the next-action card in content, the active destination in navigation.
+- Flat hairline cards with a whisper of ambient shadow; the cobalt block alone carries a deeper shadow.
+- System font stack, heavy (750) tight headlines, tabular numerals for every count.
+- Motion only when a value changes, and never under reduced motion.
+- Light and dark follow the system with manual override; the cobalt block stays saturated in both.
 
 ## Colors
 
-Paleta de neutros cálidos con una sola tinta de acento; los tonos de proyecto son la única zona categórica y libre del sistema.
+Cool, blue-leaning neutrals with a single vivid cobalt protagonist, a reserved amber, and a red that only ever means "destructive".
 
 ### Primary
-- **Verde Bitácora** (`#0B7A5C` claro / `#3CD3A0` oscuro): la única tinta "activa" del sistema — botón primario, tab activo, marca de tarea completada, barra de progreso, icono de sincronización correcta, logo. Contraste AA verificado con script propio en ambos modos (ver `PRODUCT.md`).
+- **Vivid Cobalt** (`cobalt`, dark `dark-cobalt`): action, progress and selection. Primary buttons, progress bar fills, the active week dot, checked ticks, switches, links, selected pills, the underline of the active Historia tab, focus rings, and the icon of neutral notices.
+- **Cobalt Block** (`block`, dark `dark-block`): the protagonist surface. Fills the next-action card, the active navigation destination on desktop, the centre "+" in the bottom bar, and the logo mark. Text on it is `block-ink` (white) with `block-ink-2` for secondary text; outlines on it are white at 42% and hover fills white at 14%. In dark mode the block stays a saturated mid cobalt so white text keeps AA, while the text-level accent lifts to a light periwinkle.
+- **Pressed Cobalt** (`cobalt-strong`): hover state of primary buttons.
+- **Cobalt Wash** (`cobalt-soft`): selected pill and segmented option background, "In progress" tag, done-activity dot, toast success icon, text selection.
 
 ### Secondary
-- **Ámbar Racha** (`#C2410C` claro / `#FB923C` oscuro): reservado para la racha (flama) y para "logro" en el registro de actividad. Es la segunda tinta emocional del sistema y solo aparece en esos dos contextos — nunca decorativo.
+- **Milestone Amber** (`milestone` fill, `milestone-ink` text, `milestone-soft` wash; dark `dark-milestone` for both): reserved for milestones and real achievements. In the shipped F2 build it appears on "win" activity dots (amber wash with amber-ink icon). The vivid fill is reserved for milestone marks in the screens that follow; it has no other licence.
 
 ### Tertiary
-- **Ámbar Aviso** (`#A64B00` claro / `#F2B24C` oscuro): estado de advertencia (sync pendiente, notas de fricción). Con fondo suave propio (`streak-soft`/`warn-soft`).
-- **Rojo Alerta** (`#B42318` claro / `#F87171` oscuro): destructivo/error únicamente — botón de eliminar, borrar cuenta.
-- **Paleta de Proyectos** (8 tonos categóricos, misma luminosidad y saturación pensadas para convivir): `project-teal` `#0E8A75`, `project-blue` `#2563EB`, `project-violet` `#7C3AED`, `project-rose` `#BE185D`, `project-orange` `#C2410C`, `project-amber` `#A16207`, `project-green` `#15803D`, `project-slate` `#475569`. El usuario elige uno por proyecto al crearlo; es la única superficie del sistema donde el color se usa con libertad, porque su función es distinguir, no jerarquizar.
+- **Warning Umber** (`warn` on `warn-soft`): system state that needs attention but is not an error, namely the sync chip when sync is failing and the auth notice. Not used for task priority, due dates or inactivity.
+- **Destructive Red** (`danger`, dark `dark-danger`): destructive actions and errors only.
 
 ### Neutral
-- **Papel Cálido** (`#F6F7F5` claro / `#0D1210` oscuro): fondo de página.
-- **Superficie** (`#FFFFFF` claro / `#141A17` oscuro): tarjetas, hojas, barra de navegación, inputs.
-- **Superficie Hundida** (`#EFF1EE` claro / `#1B231F` oscuro): fondo de barra de progreso vacía, chip neutro, hover de botón de icono — un nivel por debajo de Superficie.
-- **Tinta** (`#16201C` claro / `#E8EEEA` oscuro): texto primario.
-- **Tinta Suave** (`#55625C` claro / `#A2AEA8` oscuro): texto secundario, metadatos, etiquetas de campo.
-- **Tinta Tenue** (`#64706A` claro / `#86938D` oscuro): el nivel más bajo de texto — placeholders, fecha del encabezado del día, etiquetas de eje de gráfico.
-- **Línea** (`#DFE4E0` claro / `#26302B` oscuro): borde de tarjeta, divisor de lista, borde de tabbar.
-- **Línea Marcada** (`#CDD4CE` claro / `#33403A` oscuro): borde de botón ghost, borde de input, borde de píldora — más presente que `line` porque delimita algo interactivo.
+- **Cool White** (`bg`, dark `dark-bg`): the app ground.
+- **Surface White** (`surface`, dark `dark-surface`): cards, sidebar, sheets, inputs, ghost buttons.
+- **Mist** (`surface-2`, dark `dark-surface-2`): tags, bar tracks, segmented control track, hover fills, empty heatmap cells.
+- **Midnight Ink** (`text`, dark `dark-text`): primary text.
+- **Slate Ink** (`text-2`, dark `dark-text-2`): secondary text, metadata, inactive nav.
+- **Faint Slate** (`text-3`): placeholders, chart axis labels, quiet icons (streak flame, empty-state icon).
+- **Hairline** (`line`) and **Rule** (`line-2`): card borders and row dividers; input, pill and ghost-button borders.
+
+### Data
+- **Activity scale** (`viz-1` to `viz-4`): four cobalt steps for the heatmap; level 0 is Mist.
+- **Project colours** (`project-*`, eight hues, each at least 3:1 on surface): used only as an 8 px dot or a bar, never as text or a fill behind text.
 
 ### Named Rules
-**La Regla de Estado, No Emoción.** El color comunica estado y jerarquía — nunca gamificación ni recompensa emocional. Si un nuevo color no responde a "¿qué estado señala?", no se agrega.
+**The One Block Rule.** Each region has at most one solid cobalt block: the next-action card in the content, the active destination in the navigation. Anything else that needs cobalt uses it as text, outline, fill of a small control, or a wash. That is why the desktop "Registrar" is outlined.
 
-**La Regla de la Sola Voz.** El acento verde aparece en un solo lugar por vista como máximo la mayoría de las veces (una acción primaria, un tab activo, una barra). Su escasez es lo que lo hace legible como "esto importa".
+**The Earned Amber Rule.** Amber marks milestones and real achievements, nothing else. High priority and past-due dates get ink weight (semibold `text` on Mist), not amber; notices are neutral surfaces with a cobalt icon.
+
+**The No Guilt Red Rule.** Red means destructive or error. Inactivity, a broken streak or an overdue task is never red.
+
+**The Verified Pair Rule.** Every text and graphic colour pair is checked by `node scripts/contrast.mjs` (29 pairs, AA in light and dark: 4.5:1 for text, 3:1 for bars, dots and cells). A new colour token enters only with its pair added to that script.
 
 ## Typography
 
-**Display/Body/Label Font:** fuente del sistema (`-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`) — una sola familia para todo, sin fuente de marca ni fuente mono separada.
+**Display Font:** system UI stack (-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial)
+**Body Font:** the same stack
+**Label/Mono Font:** none; numerals use tabular figures from the same stack
 
-**Character:** una sola tipografía nativa que cambia de personalidad solo por tamaño, peso y tracking — nunca por familia. Los números de métricas usan `font-variant-numeric: tabular-nums` para que las cifras no salten al actualizarse.
+**Character:** one family, carried by weight and tracking. Headlines are very heavy (750) and tightly tracked; body stays regular and roomy. Zero bytes of font, nothing fetched from a third party.
 
 ### Hierarchy
-- **Display** (700, 25px, 1.2, `-0.02em`): títulos de vista (`<h1>` de Hoy/Proyectos/Progreso/Ajustes) y encabezado de las pantallas de acceso (26px ahí, misma familia de rol).
-- **Headline** (700, 18px, 1.3): título de hoja modal (`sheet-title`) y título de la tarjeta de "siguiente acción" (`next-title`, baja a 16px en variante compacta).
-- **Metric** — cuatro pasos, no uno solo, todos peso 700 y tracking negativo, tamaño según cuánto protagonismo tiene la cifra en esa pantalla:
-  - **Metric SM** (19px): tarjetas pequeñas de Récords (seis a la vez, la más discreta).
-  - **Metric** (24px): mosaicos KPI de Progreso (`tile-n`).
-  - **Metric LG** (26px): contador de registros/racha del día en Hoy (`stat-n`).
-  - **Metric XL** (28px): porcentaje del periodo en Progreso (`prog-pct`) — la cifra más grande de toda la app.
-- **Body** (400, 15px, 1.5): texto de párrafo, ítems de lista, campos de formulario. Ancho de columna limitado por el contenedor de vista (640px), no por una medida de caracteres explícita.
-- **Body SM** (400, 14px, 1.4): texto compacto dentro de tarjeta o fila — avisos, ítems de patrones/distribución, "Cómo funciona", cuerpo del toast. Un paso por debajo de Body para contenido secundario que vive dentro de un contenedor ya delimitado, no para texto de nivel de página.
-- **Label** (600, 12px, `0.06em`, mayúsculas): eyebrows de sección, texto de switch/ajuste secundario.
-- **Label SM** (500, 13px): el texto secundario más frecuente del sistema — metadatos de lista (`.small`), texto de píldora, etiquetas de campo de formulario.
-- **Micro** (600, 11px): el nivel más pequeño con texto real — etiqueta de la barra de navegación inferior, `kbd`. Nunca por debajo de esto para texto que se debe leer, no solo distinguir.
-
-Tres valores quedan fuera de la escala a propósito, como excepciones de un solo uso y no como pasos a repetir: 10px en las etiquetas del eje del gráfico de barras (una sola instancia, ilegible como texto de lectura, solo de referencia visual), 16px en los campos de formulario (evita el zoom automático de iOS al enfocar, no es una decisión tipográfica), y 22px en el logo (marca única, no texto de interfaz). Ningún componente nuevo debe copiar estos tres valores.
+- **Display** (750, 27px, 1.15, -0.025em; 32px from 1024px): the next-action title in the cobalt block, the only display-size text on a screen. A compact variant drops to 19px.
+- **Headline** (750, 26px, 1.2, -0.025em): the view heading (greeting, screen name), under a 13px Slate date line.
+- **Numeral** (700, 26px, line-height 1, -0.02em, tabular): daily stats; the same treatment scales to 28px for project percentage, 24px for tiles and 19px for records and steppers.
+- **Title** (700, 18px): sheet and panel titles; card names use 600 at body size.
+- **Body** (400, 16px, 1.5): list items, activity and task titles, inputs (16px also prevents mobile zoom). Notices and prose use 14px.
+- **Button** (600, 15px; small buttons 13px).
+- **Meta** (400, 13px): dates, sub-lines, links (600), pill text (500).
+- **Section label** (650, 12px, 0.06em, uppercase, Slate): the heading of a home section ("Hoy", "Pendientes", "Proyectos", "Hitos"). It is the section's only heading, never a line placed above another heading.
 
 ### Named Rules
-**La Regla de la Familia Única.** Cero fuentes de terceros, cero KB de red, cero huella de IP enviada a un proveedor de fuentes — decisión de privacidad tomada explícitamente tras auditar la v1 del producto, no solo de rendimiento.
+**The Tabular Count Rule.** Every number that can change (counts, percentages, times, week totals) is set in tabular figures so values do not jitter as they update.
+
+**The System Only Rule.** Only the system stack. No web fonts, no third-party font requests.
 
 ## Layout
 
-Contenedor centrado de ancho máximo 640px (`--sp: 16px` de margen lateral) para todas las vistas de contenido — optimizado para lectura de una columna, nunca para multi-columna en móvil. El ritmo vertical entre bloques de una vista es 26px (`.block`); dentro de una lista, los ítems se separan por 8–10px.
+Mobile first, one centred column with a bottom bar; the desktop gains a fixed side navigation and the content is centred in the remaining region, never pinned left.
 
-Mobile-first con navegación inferior fija (`tabbar`, 4 destinos) y un botón de acción flotante circular centrado sobre ella para capturar una actividad en un toque; ambos respetan `env(safe-area-inset-bottom)`. A partir de 1000px de ancho la navegación migra a una barra lateral fija de 232px (`navside`) y el tabbar/FAB desaparecen — no es un colapso de la misma barra, es un cambio real de patrón de navegación entre densidades. Los mosaicos de progreso pasan de 2 a 4 columnas en el mismo punto de quiebre. La hoja modal es de ancho completo con esquinas superiores redondeadas en móvil y se centra como diálogo de 560px de ancho a partir de 620px.
+- **Gutter** (`--sp`): 16px on mobile, 20px from 640px, 24px from 1024px.
+- **Content width:** centred, max 1200px (1320px from 1728px). List and reading views (log, activity, tasks, settings, project detail) cap at 760px, and the sync chip above them aligns to that same 760px column.
+- **Rhythm:** 28px between home sections, 18px between the focus card and stats, 8px between list rows, 10px between project cards, 16px card padding.
+- **640px (tablet):** stats become three equal columns; project cards flow in an auto-fill grid (min 280px); records in three columns. Navigation is still the bottom bar.
+- **1024px (rail):** a 72px icons-only rail replaces the bottom bar (native tooltips and accessible names on every icon); "Registrar" becomes a 44px outlined circle; tiles go to four columns, records to six; the toast moves to the bottom right; detail sheets open as a 420px right-hand panel.
+- **1200px (sidebar):** a 240px sidebar with the brand, Inicio / Proyectos / Historia, the outlined "Registrar" with its `N` shortcut, and Tú pinned to the bottom.
+- **Home on 1024px and up:** the next-action card and the stats run the full content width, then an 8fr / 4fr grid (28px gap): Hoy on the left, Pendientes and Proyectos on the right.
+- **Touch:** interactive targets are at least 44px (`tap`); secondary controls at least 24px, with ticks extending their hit area invisibly.
 
 ## Elevation & Depth
 
-Sistema plano con profundidad de borde: en reposo, ninguna superficie usa sombra para separarse visualmente — lo hace un borde de 1px (`line`) sobre un fondo de tono distinto (`surface` sobre `paper`). La sombra existe pero es casi imperceptible en ese estado de reposo (`--shadow`, opacidad de sombra 0.05) y funciona como un acabado sutil, no como señal de jerarquía. La sombra se vuelve protagonista solo cuando un elemento literalmente flota por encima del contenido: hoja modal, toast y botón flotante usan `--shadow-lg` (opacidad 0.16, mucho más difusa y profunda) — ese salto de intensidad es la señal de "esto es un overlay", no un valor decorativo.
+Mostly flat, with tonal layering: surfaces sit on the cool ground separated by a 1px hairline, and the only depth cue at rest is a very soft ambient shadow. The cobalt block carries a deeper, blue-tinted shadow so it reads as the lifted surface. Overlays (sheets, toast) use the large shadow. In dark mode the same roles switch to black-based shadows.
 
 ### Shadow Vocabulary
-- **Reposo** (`box-shadow: 0 1px 2px rgba(22,32,28,.05), 0 4px 16px rgba(22,32,28,.05)`): tarjetas, mosaicos, gráfico de barras — casi invisible, complementa al borde.
-- **Overlay** (`box-shadow: 0 12px 40px rgba(22,32,28,.16)`): hoja modal, toast, interruptor (knob).
-- **Acento flotante** (`box-shadow: 0 6px 20px color-mix(in srgb, var(--accent) 35%, transparent)`): botón flotante de captura — única sombra que lleva el color del acento en vez de negro/tinta.
+- **Ambient** (`box-shadow: 0 1px 2px rgba(15,23,51,.05), 0 4px 16px rgba(15,23,51,.05)`): cards, project cards, selected segmented option, switch knob.
+- **Block** (`box-shadow: 0 10px 28px rgba(15,23,51,.16)`): the next-action card and the bottom-bar "+" only.
+- **Overlay** (`box-shadow: 0 12px 40px rgba(15,23,51,.18)`): sheets, side panel and toast.
 
 ### Named Rules
-**La Regla del Borde Hace el Trabajo.** Ninguna tarjeta en reposo depende de la sombra para leerse como superficie separada; si el borde de 1px se quitara, la sombra sola no bastaría. Reserva la sombra fuerte para lo que de verdad flota.
+**The Lifted Focus Rule.** Only the cobalt block gets the block shadow. Nothing else competes with it for elevation.
 
 ## Shapes
 
-El radio de esquina escala con el tamaño y la importancia del elemento, en cinco pasos discretos más la píldora: 3px (`hairline`, celdas fijas diminutas — punto del día de la semana, celda del mapa de calor), 7px (`--r-xs`, iconos pequeños, detalles), 8px (`tick`, la casilla cuadrada de completar tarea — a medio camino entre `hairline` y `sm` porque su tamaño de toque es mayor que una celda pero menor que un botón), 10px (`--r-sm`, botones, inputs, mosaicos pequeños), 14px (`--r`, tarjetas, superficies grandes, hoja modal). Los controles que deben leerse como "seleccionables de un toque" —píldoras de filtro, chips, tags, badges, interruptor— usan radio completo (999px). Los elementos circulares puros (botón flotante, punto de progreso semanal) son la excepción deliberada a la escala: marcan una acción o un estado singular, no una superficie de contenido. Bordes siempre de 1px, nunca gruesos; sin recortes (`clip-path`) ni siluetas irregulares en ningún componente.
-
-Tres valores existen fuera de esta escala a propósito y no se documentan como pasos reutilizables: el radio de 4px del anillo de foco global y de `kbd` es una utilidad genérica, no una decisión de forma de componente; los 13px del logo son un valor único de una sola marca; y el 2px en la esquina inferior de la barra del gráfico semanal y en los puntos de onboarding es un detalle de silueta de un solo elemento diminuto, no un paso de escala. Ninguno de los tres debe copiarse a un componente nuevo — si un componente nuevo necesita radio, usa uno de los cinco pasos de arriba.
+Softly rounded, three steps plus pill: 6px for the smallest pieces, 10px for controls (buttons, inputs, nav items, segmented track, record tiles), 16px for containers (cards, stats band, sheets, toast, the "+" square). Tags, pills, chips, bars and the sync chip are full pills. Ticks are 8px-rounded squares, activity dots and swatches are circles, heatmap cells are 3px-rounded squares. Borders are 1px hairlines; the desktop capture button is the one 1.5px cobalt outline. Empty states use a dashed 1px border instead of a card.
 
 ## Components
 
 ### Buttons
-- **Shape:** radio 10px (`--r-sm`), altura mínima 44px (objetivo táctil).
-- **Primary:** fondo `accent`, texto `accent-ink`, sin borde; usado una vez por pantalla como máximo.
-- **Ghost:** fondo `surface`, borde `line-strong`, texto `ink` — acción secundaria junto a una primaria.
-- **Danger / Danger-text:** fondo `danger` sólido para confirmaciones destructivas; variante de solo texto en rojo con borde tenue para acciones destructivas de bajo énfasis (p. ej. dentro de un formulario).
-- **Google:** mismo tratamiento que ghost, ancho completo, con el logo multicolor de Google sin recolorear — única excepción a "un acento" del sistema porque es un logo de terceros, no un color propio.
-- **Active/Loading:** se encoge a 97.5% al presionar (`transform: scale`); en carga muestra un spinner de borde que gira, sin cambiar de texto ni tamaño.
+Solid, compact and legible; every button is at least 44px tall.
+- **Shape:** gently rounded (10px).
+- **Primary:** cobalt with white text, 10px 16px, 15px semibold, optional leading 18px icon.
+- **Hover / Focus:** hover darkens to pressed cobalt; press scales to 0.975; focus is a 2px cobalt outline offset 2px.
+- **Ghost:** surface with a Rule border and ink text; hover to Mist.
+- **Small:** 36px tall, 13px text, for notice and secondary actions.
+- **Destructive:** solid red, or red text with a red-tinted border for less final actions.
+- **Link:** 13px semibold cobalt with a trailing arrow icon, used for "Ver todos", "Ver registro", "Otra".
 
-### Chips, Pills & Tags
-- **Pill (filtro):** fondo `surface`, borde `line-strong`, radio completo; estado activo cambia a fondo `accent-soft` + texto `accent` + peso 600 — nunca cambia de forma, solo de color y peso.
-- **Tag:** más pequeño y sin borde, fondo `surface-sunken`; variantes semánticas `tag-accent` (fondo `accent-soft`) y `tag-warn` (fondo `warn-soft`).
-- **Chip de proyecto:** combina un punto de color categórico (`pdot`, uno de los 8 tonos de proyecto) con el nombre — es la única unidad de interfaz que lleva color libre de la Paleta de Proyectos.
+### Chips and Tags
+- **Tag:** Mist pill, 12px Slate text, optional 13px icon. The emphasis variant (high priority, past due) switches to semibold ink on the same Mist, never a warning hue.
+- **Project chip:** Mist pill with the project dot, links to the project.
+- **Filter pill:** 36px surface pill with a Rule border; selected is Cobalt Wash with cobalt text and a 45% cobalt border.
 
 ### Cards / Containers
-- **Corner Style:** 14px (`--r`).
-- **Background:** `surface` sobre `paper`; variante "siguiente acción" (`.next`) usa un degradado sutil de `accent-soft` a `surface` para diferenciarse como la tarjeta protagonista de Hoy sin romper el sistema plano.
-- **Shadow Strategy:** reposo, ver Elevation & Depth.
-- **Border:** 1px `line` en todas las tarjetas; `.next` usa un borde teñido con el acento (`color-mix` al 30%).
-- **Internal Padding:** 16px estándar.
+- **Corner Style:** 16px.
+- **Background:** Surface White on the cool ground.
+- **Shadow Strategy:** Ambient (see Elevation).
+- **Border:** 1px Hairline.
+- **Internal Padding:** 16px (14px for project cards, 12px 14px for notices and tiles).
+- **Notice:** a neutral card with a cobalt icon, 14px text and small ghost actions plus a dismiss icon button.
 
 ### Inputs / Fields
-- **Style:** fondo `surface`, borde 1px `line-strong`, radio 10px, padding 11px/13px, tamaño de fuente 16px (evita zoom automático en iOS).
-- **Focus:** borde transparente + anillo de foco sólido de 2px en `accent`, desplazado hacia adentro (`outline-offset: -1px`) — mismo tratamiento en todos los campos, checkboxes visuales y controles segmentados.
-- **Segmented / Swatch pickers:** el control de radio nativo se oculta visualmente; el estado marcado se expresa con fondo `accent-soft` (segmentado) o un anillo `ink` con separación de fondo (swatch de color).
-- **Stepper:** para un valor numérico pequeño y acotado (p. ej. la meta semanal, 1–7), dos `icon-btn` (iconos `back`/`arrow`, los mismos de la navegación de periodo de Progreso) enmarcan el número en tipografía Metric SM — nunca una lista plana de más de 4 botones para elegir un número dentro de un rango corto.
+- **Style:** Surface White, 1px Rule border, 10px radius, 11px 13px padding, 16px text, 44px minimum; label 13px Slate above.
+- **Focus:** the border gives way to a 2px cobalt outline.
+- **Segmented option:** bordered strip; the checked option takes Cobalt Wash and cobalt semibold text.
 
 ### Navigation
-- **Móvil (tabbar):** fija al fondo, 4 destinos en grid, fondo `surface` semitransparente con `backdrop-filter: blur`, ítem activo en `accent`; el botón flotante de captura se superpone al centro, empujando los ítems 2 y 3 hacia los costados.
-- **Escritorio (navside):** barra lateral fija de 232px, ítems con icono + etiqueta, hover a `surface-sunken`, activo a fondo `accent-soft` + texto `accent` en negrita — mismo lenguaje de "estado activo" que el resto del sistema, solo cambia el contenedor.
+- **Mobile and tablet:** a translucent surface bottom bar with a blur and a top hairline: Inicio · Proyectos · + · Historia · Tú. Labels 11px; the active item turns cobalt and bold with a 3px cobalt indicator along the top edge. The centre "+" is a 52px solid cobalt rounded square (16px radius) with the block shadow, scaling to 0.94 on press.
+- **Desktop:** a surface sidebar with a right hairline. Items are 44px, 10px-rounded, Slate at 550 weight; hover to Mist; the active destination is a solid cobalt block with white bold text. "Registrar" is outlined in cobalt (1.5px) with a cobalt-wash `N` key, so the active destination stays the only solid block. On the rail it collapses to a 44px outlined circle.
+- **Historia tabs:** two levels that must not look alike. The primary row (Actividad / Registro) is an underline tab row: 15px semibold, 24px apart, active in cobalt with a 2px cobalt underline on a hairline. The period control (Semana / Mes / Año) is a compact segmented control: a Mist track, 32px options, the selected one a white chip with the ambient shadow.
 
-### Next Action Card (signature)
-La tarjeta de mayor peso visual de toda la app: única superficie con degradado (siempre sutil, `accent-soft` → `surface`) y borde teñido de acento. Contiene el título de la próxima tarea sugerida, chips explicando el motivo del cálculo (`next-why`) y los botones de acción — es la expresión directa del principio de producto "el sistema decide y explica la siguiente acción".
+### Next-Action Block (signature)
+The focus of the home screen: a full-width solid cobalt card, 22px padding (28px 30px from 1024px). The task title is the heading itself, white Display type with no label above it. Beneath it, the reasons as white-wash tags and the project as an outlined tag with a dot and arrow (underlined on hover) that links to the project. Actions: a white button with cobalt text for the main step, outlined white ghost buttons for alternatives, and a white "Otra" link to see the next recommendation. Focus rings inside the block turn white.
 
-### Toast (signature)
-Notificación flotante centrada (o esquina inferior derecha en escritorio), con icono circular de estado, cuerpo de dos líneas y acción de deshacer en texto de acento — nunca autodestructiva sin posibilidad de deshacer cuando la acción lo permite. Usa `--shadow-lg`, igual que la hoja modal, porque también es un overlay.
+### Progress Bar
+An 8px Mist pill track (10px big, 6px thin) with a cobalt fill. When a keyed bar's value changes, the fill animates in width from the previous value to the new one over 400ms with `cubic-bezier(.2,.8,.2,1)`; under `prefers-reduced-motion` it jumps straight to the new value. The bar exposes `role="progressbar"` with its value.
+
+### Stats Band
+A single surface band under the focus card: today's count, active days this week as `n/goal` with seven small day squares (filled cobalt when active, the current day ringed in Faint Slate), and the current streak with a quiet Faint Slate flame. The streak number stays ink; it is never tinted to create urgency.
+
+### Feedback Toast
+A surface card with the overlay shadow, a 28px round icon (Cobalt Wash with a drawn check for success, Mist for info), a bold title and short lines. Bottom centre above the bar on mobile, bottom right on desktop. With an undo it stays 8s (3.2s otherwise) and pauses on hover; "Deshacer" is a cobalt semibold text button.
+
+### Sheet and Panel
+A bottom sheet (max 560px, 16px top corners) on mobile, centred with full corners from 620px. Detail sheets opened as a panel become a full-height 420px right-hand panel from 1024px with a left hairline, sliding in over 200ms.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** limitar el acento verde a una acción o estado por vista; su escasez es la señal (La Regla de la Sola Voz).
-- **Do** separar tarjetas del fondo con borde de 1px + sombra casi invisible; reservar sombra fuerte (`--shadow-lg`) solo para overlays reales (hoja, toast, FAB).
-- **Do** escalar el radio con el tamaño del elemento (7 → 10 → 14px) y usar radio completo (999px) solo en controles seleccionables de un toque.
-- **Do** usar la Paleta de Proyectos libremente para distinguir proyectos — es la única zona categórica del sistema.
-- **Do** mantener objetivos táctiles ≥44px en controles primarios (mínimo 24px en elementos secundarios) y respetar `prefers-reduced-motion` apagando toda animación no funcional.
-- **Do** escapar (`esc()`) todo contenido de usuario antes de insertarlo en HTML.
+- **Do** give the next step a solid cobalt block (`block`) with white text, and keep it the only solid block in its region.
+- **Do** use cobalt as text, outline, small-control fill or wash (`cobalt-soft`) everywhere else.
+- **Do** mark high priority and past-due dates with ink weight on Mist, not a colour.
+- **Do** keep amber for milestones and real achievements.
+- **Do** set every changing number in tabular figures and animate progress from its previous value (400ms, `cubic-bezier(.2,.8,.2,1)`), off under reduced motion.
+- **Do** centre content in its region: 1200px max (1320px from 1728px), 760px for list and reading views.
+- **Do** run `node scripts/contrast.mjs` after touching any colour token, and add the pair for any new one.
+- **Do** keep touch targets at 44px or more.
 
 ### Don't:
-- **Don't** introducir una segunda tipografía, un CDN de fuentes, o cualquier fuente que no sea la del sistema operativo.
-- **Don't** usar color para premiar o "gamificar" — sin XP, niveles, clasificaciones, recompensas variables, confeti ni notificaciones diseñadas para inflar métricas.
-- **Don't** mostrar un número, barra o estadística que no se pueda explicar en Ajustes → Cómo funciona.
-- **Don't** añadir sombra decorativa a una tarjeta en reposo; si necesita más separación, sube el contraste de borde antes que la sombra.
-- **Don't** usar `--danger` (rojo) fuera de acciones destructivas o errores reales.
-- **Don't** requerir un framework, build o dependencia para un cambio visual — si algo lo exige, se replantea el enfoque (restricción técnica dura del proyecto).
+- **Don't** place a second solid cobalt block next to the focus card or the active destination; the desktop "Registrar" stays outlined.
+- **Don't** use amber for priority, deadlines, notices or streaks.
+- **Don't** use red for inactivity, missed days or overdue work; red is only for destructive actions and errors.
+- **Don't** load web fonts or any third-party font.
+- **Don't** pin the content column to the left or narrow the home view to a single reading column on desktop.
+- **Don't** use project colours as text or as a fill behind text; they are dots and bars.
+- **Don't** add celebratory motion (confetti, bursts, pulsing); motion only reports a value that changed.

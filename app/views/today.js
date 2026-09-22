@@ -17,14 +17,13 @@ function nextCard() {
     : n.type === 'milestone' ? `data-act="toggle-milestone" data-id="${n.id}"`
     : n.type === 'define' ? `data-act="new-task" data-project="${n.projectId}"`
     : `data-act="capture"`;
-  return `<section class="card next">
-    <div class="next-head"><h2 class="eyebrow">Siguiente acción</h2>${items.length > 1 ? `<button class="link" data-act="next-other">Otra${icon('arrow')}</button>` : ''}</div>
-    <p class="next-title">${esc(n.title)}</p>
-    <div class="next-why">${n.reasons.map(r => `<span class="tag">${esc(r)}</span>`).join('')}${p ? `<span class="tag">${dot(p.color)}${esc(p.name)}</span>` : ''}</div>
+  // El título es el encabezado (sin etiqueta encima); el proyecto es un enlace dentro de los motivos.
+  return `<section class="card next" aria-label="Siguiente acción">
+    <div class="next-head"><h2 class="next-title">${esc(n.title)}</h2>${items.length > 1 ? `<button class="link" data-act="next-other" aria-label="Ver otra recomendación">Otra${icon('arrow')}</button>` : ''}</div>
+    <div class="next-why">${n.reasons.map(r => `<span class="tag">${esc(r)}</span>`).join('')}${p ? `<a class="tag" href="#/project/${p.id}">${dot(p.color)}${esc(p.name)}${icon('arrow')}</a>` : ''}</div>
     <div class="next-actions">
       <button class="btn primary" ${act}>${icon(n.type === 'log' ? 'plus' : 'check')}${KIND_ACTION[n.type]}</button>
       ${n.type === 'task' ? `<button class="btn ghost" data-act="start-task" data-id="${n.id}">Empezar</button>` : ''}
-      ${p ? `<a class="btn ghost" href="#/project/${p.id}">Ver proyecto</a>` : ''}
     </div>
   </section>`;
 }
@@ -92,21 +91,26 @@ export function render() {
       <p class="date">${esc(cap(fmtDayLong(today)))}</p>
       <h1>${model.greeting()}${name ? `, ${esc(name)}` : ''}</h1>
     </div>
-    <a class="icon-btn" href="#/settings" aria-label="Ajustes y perfil">${icon('user')}</a>
+    <a class="icon-btn" href="#/you" aria-label="Tú: perfil y ajustes">${icon('user')}</a>
   </header>
   ${noticeCard()}
   ${nextCard()}
   ${statsRow()}
+  <div class="home-grid">
+  <div class="home-main">
 
   <section class="block">
-    <div class="block-head"><h2 class="eyebrow">Hoy</h2>${acts.length ? `<a class="link" href="#/log">Ver registro${icon('arrow')}</a>` : ''}</div>
+    <div class="block-head"><h2 class="eyebrow">Hoy</h2>${acts.length ? `<a class="link" href="#/history/log">Ver registro${icon('arrow')}</a>` : ''}</div>
     ${acts.length
       ? `<ul class="acts">${acts.map(a => activityRow(a)).join('')}</ul>`
       : empty('plus', 'Aún no hay nada de hoy', 'Registra lo primero que hiciste: basta una línea, con el botón de abajo.')}
   </section>
 
+  ${closingCard(acts)}
+  </div>
+  <div class="home-side">
   <section class="block">
-    <div class="block-head"><h2 class="eyebrow">Pendientes</h2>${openTotal > open.length ? `<a class="link" href="#/tasks">Ver las ${openTotal}${icon('arrow')}</a>` : ''}</div>
+    <div class="block-head"><h2 class="eyebrow">Pendientes</h2>${openTotal > open.length ? `<a class="link" href="#/next">Ver las ${openTotal}${icon('arrow')}</a>` : ''}</div>
     ${open.length
       ? `<ul class="tasks">${open.map(t => taskRow(t)).join('')}</ul>`
       : empty('check', 'Sin tareas abiertas', 'Anota lo siguiente que quieras hacer y no tendrás que recordarlo.', '<button class="btn ghost" data-act="new-task">Nueva tarea</button>')}
@@ -118,6 +122,6 @@ export function render() {
       ? `<div class="pcards">${projects.map(({ p }) => projectCard(p)).join('')}</div>`
       : empty('folder', 'Sin proyectos activos', 'Un proyecto agrupa lo que haces y muestra tu avance.', '<button class="btn ghost" data-act="new-project">Crear proyecto</button>')}
   </section>
-
-  ${closingCard(acts)}`;
+  </div>
+  </div>`;
 }

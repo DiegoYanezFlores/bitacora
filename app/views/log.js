@@ -22,7 +22,7 @@ export function render() {
 
   return `
   <header class="view-head">
-    <div><h1>Registro</h1><p class="date">${state.q || state.kind || state.project ? plural(all.length, 'resultado', 'resultados') : plural(all.length, 'actividad', 'actividades')}</p></div>
+    <div><h1>Historia</h1><p class="date">${state.q || state.kind || state.project ? plural(all.length, 'resultado', 'resultados') : plural(all.length, 'actividad', 'actividades')}</p></div>
     <button class="icon-btn" data-act="capture" aria-label="Registrar">${icon('plus')}</button>
   </header>
 
