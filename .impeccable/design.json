@@ -1,160 +1,938 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-18T14:55:00.000Z",
+  "generatedAt": "2026-09-22T00:49:06.539Z",
   "title": "Design System: Bitácora",
   "extensions": {
     "colorMeta": {
-      "ink": { "role": "neutral", "displayName": "Tinta", "canonical": "#16201C", "tonalRamp": ["#0D1210", "#141A17", "#1B231F", "#26302B", "#55625C", "#A2AEA8", "#DFE4E0", "#F6F7F5"] },
-      "ink-soft": { "role": "neutral", "displayName": "Tinta Suave", "canonical": "#55625C" },
-      "ink-faint": { "role": "neutral", "displayName": "Tinta Tenue", "canonical": "#64706A" },
-      "paper": { "role": "neutral", "displayName": "Papel Cálido", "canonical": "#F6F7F5", "tonalRamp": ["#0D1210", "#141A17", "#1B231F", "#26302B", "#33403A", "#86938D", "#DFE4E0", "#F6F7F5"] },
-      "surface": { "role": "neutral", "displayName": "Superficie", "canonical": "#FFFFFF" },
-      "surface-sunken": { "role": "neutral", "displayName": "Superficie Hundida", "canonical": "#EFF1EE" },
-      "line": { "role": "neutral", "displayName": "Línea", "canonical": "#DFE4E0" },
-      "line-strong": { "role": "neutral", "displayName": "Línea Marcada", "canonical": "#CDD4CE" },
-      "accent": { "role": "primary", "displayName": "Verde Bitácora", "canonical": "#0B7A5C", "tonalRamp": ["#04241A", "#063829", "#0B7A5C", "#0E8A75", "#3CD3A0", "#7EE6C4", "#B9F1DD", "#E4F1EC"] },
-      "accent-ink": { "role": "primary", "displayName": "Tinta sobre Acento", "canonical": "#FFFFFF" },
-      "accent-soft": { "role": "primary", "displayName": "Verde Bitácora Suave", "canonical": "#E4F1EC" },
-      "streak": { "role": "secondary", "displayName": "Ámbar Racha", "canonical": "#C2410C", "tonalRamp": ["#2E2118", "#7A2E0C", "#A6390F", "#C2410C", "#FB923C", "#FCA96A", "#FCC79E", "#FCEDE4"] },
-      "streak-soft": { "role": "secondary", "displayName": "Ámbar Racha Suave", "canonical": "#FCEDE4" },
-      "warn": { "role": "tertiary", "displayName": "Ámbar Aviso", "canonical": "#A64B00" },
-      "warn-soft": { "role": "tertiary", "displayName": "Ámbar Aviso Suave", "canonical": "#FBF0E2" },
-      "danger": { "role": "tertiary", "displayName": "Rojo Alerta", "canonical": "#B42318" },
-      "project-teal": { "role": "categorical", "displayName": "Proyecto Teal", "canonical": "#0E8A75" },
-      "project-blue": { "role": "categorical", "displayName": "Proyecto Azul", "canonical": "#2563EB" },
-      "project-violet": { "role": "categorical", "displayName": "Proyecto Violeta", "canonical": "#7C3AED" },
-      "project-rose": { "role": "categorical", "displayName": "Proyecto Rosa", "canonical": "#BE185D" },
-      "project-orange": { "role": "categorical", "displayName": "Proyecto Naranja", "canonical": "#C2410C" },
-      "project-amber": { "role": "categorical", "displayName": "Proyecto Ámbar", "canonical": "#A16207" },
-      "project-green": { "role": "categorical", "displayName": "Proyecto Verde", "canonical": "#15803D" },
-      "project-slate": { "role": "categorical", "displayName": "Proyecto Pizarra", "canonical": "#475569" }
+      "cobalt": {
+        "role": "primary",
+        "displayName": "Vivid Cobalt",
+        "canonical": "#2F4BF5",
+        "oklch": "oklch(51.7% 0.252 267.8)",
+        "tonalRamp": [
+          "#020629",
+          "#0C1860",
+          "#1A2D9D",
+          "#2A43DE",
+          "#486DFA",
+          "#7498FF",
+          "#AEC6FF",
+          "#EBEEF8"
+        ]
+      },
+      "cobalt-strong": {
+        "role": "primary",
+        "displayName": "Pressed Cobalt",
+        "canonical": "#2238D1",
+        "oklch": "oklch(44.6% 0.231 267.6)",
+        "tonalRamp": [
+          "#02052B",
+          "#0A1663",
+          "#1829A2",
+          "#2B48D5",
+          "#5174E2",
+          "#7C9BEC",
+          "#B3C7F7",
+          "#EBEEF6"
+        ]
+      },
+      "cobalt-soft": {
+        "role": "primary",
+        "displayName": "Cobalt Wash",
+        "canonical": "#E6EBFF",
+        "oklch": "oklch(94.2% 0.028 274.7)",
+        "tonalRamp": [
+          "#0B0B0D",
+          "#232428",
+          "#3E3F46",
+          "#5B5D66",
+          "#7A7D88",
+          "#9A9EAC",
+          "#C2C6D8",
+          "#ECEEF7"
+        ]
+      },
+      "block": {
+        "role": "primary",
+        "displayName": "Cobalt Block",
+        "canonical": "#2F4BF5",
+        "oklch": "oklch(51.7% 0.252 267.8)",
+        "tonalRamp": [
+          "#020629",
+          "#0C1860",
+          "#1A2D9D",
+          "#2A43DE",
+          "#486DFA",
+          "#7498FF",
+          "#AEC6FF",
+          "#EBEEF8"
+        ]
+      },
+      "block-ink": {
+        "role": "primary",
+        "displayName": "Block Ink",
+        "canonical": "#FFFFFF",
+        "oklch": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#242424",
+          "#404040",
+          "#5D5D5D",
+          "#7D7D7D",
+          "#9E9E9E",
+          "#C7C7C7",
+          "#EEEEEE"
+        ]
+      },
+      "block-ink-2": {
+        "role": "primary",
+        "displayName": "Block Ink Soft",
+        "canonical": "#DDE4FF",
+        "oklch": "oklch(92.2% 0.038 274.1)",
+        "tonalRamp": [
+          "#0A0B0E",
+          "#222429",
+          "#3D3F48",
+          "#5A5D69",
+          "#797D8C",
+          "#999EB1",
+          "#C0C6DE",
+          "#ECEEF7"
+        ]
+      },
+      "milestone": {
+        "role": "secondary",
+        "displayName": "Milestone Amber",
+        "canonical": "#FFA826",
+        "oklch": "oklch(79.9% 0.164 70.2)",
+        "tonalRamp": [
+          "#130900",
+          "#341F02",
+          "#593806",
+          "#80520D",
+          "#AA6F16",
+          "#D68C1E",
+          "#FFB659",
+          "#F8ECE0"
+        ]
+      },
+      "milestone-ink": {
+        "role": "secondary",
+        "displayName": "Milestone Amber Ink",
+        "canonical": "#A35A00",
+        "oklch": "oklch(54.2% 0.127 60.2)",
+        "tonalRamp": [
+          "#160700",
+          "#391C00",
+          "#603300",
+          "#8A4B00",
+          "#AE6B2E",
+          "#C59269",
+          "#DFC1A9",
+          "#F2EDEA"
+        ]
+      },
+      "milestone-soft": {
+        "role": "secondary",
+        "displayName": "Milestone Amber Wash",
+        "canonical": "#FFF1DC",
+        "oklch": "oklch(96.4% 0.032 78.2)",
+        "tonalRamp": [
+          "#0C0B09",
+          "#26241F",
+          "#433F39",
+          "#635D54",
+          "#847C71",
+          "#A69D8F",
+          "#D1C6B4",
+          "#F4EDE3"
+        ]
+      },
+      "warn": {
+        "role": "tertiary",
+        "displayName": "Warning Umber",
+        "canonical": "#9A5200",
+        "oklch": "oklch(51.5% 0.123 58.2)",
+        "tonalRamp": [
+          "#160700",
+          "#3A1B00",
+          "#613200",
+          "#8C4A00",
+          "#AB6C39",
+          "#C3936F",
+          "#DEC1AC",
+          "#F2EDEA"
+        ]
+      },
+      "warn-soft": {
+        "role": "tertiary",
+        "displayName": "Warning Umber Wash",
+        "canonical": "#FFF3DF",
+        "oklch": "oklch(96.8% 0.029 80.7)",
+        "tonalRamp": [
+          "#0C0B09",
+          "#262420",
+          "#433F39",
+          "#625D55",
+          "#837C72",
+          "#A59D90",
+          "#D0C6B5",
+          "#F4EEE4"
+        ]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Destructive Red",
+        "canonical": "#D1242F",
+        "oklch": "oklch(55.7% 0.206 24.6)",
+        "tonalRamp": [
+          "#1D0102",
+          "#48060A",
+          "#781017",
+          "#AB1C25",
+          "#D73E40",
+          "#E87972",
+          "#F7B4AE",
+          "#F6ECEB"
+        ]
+      },
+      "bg": {
+        "role": "neutral",
+        "displayName": "Cool White",
+        "canonical": "#F5F7FB",
+        "oklch": "oklch(97.6% 0.006 264.5)",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#242425",
+          "#3F4041",
+          "#5D5E5F",
+          "#7C7D7F",
+          "#9D9EA1",
+          "#C6C7CA",
+          "#EDEEF0"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface White",
+        "canonical": "#FFFFFF",
+        "oklch": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#242424",
+          "#404040",
+          "#5D5D5D",
+          "#7D7D7D",
+          "#9E9E9E",
+          "#C7C7C7",
+          "#EEEEEE"
+        ]
+      },
+      "surface-2": {
+        "role": "neutral",
+        "displayName": "Mist",
+        "canonical": "#EDF0F7",
+        "oklch": "oklch(95.5% 0.010 267.4)",
+        "tonalRamp": [
+          "#0B0B0C",
+          "#232425",
+          "#3F4042",
+          "#5C5D60",
+          "#7B7D81",
+          "#9C9EA3",
+          "#C5C7CD",
+          "#EDEEF2"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Midnight Ink",
+        "canonical": "#0F1733",
+        "oklch": "oklch(21.5% 0.056 269.3)",
+        "tonalRamp": [
+          "#050A1C",
+          "#1A223E",
+          "#363F58",
+          "#555D73",
+          "#767D8F",
+          "#999EAC",
+          "#C4C7CF",
+          "#EEEEF0"
+        ]
+      },
+      "text-2": {
+        "role": "neutral",
+        "displayName": "Slate Ink",
+        "canonical": "#4A5470",
+        "oklch": "oklch(44.9% 0.048 269.2)",
+        "tonalRamp": [
+          "#080B12",
+          "#1E2432",
+          "#373F55",
+          "#535D78",
+          "#747D93",
+          "#989EAF",
+          "#C3C7D1",
+          "#EEEEF0"
+        ]
+      },
+      "text-3": {
+        "role": "neutral",
+        "displayName": "Faint Slate",
+        "canonical": "#5B6580",
+        "oklch": "oklch(50.9% 0.045 268.9)",
+        "tonalRamp": [
+          "#090B11",
+          "#1F242F",
+          "#393F51",
+          "#545D76",
+          "#747D94",
+          "#979EB0",
+          "#C3C7D2",
+          "#EEEEF0"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#E1E6F0",
+        "oklch": "oklch(92.4% 0.015 264.5)",
+        "tonalRamp": [
+          "#0B0B0C",
+          "#232426",
+          "#3E4043",
+          "#5B5E62",
+          "#7A7D83",
+          "#9B9EA6",
+          "#C3C7D0",
+          "#EDEEF2"
+        ]
+      },
+      "line-2": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "canonical": "#CBD3E1",
+        "oklch": "oklch(86.5% 0.021 261.8)",
+        "tonalRamp": [
+          "#0A0B0D",
+          "#222427",
+          "#3D4045",
+          "#5A5E64",
+          "#797D86",
+          "#999FA9",
+          "#C0C8D5",
+          "#EDEEF1"
+        ]
+      },
+      "viz-1": {
+        "role": "data",
+        "displayName": "Activity Step 1",
+        "canonical": "#C7D0FF",
+        "oklch": "oklch(86.6% 0.066 276.4)",
+        "tonalRamp": [
+          "#0B1020",
+          "#1C2759",
+          "#2238D1",
+          "#2F4BF5",
+          "#5670FA",
+          "#8C9DFF",
+          "#C7D0FF",
+          "#E6EBFF"
+        ]
+      },
+      "viz-2": {
+        "role": "data",
+        "displayName": "Activity Step 2",
+        "canonical": "#8C9DFF",
+        "oklch": "oklch(72.4% 0.143 274.8)",
+        "tonalRamp": [
+          "#0B1020",
+          "#1C2759",
+          "#2238D1",
+          "#2F4BF5",
+          "#5670FA",
+          "#8C9DFF",
+          "#C7D0FF",
+          "#E6EBFF"
+        ]
+      },
+      "viz-3": {
+        "role": "data",
+        "displayName": "Activity Step 3",
+        "canonical": "#5670FA",
+        "oklch": "oklch(60.2% 0.207 270.8)",
+        "tonalRamp": [
+          "#0B1020",
+          "#1C2759",
+          "#2238D1",
+          "#2F4BF5",
+          "#5670FA",
+          "#8C9DFF",
+          "#C7D0FF",
+          "#E6EBFF"
+        ]
+      },
+      "viz-4": {
+        "role": "data",
+        "displayName": "Activity Step 4",
+        "canonical": "#2F4BF5",
+        "oklch": "oklch(51.7% 0.252 267.8)",
+        "tonalRamp": [
+          "#0B1020",
+          "#1C2759",
+          "#2238D1",
+          "#2F4BF5",
+          "#5670FA",
+          "#8C9DFF",
+          "#C7D0FF",
+          "#E6EBFF"
+        ]
+      },
+      "project-teal": {
+        "role": "data",
+        "displayName": "Project Teal",
+        "canonical": "#0F9D84",
+        "oklch": "oklch(62.3% 0.114 175.7)",
+        "tonalRamp": [
+          "#000F0B",
+          "#012B23",
+          "#034B3E",
+          "#076D5B",
+          "#0D927A",
+          "#5AB19C",
+          "#A5D3C6",
+          "#EAF0EE"
+        ]
+      },
+      "project-blue": {
+        "role": "data",
+        "displayName": "Project Blue",
+        "canonical": "#0284C7",
+        "oklch": "oklch(58.8% 0.139 242.0)",
+        "tonalRamp": [
+          "#000C19",
+          "#00273F",
+          "#004469",
+          "#016397",
+          "#0885C7",
+          "#62A6D8",
+          "#A7CDEA",
+          "#EAEFF4"
+        ]
+      },
+      "project-violet": {
+        "role": "data",
+        "displayName": "Project Violet",
+        "canonical": "#7C3AED",
+        "oklch": "oklch(54.1% 0.247 293.0)",
+        "tonalRamp": [
+          "#0E0324",
+          "#290F56",
+          "#481F8E",
+          "#6930CA",
+          "#8756F1",
+          "#A488F8",
+          "#C9BDFE",
+          "#EEEDF7"
+        ]
+      },
+      "project-rose": {
+        "role": "data",
+        "displayName": "Project Rose",
+        "canonical": "#DB2777",
+        "oklch": "oklch(59.2% 0.218 0.6)",
+        "tonalRamp": [
+          "#1C010A",
+          "#450622",
+          "#740F3C",
+          "#A51B58",
+          "#DA2777",
+          "#EC6E99",
+          "#F9AFC4",
+          "#F7EBEE"
+        ]
+      },
+      "project-orange": {
+        "role": "data",
+        "displayName": "Project Orange",
+        "canonical": "#EA580C",
+        "oklch": "oklch(64.6% 0.194 41.1)",
+        "tonalRamp": [
+          "#1A0400",
+          "#411301",
+          "#6E2502",
+          "#9D3805",
+          "#CF4D09",
+          "#F17545",
+          "#FCB398",
+          "#F7ECE8"
+        ]
+      },
+      "project-amber": {
+        "role": "data",
+        "displayName": "Project Amber",
+        "canonical": "#A16207",
+        "oklch": "oklch(55.4% 0.121 66.4)",
+        "tonalRamp": [
+          "#140800",
+          "#361E01",
+          "#5C3602",
+          "#845005",
+          "#A96F2A",
+          "#C19567",
+          "#DCC2A8",
+          "#F2EEEA"
+        ]
+      },
+      "project-green": {
+        "role": "data",
+        "displayName": "Project Green",
+        "canonical": "#16A34A",
+        "oklch": "oklch(62.7% 0.170 149.2)",
+        "tonalRamp": [
+          "#001003",
+          "#022D0F",
+          "#054E1F",
+          "#0C7131",
+          "#139644",
+          "#59B66E",
+          "#A4D6AC",
+          "#E9F1EA"
+        ]
+      },
+      "project-slate": {
+        "role": "data",
+        "displayName": "Project Slate",
+        "canonical": "#64748B",
+        "oklch": "oklch(55.4% 0.041 257.4)",
+        "tonalRamp": [
+          "#080B10",
+          "#1E242D",
+          "#37404E",
+          "#515F72",
+          "#6F7E94",
+          "#949FB0",
+          "#C1C8D2",
+          "#EDEEF0"
+        ]
+      },
+      "dark-bg": {
+        "role": "neutral",
+        "displayName": "Night Ground (dark)",
+        "canonical": "#0B1020",
+        "oklch": "oklch(17.7% 0.034 269.6)",
+        "tonalRamp": [
+          "#070A17",
+          "#1E2333",
+          "#3A3F4E",
+          "#595D6A",
+          "#797D88",
+          "#9B9EA6",
+          "#C5C7CC",
+          "#EEEEEF"
+        ]
+      },
+      "dark-surface": {
+        "role": "neutral",
+        "displayName": "Night Surface (dark)",
+        "canonical": "#121833",
+        "oklch": "oklch(22.0% 0.053 271.9)",
+        "tonalRamp": [
+          "#060A1A",
+          "#1B223C",
+          "#383E57",
+          "#565D72",
+          "#777D8F",
+          "#9A9EAC",
+          "#C4C7CF",
+          "#EEEEF0"
+        ]
+      },
+      "dark-surface-2": {
+        "role": "neutral",
+        "displayName": "Night Mist (dark)",
+        "canonical": "#1A2244",
+        "oklch": "oklch(26.4% 0.064 271.4)",
+        "tonalRamp": [
+          "#060A1A",
+          "#192142",
+          "#353E5D",
+          "#545C78",
+          "#757C93",
+          "#989EAF",
+          "#C4C7D1",
+          "#EEEEF0"
+        ]
+      },
+      "dark-text": {
+        "role": "neutral",
+        "displayName": "Night Ink (dark)",
+        "canonical": "#EEF1FA",
+        "oklch": "oklch(95.8% 0.012 271.3)",
+        "tonalRamp": [
+          "#0B0B0C",
+          "#232426",
+          "#3F4042",
+          "#5C5D61",
+          "#7B7D82",
+          "#9C9EA4",
+          "#C5C7CF",
+          "#EDEEF3"
+        ]
+      },
+      "dark-text-2": {
+        "role": "neutral",
+        "displayName": "Night Slate (dark)",
+        "canonical": "#A9B2CC",
+        "oklch": "oklch(76.5% 0.039 270.3)",
+        "tonalRamp": [
+          "#0A0B0E",
+          "#21242B",
+          "#3C3F4A",
+          "#585D6C",
+          "#767D90",
+          "#969EB5",
+          "#C0C7DA",
+          "#EDEEF1"
+        ]
+      },
+      "dark-cobalt": {
+        "role": "primary",
+        "displayName": "Periwinkle Cobalt (dark accent)",
+        "canonical": "#8FA2FF",
+        "oklch": "oklch(73.6% 0.136 273.8)",
+        "tonalRamp": [
+          "#080A17",
+          "#1D223B",
+          "#343C64",
+          "#4E5990",
+          "#6977BE",
+          "#8597EF",
+          "#B5C4FF",
+          "#EBEEF7"
+        ]
+      },
+      "dark-block": {
+        "role": "primary",
+        "displayName": "Cobalt Block (dark)",
+        "canonical": "#3551F2",
+        "oklch": "oklch(52.6% 0.241 268.4)",
+        "tonalRamp": [
+          "#030627",
+          "#0E195C",
+          "#1D2F97",
+          "#2E47D7",
+          "#4B6EF7",
+          "#7798FD",
+          "#B0C6FF",
+          "#EBEEF7"
+        ]
+      },
+      "dark-milestone": {
+        "role": "secondary",
+        "displayName": "Milestone Amber (dark)",
+        "canonical": "#FFB547",
+        "oklch": "oklch(82.4% 0.149 73.3)",
+        "tonalRamp": [
+          "#120901",
+          "#322007",
+          "#553A11",
+          "#7B551D",
+          "#A3722A",
+          "#CD9137",
+          "#FFB74F",
+          "#F7EDDF"
+        ]
+      },
+      "dark-danger": {
+        "role": "tertiary",
+        "displayName": "Destructive Red (dark)",
+        "canonical": "#FF7B7B",
+        "oklch": "oklch(73.6% 0.161 21.8)",
+        "tonalRamp": [
+          "#170606",
+          "#3B1717",
+          "#642C2C",
+          "#904242",
+          "#BE5A5A",
+          "#EF7373",
+          "#FFACA9",
+          "#F9EBEA"
+        ]
+      }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display", "purpose": "Títulos de vista (h1) y encabezados de acceso." },
-      "headline": { "displayName": "Headline", "purpose": "Título de hoja modal y de la tarjeta de siguiente acción." },
-      "metric-sm": { "displayName": "Metric SM", "purpose": "Tarjetas pequeñas de Récords (19px)." },
-      "metric": { "displayName": "Metric", "purpose": "Mosaicos KPI de Progreso (24px)." },
-      "metric-lg": { "displayName": "Metric LG", "purpose": "Contador de registros/racha del día en Hoy (26px)." },
-      "metric-xl": { "displayName": "Metric XL", "purpose": "Porcentaje del periodo en Progreso, la cifra más grande de la app (28px)." },
-      "body": { "displayName": "Body", "purpose": "Texto de párrafo, ítems de lista, campos de formulario." },
-      "body-sm": { "displayName": "Body SM", "purpose": "Texto compacto dentro de tarjeta o fila: avisos, patrones, distribución, Cómo funciona, cuerpo del toast (14px)." },
-      "label": { "displayName": "Label", "purpose": "Eyebrows, metadatos y texto secundario de ajustes." },
-      "label-sm": { "displayName": "Label SM", "purpose": "Texto secundario más frecuente: metadatos de lista, píldoras, etiquetas de campo (13px)." },
-      "micro": { "displayName": "Micro", "purpose": "Etiqueta de la barra de navegación inferior, kbd (11px) — piso mínimo para texto que debe leerse." }
+      "display": {
+        "displayName": "Display",
+        "purpose": "Next-action title inside the cobalt block only; 32px from 1024px, 19px in the compact variant."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "View heading (greeting, screen name)."
+      },
+      "numeral": {
+        "displayName": "Numeral",
+        "purpose": "Daily stats in tabular figures; scales to 28/24/19px for percentages, tiles and records."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Sheet and panel titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "List items, inputs, reading text."
+      },
+      "button": {
+        "displayName": "Button",
+        "purpose": "Button labels; 13px on small buttons."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Dates, sub-lines, links, pill text."
+      },
+      "section-label": {
+        "displayName": "Section Label",
+        "purpose": "Uppercase heading of a home section; the section's only heading, never a line above another heading."
+      }
     },
     "shadows": [
-      { "name": "resting", "value": "0 1px 2px rgba(22,32,28,.05), 0 4px 16px rgba(22,32,28,.05)", "purpose": "Tarjetas y mosaicos en reposo; casi imperceptible, el borde hace el trabajo de separación." },
-      { "name": "overlay", "value": "0 12px 40px rgba(22,32,28,.16)", "purpose": "Hoja modal, toast, interruptor: elementos que literalmente flotan sobre el contenido." },
-      { "name": "fab-accent", "value": "0 6px 20px color-mix(in srgb, var(--accent) 35%, transparent)", "purpose": "Botón flotante de captura; única sombra que lleva el color del acento." }
+      {
+        "name": "ambient",
+        "value": "0 1px 2px rgba(15,23,51,.05), 0 4px 16px rgba(15,23,51,.05)",
+        "dark": "0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3)",
+        "purpose": "Cards, project cards, selected segmented option, switch knob."
+      },
+      {
+        "name": "block",
+        "value": "0 10px 28px rgba(15,23,51,.16)",
+        "dark": "0 12px 32px rgba(0,0,0,.5)",
+        "purpose": "The next-action card and the bottom-bar + only."
+      },
+      {
+        "name": "overlay",
+        "value": "0 12px 40px rgba(15,23,51,.18)",
+        "dark": "0 16px 48px rgba(0,0,0,.6)",
+        "purpose": "Sheets, side panel and toast."
+      }
     ],
     "motion": [
-      { "name": "press-scale", "value": "transform .1s ease (scale .975 en botones, .94 en FAB)", "purpose": "Feedback táctil inmediato al presionar." },
-      { "name": "sheet-up", "value": "translateY(18px)→0, opacity .6→1, .18s ease", "purpose": "Entrada de la hoja modal." },
-      { "name": "reduced-motion-override", "value": "animation-duration/transition-duration .001ms bajo prefers-reduced-motion: reduce", "purpose": "Toda animación se desactiva por completo si el usuario lo pide." }
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(.2, .8, .2, 1)",
+        "purpose": "Progress bar value change, + press, side panel entry."
+      },
+      {
+        "name": "value-change",
+        "value": "400ms width from previous value to new value",
+        "purpose": "Keyed progress bars (data-motion) animate from their previous width after each render; skipped under prefers-reduced-motion."
+      },
+      {
+        "name": "press",
+        "value": "scale(.975) 100ms; + button scale(.94) 120ms",
+        "purpose": "Tactile press feedback on buttons."
+      },
+      {
+        "name": "sheet-in",
+        "value": "translateY(18px) 180ms ease; panel translateX(24px) 200ms ease-out",
+        "purpose": "Bottom sheet and desktop side panel entry."
+      },
+      {
+        "name": "toast",
+        "value": "opacity + translate 180ms ease; 8s dwell with undo, 3.2s without, paused on hover",
+        "purpose": "Feedback toast with undo."
+      },
+      {
+        "name": "check-draw",
+        "value": "stroke-dashoffset 340ms ease",
+        "purpose": "Success check drawn in the toast icon."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "all animations and transitions ~0ms",
+        "purpose": "prefers-reduced-motion: reduce disables every animation."
+      }
     ],
     "breakpoints": [
-      { "name": "sheet-dialog", "value": "620px" },
-      { "name": "desktop-sidebar", "value": "1000px" }
-    ]
+      {
+        "name": "tablet",
+        "value": "640px",
+        "purpose": "Gutter 20px; stats in three columns; card grids."
+      },
+      {
+        "name": "rail",
+        "value": "1024px",
+        "purpose": "Gutter 24px; 72px icons-only rail replaces the bottom bar; Registrar as 44px outlined circle; home 8fr/4fr grid; side panel."
+      },
+      {
+        "name": "sidebar",
+        "value": "1200px",
+        "purpose": "240px sidebar with brand, labels, Registrar and Tú at the bottom."
+      },
+      {
+        "name": "wide",
+        "value": "1728px",
+        "purpose": "Content container grows to 1320px."
+      }
+    ],
+    "layout": {
+      "contentMax": "1200px",
+      "contentMaxWide": "1320px",
+      "readingMax": "760px",
+      "readingViews": [
+        "log",
+        "activity",
+        "tasks",
+        "settings",
+        "project"
+      ],
+      "rail": "72px",
+      "sidebar": "240px",
+      "homeGrid": "minmax(0,8fr) minmax(0,4fr), gap 28px, from 1024px"
+    },
+    "verification": {
+      "contrast": "node scripts/contrast.mjs (29 pairs, AA in light and dark)"
+    }
   },
   "components": [
     {
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Acción principal de una pantalla u hoja modal.",
-      "html": "<button class=\"ds-btn ds-btn-primary\">Guardar</button>",
-      "css": ".ds-btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:44px; padding:10px 16px; border-radius:10px; font-size:15px; font-weight:600; border:1px solid transparent; transition:transform .1s ease, background .15s ease; } .ds-btn:active { transform:scale(.975); } .ds-btn-primary { background:#0B7A5C; color:#FFFFFF; } .ds-btn-primary:hover { background:#0E8A75; } .ds-btn-primary:focus-visible { outline:2px solid #0B7A5C; outline-offset:2px; }"
+      "description": "Main action on neutral surfaces: solid cobalt, white text.",
+      "html": "<button class=\"ds-btn-primary\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"/></svg>Completar</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:10px 16px;border-radius:10px;font:600 15px var(--font,system-ui);border:1px solid transparent;cursor:pointer;transition:transform .1s ease,background .15s ease;background:var(--accent,#2F4BF5);color:var(--accent-ink,#FFFFFF);} .ds-btn-primary:hover{background:var(--accent-strong,#2238D1);} .ds-btn-primary:active{transform:scale(.975);} .ds-btn-primary:focus-visible{outline:2px solid var(--accent,#2F4BF5);outline-offset:2px;}"
     },
     {
       "name": "Ghost Button",
       "kind": "button",
       "refersTo": "button-ghost",
-      "description": "Acción secundaria junto a una primaria.",
-      "html": "<button class=\"ds-btn ds-btn-ghost\">Cancelar</button>",
-      "css": ".ds-btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:44px; padding:10px 16px; border-radius:10px; font-size:15px; font-weight:600; transition:transform .1s ease, background .15s ease; } .ds-btn:active { transform:scale(.975); } .ds-btn-ghost { background:#FFFFFF; border:1px solid #CDD4CE; color:#16201C; } .ds-btn-ghost:hover { background:#EFF1EE; } .ds-btn-ghost:focus-visible { outline:2px solid #0B7A5C; outline-offset:2px; }"
+      "description": "Secondary action: surface fill, Rule border, ink text.",
+      "html": "<button class=\"ds-btn-ghost\">Nueva tarea</button>",
+      "css": ".ds-btn-ghost{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:10px 16px;border-radius:10px;font:600 15px var(--font,system-ui);border:1px solid transparent;cursor:pointer;transition:transform .1s ease,background .15s ease;background:var(--surface,#FFFFFF);border-color:var(--line-2,#CBD3E1);color:var(--text,#0F1733);} .ds-btn-ghost:hover{background:var(--surface-2,#EDF0F7);} .ds-btn-ghost:active{transform:scale(.975);} .ds-btn-ghost:focus-visible{outline:2px solid var(--accent,#2F4BF5);outline-offset:2px;}"
     },
     {
-      "name": "Task Card",
-      "kind": "custom",
-      "refersTo": "card",
-      "description": "Fila de tarea con casilla circular, título y metadatos.",
-      "html": "<div class=\"ds-task\"><span class=\"ds-tick\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"/></svg></span><div class=\"ds-task-body\"><span class=\"ds-task-title\">Escribir informe semanal</span></div></div>",
-      "css": ".ds-task { display:flex; align-items:center; gap:10px; background:#FFFFFF; border:1px solid #DFE4E0; border-radius:14px; padding:6px 12px 6px 8px; box-shadow:0 1px 2px rgba(22,32,28,.05), 0 4px 16px rgba(22,32,28,.05); } .ds-tick { width:26px; height:26px; border:1.8px solid #CDD4CE; border-radius:8px; display:grid; place-items:center; color:transparent; transition:background .15s ease, border-color .15s ease; } .ds-tick:hover { border-color:#0B7A5C; } .ds-task-body { flex:1; padding:8px 0; } .ds-task-title { color:#16201C; font-size:15px; }"
+      "name": "Next-Action Block",
+      "kind": "card",
+      "refersTo": "next-action-card",
+      "description": "Signature focus card: solid cobalt block, white display title, reasons as white-wash tags, project as outlined link tag, white primary and outlined ghost buttons.",
+      "html": "<section class=\"ds-next\"><div class=\"ds-next-head\"><h2 class=\"ds-next-title\">Repasar IAM y roles</h2><a class=\"ds-next-link\" href=\"#\">Otra<svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14M13 6l6 6-6 6\"/></svg></a></div><div class=\"ds-next-why\"><span class=\"ds-next-tag\">Prioridad alta</span><a class=\"ds-next-tag ds-next-proj\" href=\"#\"><span class=\"ds-dot\"></span>Certificación AWS<svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14M13 6l6 6-6 6\"/></svg></a></div><div class=\"ds-next-actions\"><button class=\"ds-next-primary\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"/></svg>Completar</button><button class=\"ds-next-ghost\">Empezar</button></div></section>",
+      "css": ".ds-next{background:var(--block,#2F4BF5);color:var(--block-ink,#FFFFFF);border-radius:16px;padding:22px;box-shadow:0 10px 28px rgba(15,23,51,.16);font-family:var(--font,system-ui);} .ds-next-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;} .ds-next-title{margin:0 0 14px;font-size:27px;font-weight:750;line-height:1.15;letter-spacing:-.025em;} .ds-next-link{display:inline-flex;align-items:center;gap:4px;color:inherit;font-size:13px;font-weight:600;text-decoration:none;padding-top:6px;} .ds-next-link svg{width:15px;height:15px;} .ds-next-why{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;} .ds-next-tag{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.14);color:inherit;text-decoration:none;} .ds-next-tag svg{width:13px;height:13px;} .ds-next-proj{border:1px solid rgba(255,255,255,.42);} .ds-next-proj:hover{text-decoration:underline;text-underline-offset:3px;} .ds-dot{width:8px;height:8px;border-radius:50%;background:#7C3AED;box-shadow:0 0 0 1.5px #FFFFFF;} .ds-next-actions{display:flex;flex-wrap:wrap;gap:8px;} .ds-next-primary,.ds-next-ghost{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:10px 16px;border-radius:10px;font:600 15px var(--font,system-ui);border:1px solid transparent;cursor:pointer;transition:transform .1s ease,background .15s ease;} .ds-next-primary{background:var(--block-ink,#FFFFFF);color:var(--block,#2F4BF5);} .ds-next-primary:hover{background:var(--block-ink-2,#DDE4FF);} .ds-next-ghost{background:transparent;border-color:rgba(255,255,255,.42);color:var(--block-ink,#FFFFFF);} .ds-next-ghost:hover{background:rgba(255,255,255,.14);} .ds-next :focus-visible{outline:2px solid #FFFFFF;outline-offset:2px;}"
     },
     {
-      "name": "Filter Pill",
+      "name": "Sidebar Navigation",
+      "kind": "nav",
+      "refersTo": "nav-destination-active",
+      "description": "Desktop sidebar: active destination as the only solid cobalt block; Registrar outlined in cobalt with its N key.",
+      "html": "<nav class=\"ds-side\"><div class=\"ds-brand\"><span class=\"ds-logo\">B</span>Bitácora</div><a class=\"ds-nav on\" href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z\"/></svg>Inicio</a><a class=\"ds-nav\" href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/></svg>Proyectos</a><a class=\"ds-nav\" href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 20h16M7 16v-5M12 16V8M17 16v-8\"/></svg>Historia</a><button class=\"ds-cap\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg>Registrar<kbd>N</kbd></button></nav>",
+      "css": ".ds-side{display:flex;flex-direction:column;gap:4px;width:240px;padding:20px 14px;background:var(--surface,#FFFFFF);border-right:1px solid var(--line,#E1E6F0);font-family:var(--font,system-ui);} .ds-brand{display:flex;align-items:center;gap:10px;font-weight:750;font-size:17px;padding:4px 6px 18px;color:var(--text,#0F1733);} .ds-logo{width:30px;height:30px;border-radius:9px;background:var(--block,#2F4BF5);color:#FFFFFF;display:grid;place-items:center;font-size:16px;} .ds-nav{display:flex;align-items:center;gap:12px;min-height:44px;padding:10px 12px;border-radius:10px;color:var(--text-2,#4A5470);font-weight:550;text-decoration:none;transition:background .12s ease,color .12s ease;} .ds-nav svg{width:20px;height:20px;} .ds-nav:hover{background:var(--surface-2,#EDF0F7);color:var(--text,#0F1733);} .ds-nav.on{background:var(--block,#2F4BF5);color:var(--block-ink,#FFFFFF);font-weight:700;} .ds-nav:focus-visible,.ds-cap:focus-visible{outline:2px solid var(--accent,#2F4BF5);outline-offset:2px;} .ds-cap{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:10px 16px;border-radius:10px;font:600 15px var(--font,system-ui);border:1px solid transparent;cursor:pointer;transition:transform .1s ease,background .15s ease;margin-top:14px;justify-content:flex-start;gap:10px;background:transparent;color:var(--accent,#2F4BF5);border:1.5px solid var(--accent,#2F4BF5);} .ds-cap:hover{background:var(--accent-soft,#E6EBFF);} .ds-cap kbd{margin-left:auto;font:600 11px var(--font,system-ui);background:var(--accent-soft,#E6EBFF);border-radius:4px;padding:1px 5px;}"
+    },
+    {
+      "name": "Bottom Bar",
+      "kind": "nav",
+      "refersTo": "tab-add",
+      "description": "Mobile and tablet navigation: active item cobalt with a top indicator; centre + as a solid cobalt rounded square.",
+      "html": "<nav class=\"ds-tabbar\"><a class=\"on\" href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z\"/></svg><span>Inicio</span></a><a href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/></svg><span>Proyectos</span></a><button class=\"ds-tab-add\" aria-label=\"Registrar actividad\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg></button><a href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 20h16M7 16v-5M12 16V8M17 16v-8\"/></svg><span>Historia</span></a><a href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20a8 8 0 0 1 16 0\"/></svg><span>Tú</span></a></nav>",
+      "css": ".ds-tabbar{display:grid;grid-template-columns:repeat(5,1fr);align-items:end;width:390px;background:color-mix(in srgb,var(--surface,#FFFFFF) 94%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line,#E1E6F0);font-family:var(--font,system-ui);} .ds-tabbar a{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 8px;min-height:56px;font-size:11px;font-weight:550;color:var(--text-2,#4A5470);text-decoration:none;} .ds-tabbar a svg{width:22px;height:22px;} .ds-tabbar a.on{color:var(--accent,#2F4BF5);font-weight:700;} .ds-tabbar a.on::before{content:\"\";position:absolute;top:0;left:28%;right:28%;height:3px;border-radius:0 0 3px 3px;background:var(--accent,#2F4BF5);} .ds-tabbar a:focus-visible{outline:2px solid var(--accent,#2F4BF5);outline-offset:-2px;} .ds-tab-add{justify-self:center;align-self:center;width:52px;height:52px;margin:4px 0;border:0;border-radius:16px;background:var(--block,#2F4BF5);color:#FFFFFF;display:grid;place-items:center;box-shadow:0 10px 28px rgba(15,23,51,.16);cursor:pointer;transition:transform .12s cubic-bezier(.2,.8,.2,1);} .ds-tab-add svg{width:24px;height:24px;stroke-width:2.2;} .ds-tab-add:active{transform:scale(.94);} .ds-tab-add:focus-visible{outline:2px solid var(--accent,#2F4BF5);outline-offset:2px;}"
+    },
+    {
+      "name": "Tags and Filter Pills",
       "kind": "chip",
-      "refersTo": "pill",
-      "description": "Píldora de filtro con estado activo/inactivo.",
-      "html": "<span class=\"ds-pill\">Todos</span> <span class=\"ds-pill ds-pill-on\">Activos</span>",
-      "css": ".ds-pill { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:6px 13px; border:1px solid #CDD4CE; border-radius:999px; background:#FFFFFF; font-size:13px; font-weight:500; color:#55625C; } .ds-pill-on { background:#E4F1EC; border-color:rgba(11,122,92,.45); color:#0B7A5C; font-weight:600; }"
+      "refersTo": "tag",
+      "description": "Mist tags (emphasis = ink weight, not colour) and filter pills with a cobalt-wash selected state.",
+      "html": "<div class=\"ds-row\"><span class=\"ds-tag\">Certificación AWS</span><span class=\"ds-tag ds-tag-em\">Alta</span><span class=\"ds-tag ds-tag-accent\">En curso</span></div><div class=\"ds-row\"><button class=\"ds-pill on\">Todas</button><button class=\"ds-pill\">Abiertas</button><button class=\"ds-pill\">Hechas</button></div>",
+      "css": ".ds-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;font-family:var(--font,system-ui);} .ds-tag{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:2px 8px;border-radius:999px;background:var(--surface-2,#EDF0F7);color:var(--text-2,#4A5470);} .ds-tag-em{color:var(--text,#0F1733);font-weight:650;} .ds-tag-accent{background:var(--accent-soft,#E6EBFF);color:var(--accent,#2F4BF5);} .ds-pill{display:inline-flex;align-items:center;min-height:36px;padding:6px 13px;border:1px solid var(--line-2,#CBD3E1);border-radius:999px;background:var(--surface,#FFFFFF);font-size:13px;font-weight:500;color:var(--text-2,#4A5470);cursor:pointer;} .ds-pill:hover{background:var(--surface-2,#EDF0F7);} .ds-pill.on{background:var(--accent-soft,#E6EBFF);border-color:color-mix(in srgb,var(--accent,#2F4BF5) 45%,transparent);color:var(--accent,#2F4BF5);font-weight:600;} .ds-pill:focus-visible{outline:2px solid var(--accent,#2F4BF5);outline-offset:2px;}"
+    },
+    {
+      "name": "Historia Tabs and Period Control",
+      "kind": "nav",
+      "refersTo": "pill-selected",
+      "description": "Primary underline tab row versus the compact segmented period control; the two levels never look alike.",
+      "html": "<div class=\"ds-subtabs\"><button class=\"on\">Actividad</button><button>Registro</button></div><div class=\"ds-seg\"><button class=\"on\">Semana</button><button>Mes</button><button>Año</button></div>",
+      "css": ".ds-subtabs{display:flex;gap:24px;border-bottom:1px solid var(--line,#E1E6F0);margin-bottom:18px;font-family:var(--font,system-ui);} .ds-subtabs button{border:0;background:none;min-height:42px;padding:8px 2px;font:600 15px var(--font,system-ui);color:var(--text-2,#4A5470);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;} .ds-subtabs button.on{color:var(--accent,#2F4BF5);border-bottom-color:var(--accent,#2F4BF5);} .ds-subtabs button:hover{color:var(--text,#0F1733);} .ds-seg{display:inline-flex;gap:2px;padding:3px;background:var(--surface-2,#EDF0F7);border-radius:10px;} .ds-seg button{min-height:32px;padding:6px 13px;border:0;border-radius:7px;background:transparent;font:500 13px var(--font,system-ui);color:var(--text-2,#4A5470);cursor:pointer;} .ds-seg button.on{background:var(--surface,#FFFFFF);color:var(--text,#0F1733);box-shadow:0 1px 2px rgba(15,23,51,.05),0 4px 16px rgba(15,23,51,.05);} .ds-subtabs button:focus-visible,.ds-seg button:focus-visible{outline:2px solid var(--accent,#2F4BF5);outline-offset:2px;}"
     },
     {
       "name": "Text Input",
       "kind": "input",
       "refersTo": "input",
-      "description": "Campo de texto estándar con foco en acento.",
-      "html": "<div class=\"ds-field\"><span class=\"ds-field-label\">Nombre del proyecto</span><input class=\"ds-input\" type=\"text\" placeholder=\"Ej. Tesis de maestría\"></div>",
-      "css": ".ds-field { display:grid; gap:5px; } .ds-field-label { font-size:13px; color:#55625C; } .ds-input { width:100%; min-height:44px; background:#FFFFFF; color:#16201C; border:1px solid #CDD4CE; border-radius:10px; padding:11px 13px; font-size:16px; } .ds-input::placeholder { color:#64706A; } .ds-input:focus { outline:2px solid #0B7A5C; outline-offset:-1px; border-color:transparent; }"
+      "description": "Surface field with Rule border; focus swaps the border for a 2px cobalt outline.",
+      "html": "<label class=\"ds-field\"><span>Título</span><input class=\"ds-input\" type=\"text\" placeholder=\"¿Qué hiciste?\"></label>",
+      "css": ".ds-field{display:grid;gap:5px;font-family:var(--font,system-ui);max-width:360px;} .ds-field span{font-size:13px;color:var(--text-2,#4A5470);} .ds-input{width:100%;min-height:44px;background:var(--surface,#FFFFFF);color:var(--text,#0F1733);border:1px solid var(--line-2,#CBD3E1);border-radius:10px;padding:11px 13px;font:16px var(--font,system-ui);} .ds-input::placeholder{color:var(--text-3,#5B6580);} .ds-input:focus{outline:2px solid var(--accent,#2F4BF5);outline-offset:-1px;border-color:transparent;}"
     },
     {
-      "name": "Next Action Card",
-      "kind": "custom",
+      "name": "Project Card with Progress Bar",
+      "kind": "card",
       "refersTo": "card",
-      "description": "Tarjeta protagonista de Hoy: siguiente tarea sugerida con motivo explicado.",
-      "html": "<div class=\"ds-next\"><div class=\"ds-next-head\"><span class=\"ds-eyebrow\">Siguiente</span></div><p class=\"ds-next-title\">Terminar la sección de resultados</p><div class=\"ds-next-why\"><span class=\"ds-tag\">Vence hoy</span><span class=\"ds-tag\">3 días sin avanzar</span></div></div>",
-      "css": ".ds-next { background:linear-gradient(180deg, #E4F1EC 0%, #FFFFFF 55%); border:1px solid rgba(11,122,92,.3); border-radius:14px; padding:16px; } .ds-eyebrow { font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:#55625C; } .ds-next-title { font-size:18px; font-weight:700; line-height:1.3; margin:8px 0 10px; color:#16201C; } .ds-next-why { display:flex; flex-wrap:wrap; gap:6px; } .ds-tag { display:inline-flex; align-items:center; gap:4px; font-size:12px; padding:2px 8px; border-radius:999px; background:#EFF1EE; color:#55625C; }"
-    },
-    {
-      "name": "Stepper",
-      "kind": "input",
-      "refersTo": "button-ghost",
-      "description": "Valor numérico corto y acotado (ej. meta semanal 1–7); dos icon-btn enmarcan el número, nunca una lista plana de botones.",
-      "html": "<div class=\"ds-stepper\"><button class=\"ds-icon-btn\" aria-label=\"Bajar\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 12H5M11 6l-6 6 6 6\"/></svg></button><span class=\"ds-stepper-n\">4<span class=\"ds-stepper-l\">días/semana</span></span><button class=\"ds-icon-btn\" aria-label=\"Subir\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14M13 6l6 6-6 6\"/></svg></button></div>",
-      "css": ".ds-stepper { display:flex; align-items:center; gap:14px; } .ds-icon-btn { display:inline-grid; place-items:center; width:40px; height:40px; border-radius:10px; color:#55625C; background:none; border:0; cursor:pointer; } .ds-icon-btn:hover { background:#EFF1EE; color:#16201C; } .ds-stepper-n { display:flex; align-items:baseline; gap:6px; font-size:19px; font-weight:700; letter-spacing:-.02em; color:#16201C; } .ds-stepper-l { font-size:13px; font-weight:500; color:#55625C; }"
-    },
-    {
-      "name": "Toast",
-      "kind": "custom",
-      "refersTo": "card",
-      "description": "Confirmación flotante con acción de deshacer.",
-      "html": "<div class=\"ds-toast\"><span class=\"ds-toast-icon\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"/></svg></span><div class=\"ds-toast-body\"><strong>Guardado</strong><span>Actividad registrada</span></div><button class=\"ds-toast-undo\">Deshacer</button></div>",
-      "css": ".ds-toast { display:flex; align-items:center; gap:11px; max-width:min(460px, calc(100vw - 24px)); background:#FFFFFF; border:1px solid #DFE4E0; border-radius:14px; padding:11px 14px; box-shadow:0 12px 40px rgba(22,32,28,.16); } .ds-toast-icon { display:grid; place-items:center; width:28px; height:28px; border-radius:50%; background:#E4F1EC; color:#0B7A5C; } .ds-toast-body { display:grid; gap:1px; font-size:13px; color:#55625C; } .ds-toast-body strong { font-size:14px; color:#16201C; } .ds-toast-undo { color:#0B7A5C; font-weight:600; font-size:13px; background:none; border:0; padding:8px; cursor:pointer; }"
+      "description": "Hairline surface card with ambient shadow; the cobalt bar fill animates from its previous value.",
+      "html": "<a class=\"ds-card\" href=\"#\"><div class=\"ds-card-head\"><span class=\"ds-dot2\"></span><span class=\"ds-card-name\">Certificación AWS</span><span class=\"ds-card-pct\">40%</span></div><div class=\"ds-bar\" role=\"progressbar\" aria-valuenow=\"40\" aria-valuemin=\"0\" aria-valuemax=\"100\"><span style=\"width:40%\"></span></div></a>",
+      "css": ".ds-card{display:block;max-width:360px;background:var(--surface,#FFFFFF);border:1px solid var(--line,#E1E6F0);border-radius:16px;padding:14px;box-shadow:0 1px 2px rgba(15,23,51,.05),0 4px 16px rgba(15,23,51,.05);color:var(--text,#0F1733);text-decoration:none;font-family:var(--font,system-ui);} .ds-card:hover{border-color:var(--line-2,#CBD3E1);} .ds-card:focus-visible{outline:2px solid var(--accent,#2F4BF5);outline-offset:2px;} .ds-card-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;} .ds-dot2{width:8px;height:8px;border-radius:50%;background:#7C3AED;} .ds-card-name{flex:1;font-weight:600;} .ds-card-pct{font-size:13px;color:var(--text-2,#4A5470);font-variant-numeric:tabular-nums;} .ds-bar{height:8px;border-radius:999px;background:var(--surface-2,#EDF0F7);overflow:hidden;} .ds-bar span{display:block;height:100%;background:var(--accent,#2F4BF5);border-radius:999px;transition:width .4s cubic-bezier(.2,.8,.2,1);} @media (prefers-reduced-motion:reduce){.ds-bar span{transition:none;}}"
     }
   ],
   "narrative": {
-    "northStar": "El Cuaderno de Campo",
-    "overview": "Bitácora se ve como una herramienta de trabajo, no como un producto de consumo. La superficie es un papel cálido casi blanco, no un blanco de laboratorio; el texto es tinta oscura de alto contraste; y hay exactamente una tinta de color —un verde profundo— reservada para lo que importa: la acción principal y el estado positivo. Todo lo demás vive en grises cálidos. No hay gradientes decorativos, ilustraciones ni imágenes de marca: la jerarquía se construye con tipografía del sistema, espacio y ese único acento, nunca con adornos.\n\nEl sistema es deliberadamente plano y silencioso. Las tarjetas se separan del fondo con un borde de 1px, no con sombra teatral; la sombra fuerte se reserva para lo que literalmente flota sobre el contenido (hoja modal, toast, botón flotante). La app rechaza activamente el lenguaje visual de los juegos —sin XP, niveles, confeti ni recompensas variables— y aplica la misma regla a la propia paleta: el color comunica estado y jerarquía, nunca 'premia' ni 'castiga' emocionalmente.\n\nEs una interfaz para usarse en segundos, muchas veces al día, con una mano, y para leerse en una sesión de reflexión más larga los lunes. Por eso las densidades cambian por vista pero el vocabulario visual —tarjeta, borde, acento único— nunca cambia.",
+    "northStar": "The Build Instrument",
+    "overview": "Bitácora is an instrument for building something over months with a few hours a week. The screen answers three questions in seconds: what to do now, how far it has come, where to log. Cobalt marks what moves forward and occupies whole blocks where the focus is; everything else is quiet neutral surface on a cool white ground. There is exactly one loud thing per view, and it is always the next step.\n\nDensity is calm and even: white cards with a 1 px hairline, generous 28 px gaps between sections, system type with tabular numerals, and no decoration that does not carry information. Progress is shown, not celebrated: a bar that fills from where it was, a count of active days, a streak that never punishes. Amber is kept back for milestones and real achievements so that it still means something when it appears.\n\nThe world rejects the grey dashboard with a timid accent, and the narrow column pinned to the left edge. Content is always centred in its region. The product commitments that bind the visuals: system fonts only (no third-party font requests), no dark patterns (no guilt colours, no loss framing), and every number shown must be explainable.",
     "keyCharacteristics": [
-      "Neutros cálidos (no grises fríos ni blanco puro) + una sola tinta de acento.",
-      "Plano en reposo; el borde de 1px hace el trabajo de separación, no la sombra.",
-      "Tipografía exclusivamente del sistema operativo — cero fuentes de terceros, cero KB de red.",
-      "Radios que crecen con el tamaño del elemento: 3px en celdas fijas diminutas, 7px en detalles pequeños, 8px en la casilla de tarea, 10px en controles, 14px en superficies grandes, 999px en píldoras y controles circulares.",
-      "Un color por proyecto (paleta categórica de 8 tonos) es la única superficie donde el color se usa libremente; en el resto de la interfaz es escaso a propósito.",
-      "Claro/oscuro nativos vía prefers-color-scheme, con anulación manual (data-theme); cada token tiene su par exacto en ambos modos."
+      "Committed colour strategy on cool white: cobalt as solid blocks, not as a thin accent.",
+      "One solid cobalt block per region: the next-action card in content, the active destination in navigation.",
+      "Flat hairline cards with a whisper of ambient shadow; the cobalt block alone carries a deeper shadow.",
+      "System font stack, heavy (750) tight headlines, tabular numerals for every count.",
+      "Motion only when a value changes, and never under reduced motion.",
+      "Light and dark follow the system with manual override; the cobalt block stays saturated in both."
     ],
     "rules": [
-      { "name": "La Regla de Estado, No Emoción", "body": "El color comunica estado y jerarquía — nunca gamificación ni recompensa emocional. Si un nuevo color no responde a \"¿qué estado señala?\", no se agrega.", "section": "colors" },
-      { "name": "La Regla de la Sola Voz", "body": "El acento verde aparece en un solo lugar por vista como máximo la mayoría de las veces (una acción primaria, un tab activo, una barra). Su escasez es lo que lo hace legible como \"esto importa\".", "section": "colors" },
-      { "name": "La Regla de la Familia Única", "body": "Cero fuentes de terceros, cero KB de red, cero huella de IP enviada a un proveedor de fuentes — decisión de privacidad tomada explícitamente tras auditar la v1 del producto.", "section": "typography" },
-      { "name": "La Regla del Borde Hace el Trabajo", "body": "Ninguna tarjeta en reposo depende de la sombra para leerse como superficie separada; si el borde de 1px se quitara, la sombra sola no bastaría. Reserva la sombra fuerte para lo que de verdad flota.", "section": "elevation" }
+      {
+        "name": "The One Block Rule",
+        "body": "Each region has at most one solid cobalt block: the next-action card in the content, the active destination in the navigation. Anything else that needs cobalt uses it as text, outline, fill of a small control, or a wash. That is why the desktop \"Registrar\" is outlined.",
+        "section": "colors"
+      },
+      {
+        "name": "The Earned Amber Rule",
+        "body": "Amber marks milestones and real achievements, nothing else. High priority and past-due dates get ink weight (semibold `text` on Mist), not amber; notices are neutral surfaces with a cobalt icon.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Guilt Red Rule",
+        "body": "Red means destructive or error. Inactivity, a broken streak or an overdue task is never red.",
+        "section": "colors"
+      },
+      {
+        "name": "The Verified Pair Rule",
+        "body": "Every text and graphic colour pair is checked by `node scripts/contrast.mjs` (29 pairs, AA in light and dark: 4.5:1 for text, 3:1 for bars, dots and cells). A new colour token enters only with its pair added to that script.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Count Rule",
+        "body": "Every number that can change (counts, percentages, times, week totals) is set in tabular figures so values do not jitter as they update.",
+        "section": "typography"
+      },
+      {
+        "name": "The System Only Rule",
+        "body": "Only the system stack. No web fonts, no third-party font requests.",
+        "section": "typography"
+      },
+      {
+        "name": "The Lifted Focus Rule",
+        "body": "Only the cobalt block gets the block shadow. Nothing else competes with it for elevation.",
+        "section": "elevation"
+      }
     ],
     "dos": [
-      "Do limitar el acento verde a una acción o estado por vista; su escasez es la señal (La Regla de la Sola Voz).",
-      "Do separar tarjetas del fondo con borde de 1px + sombra casi invisible; reservar sombra fuerte (--shadow-lg) solo para overlays reales (hoja, toast, FAB).",
-      "Do escalar el radio con el tamaño del elemento (3 → 7 → 8 → 10 → 14px) y usar radio completo (999px) solo en controles seleccionables de un toque.",
-      "Do usar la Paleta de Proyectos libremente para distinguir proyectos — es la única zona categórica del sistema.",
-      "Do mantener objetivos táctiles ≥44px en controles primarios (mínimo 24px en elementos secundarios) y respetar prefers-reduced-motion apagando toda animación no funcional.",
-      "Do escapar (esc()) todo contenido de usuario antes de insertarlo en HTML."
+      "Do give the next step a solid cobalt block (`block`) with white text, and keep it the only solid block in its region.",
+      "Do use cobalt as text, outline, small-control fill or wash (`cobalt-soft`) everywhere else.",
+      "Do mark high priority and past-due dates with ink weight on Mist, not a colour.",
+      "Do keep amber for milestones and real achievements.",
+      "Do set every changing number in tabular figures and animate progress from its previous value (400ms, `cubic-bezier(.2,.8,.2,1)`), off under reduced motion.",
+      "Do centre content in its region: 1200px max (1320px from 1728px), 760px for list and reading views.",
+      "Do run `node scripts/contrast.mjs` after touching any colour token, and add the pair for any new one.",
+      "Do keep touch targets at 44px or more."
     ],
     "donts": [
-      "Don't introducir una segunda tipografía, un CDN de fuentes, o cualquier fuente que no sea la del sistema operativo.",
-      "Don't usar color para premiar o \"gamificar\" — sin XP, niveles, clasificaciones, recompensas variables, confeti ni notificaciones diseñadas para inflar métricas.",
-      "Don't mostrar un número, barra o estadística que no se pueda explicar en Ajustes → Cómo funciona.",
-      "Don't añadir sombra decorativa a una tarjeta en reposo; si necesita más separación, sube el contraste de borde antes que la sombra.",
-      "Don't usar --danger (rojo) fuera de acciones destructivas o errores reales.",
-      "Don't requerir un framework, build o dependencia para un cambio visual — si algo lo exige, se replantea el enfoque."
+      "Don't place a second solid cobalt block next to the focus card or the active destination; the desktop \"Registrar\" stays outlined.",
+      "Don't use amber for priority, deadlines, notices or streaks.",
+      "Don't use red for inactivity, missed days or overdue work; red is only for destructive actions and errors.",
+      "Don't load web fonts or any third-party font.",
+      "Don't pin the content column to the left or narrow the home view to a single reading column on desktop.",
+      "Don't use project colours as text or as a fill behind text; they are dots and bars.",
+      "Don't add celebratory motion (confetti, bursts, pulsing); motion only reports a value that changed."
     ]
   }
 }

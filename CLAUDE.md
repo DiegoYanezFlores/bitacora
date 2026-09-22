@@ -1,4 +1,4 @@
-# Bitácora v2 — guía del proyecto
+# Bitácora — guía del proyecto
 
 ## Qué es
 
@@ -37,21 +37,24 @@ docs/               auditoría, investigación, diseño, informe final, métrica
 - **Nada de patrones oscuros**: sin culpa, sin miedo a perder rachas, sin recompensas variables, sin notificaciones para inflar métricas, sin scroll infinito. Ver `docs/02-investigacion.md`.
 - **Todo lo que se muestra se explica** (Ajustes → Cómo funciona). Si un número no se puede explicar, no se muestra.
 - **Escapa siempre** el contenido del usuario con `esc()` antes de insertarlo en HTML.
-- **Pruebas antes de cada deploy** (sin dependencias, Node ≥ 22): `node --test "tests/*.test.js"` y `node scripts/check-precache.mjs` (todo archivo nuevo de `app/` debe estar en `PRECACHE` de `sw.js`; sube también `CACHE`). La lógica derivada nueva va en `app/domain/` como funciones puras con su prueba.
+- **Pruebas antes de cada deploy** (sin dependencias, Node ≥ 22): `node --test "tests/*.test.js"`, `node scripts/check-precache.mjs` y `node scripts/contrast.mjs` (todo archivo nuevo de `app/` debe estar en `PRECACHE` de `sw.js`; sube también `CACHE`). La lógica derivada nueva va en `app/domain/` como funciones puras con su prueba.
 - **Migraciones SQL:** pruébalas en un Postgres local antes de pedir que se apliquen: base nueva → `00_supabase_stub.sql` → 001 → 002 → 003 (dos veces, idempotencia) → `003_test.sql` (debe terminar en `OK`) → down → 003 otra vez. La app detecta si el servidor aún no tiene 003 (`sync.schema.v3`) y no envía tablas ni columnas nuevas hasta entonces.
 - **Verifica antes de decir que está listo.** El servidor local de Python se bloquea por el permiso de macOS a Documentos; usa el de Node (`.claude/launch.json` → `bitacora`) o prueba en la URL de Vercel.
 - Respuestas cortas en el chat.
 
-## Sistema de diseño
+## Sistema de diseño (F2)
 
-Neutros cálidos + un acento; el color indica estado y jerarquía. Tipografía del sistema (0 KB, sin terceros). Radios 14/10 px. Objetivos táctiles ≥44 px (mínimo 24 px en elementos secundarios). Claro y oscuro según el sistema, con anulación manual. Contraste AA verificado. Animaciones cortas y funcionales; `prefers-reduced-motion` las apaga.
+Blanco frío + **cobalto vivo como color protagonista**: bloques enteros donde está el foco (tarjeta de siguiente acción, destino activo del menú y el "+" central de la barra inferior; en escritorio "Registrar" va con contorno para que el destino activo sea el único bloque sólido del menú); el resto en neutros. **Ámbar solo para hitos y logros reales.** El rojo nunca significa inactividad. Tipografía del sistema (0 KB, sin terceros). Radios 6/10/16. Objetivos táctiles ≥44 px. Claro y oscuro según el sistema, con anulación manual. Contraste AA verificado con `node scripts/contrast.mjs` (córrelo si tocas un color). El cambio de un valor (p. ej. el % de una barra) se anima desde el anterior con `app/motion.js` (`bar(pct, cls, key)`); `prefers-reduced-motion` lo apaga.
 
 | Token | Claro | Oscuro |
 |---|---|---|
-| `--bg` / `--surface` | #F6F7F5 / #FFFFFF | #0D1210 / #141A17 |
-| `--text` / `--text-2` | #16201C / #55625C | #E8EEEA / #A2AEA8 |
-| `--accent` | #0B7A5C | #3CD3A0 |
-| `--streak` | #C2410C | #FB923C |
+| `--bg` / `--surface` | #F5F7FB / #FFFFFF | #0B1020 / #121833 |
+| `--text` / `--text-2` | #0F1733 / #4A5470 | #EEF1FA / #A9B2CC |
+| `--accent` (acción, progreso) | #2F4BF5 | #8FA2FF |
+| `--block` (bloque protagonista, texto blanco) | #2F4BF5 | #3551F2 |
+| `--milestone` / `--milestone-ink` | #FFA826 / #A35A00 | #FFB547 |
+
+Navegación: móvil y tablet con barra inferior Inicio · Proyectos · + · Historia · Tú; rail de 72 px entre 1024 y 1199; barra lateral de 240 px desde 1200. Contenido centrado (máx. 1200, 1320 desde 1728; 760 en vistas de lista). Rutas: `#/home`, `#/projects`, `#/project/:id`, `#/next`, `#/history` (Actividad) y `#/history/log` (Registro), `#/you`; las antiguas redirigen.
 
 ## Modelo de datos (Supabase, todo con RLS por usuario)
 

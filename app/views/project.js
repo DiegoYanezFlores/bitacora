@@ -19,7 +19,7 @@ export function render({ id }) {
   return `
   <header class="view-head">
     <div class="head-left">
-      <a class="icon-btn" href="#/projects" aria-label="Volver">${icon('back')}</a>
+      <a class="icon-btn" href="#/projects" aria-label="Volver a proyectos">${icon('back')}</a>
       <div><h1 class="p-title">${dot(p.color)}${esc(p.name)}</h1>
       <p class="date">${[PROJECT_STATUS[p.status], info.last ? `última actividad ${ago(info.last.occurred_at)}` : 'sin actividad', due !== null ? (due < 0 ? `fecha objetivo ${fmtDayShort(p.due_date)}` : `faltan ${plural(due, 'día', 'días')}`) : ''].filter(Boolean).join(' · ')}</p></div>
     </div>
@@ -35,16 +35,15 @@ export function render({ id }) {
       <span class="muted small">${info.progress.mode === 'none' ? (info.activityCount === 1 ? 'registro · sin meta definida' : 'registros · sin meta definida') : esc(info.progress.label)}</span>
       <button class="icon-btn small" data-act="explain-progress" data-mode="${info.progress.mode}" aria-label="Cómo se calcula">${icon('info')}</button>
     </div>
-    ${info.progress.mode === 'none' ? '<p class="muted small">Añade una tarea, un hito o una métrica y el avance se calculará solo.</p>' : bar(info.progress.pct, 'big')}
+    ${info.progress.mode === 'none' ? '<p class="muted small">Añade una tarea, un hito o una métrica y el avance se calculará solo.</p>' : bar(info.progress.pct, 'big', `project:${p.id}`)}
     <div class="prog-actions">
       ${info.progress.mode === 'metric' ? `<button class="btn ghost small" data-act="metric" data-id="${p.id}">Actualizar valor</button>` : ''}
       <button class="btn ghost small" data-act="capture-project" data-id="${p.id}">${icon('plus')}Registrar avance</button>
     </div>
   </section>
 
-  ${info.next ? `<section class="card next slim">
-    <h2 class="eyebrow">Siguiente</h2>
-    <p class="next-title">${esc(info.next.title)}</p>
+  ${info.next ? `<section class="card next slim" aria-label="Siguiente paso">
+    <h2 class="next-title">${esc(info.next.title)}</h2>
     <div class="next-actions"><button class="btn primary" data-act="complete-next" data-id="${info.next.id}">${icon('check')}Completar</button></div>
   </section>` : ''}
 

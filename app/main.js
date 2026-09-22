@@ -9,6 +9,7 @@ import { openCapture } from './capture.js';
 import { runMigration, migrateV3, exportBackup, importBackup } from './migrate.js';
 import { icon, initSheet, openSheet, closeSheet, confirmSheet, feedback, busy, hideToast } from './ui.js';
 import { esc, debounce, plural, dayKey } from './lib.js';
+import * as motion from './motion.js';
 
 import * as today from './views/today.js';
 import * as projects from './views/projects.js';
@@ -20,19 +21,34 @@ import * as settings from './views/settings.js';
 import { mountAuth } from './views/auth.js';
 import { mountOnboarding } from './views/onboarding.js';
 
-const VIEWS = { today, projects, project, tasks, log, progress, settings };
-const NAV = [['today', 'Hoy', 'home'], ['projects', 'Proyectos', 'folder'], ['log', 'Registro', 'list'], ['progress', 'Progreso', 'chart']];
+// Historia reúne la actividad (antes Progreso) y el registro, con pestañas.
+const HISTORY_TABS = [['', 'Actividad'], ['log', 'Registro']];
+const historyView = {
+  render: ({ tab = '' }) => {
+    const html = tab === 'log' ? log.render() : progress.render();
+    const tabs = `<div class="filters subtabs" role="tablist" aria-label="Historia">${HISTORY_TABS.map(([k, l]) =>
+      `<a class="pill ${tab === k ? 'on' : ''}" role="tab" aria-selected="${tab === k}" href="#/history${k ? '/' + k : ''}">${l}</a>`).join('')}</div>`;
+    const cut = html.indexOf('</header>') + '</header>'.length;
+    return html.slice(0, cut) + tabs + html.slice(cut);
+  }
+};
+
+const VIEWS = { home: today, projects, project, next: tasks, history: historyView, you: settings };
+// Rutas anteriores: siguen funcionando (atajos de la PWA, enlaces guardados) y se reescriben a la nueva.
+const REDIRECTS = { today: 'home', log: 'history/log', progress: 'history', settings: 'you', tasks: 'next' };
+const NAV = [['home', 'Inicio', 'home'], ['projects', 'Proyectos', 'folder'], ['history', 'Historia', 'chart'], ['you', 'Tú', 'user']];
 const $ = s => document.querySelector(s);
 const scrolls = new Map();
-let route = { name: 'today', params: {} };
+let route = { name: 'home', params: {} };
 let booted = false;
+let lastRenderKey = '';
 
 // ---------- tema ----------
 export function applyTheme() {
   const t = store.prefs().theme;
   document.documentElement.dataset.theme = t === 'system' ? '' : t;
   const dark = t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
-  document.querySelector('meta[name=theme-color]').setAttribute('content', dark ? '#0D1210' : '#F6F7F5');
+  document.querySelector('meta[name=theme-color]').setAttribute('content', dark ? '#0B1020' : '#F5F7FB');
 }
 
 // ---------- estado de sincronización para la vista de ajustes ----------
@@ -49,17 +65,23 @@ function syncChip() {
   const s = syncState();
   const cls = { ok: 'ok', syncing: 'busy', pending: 'busy', offline: 'warn', error: 'warn', migration: 'warn', guest: 'muted', idle: 'muted' }[s.status] || 'muted';
   const label = s.status === 'ok' ? 'Sincronizado' : s.status === 'syncing' ? 'Sincronizando' : s.status === 'pending' ? `${s.pending} por subir` : s.status === 'guest' ? 'Sin cuenta' : s.status === 'offline' ? 'Sin conexión' : s.status === 'migration' ? 'Falta migración' : s.status === 'error' ? 'Error' : '';
-  return label ? `<a class="sync-chip ${cls}" href="#/settings" title="${esc(s.text)}">${icon('cloud')}<span>${esc(label)}</span></a>` : '';
+  return label ? `<a class="sync-chip ${cls}" href="#/you" title="${esc(s.text)}">${icon('cloud')}<span>${esc(label)}</span></a>` : '';
 }
 
 // ---------- router ----------
 function parseHash() {
-  const raw = (location.hash || '#/today').replace(/^#\/?/, '');
+  let raw = (location.hash || '#/home').replace(/^#\/?/, '');
+  const [first] = raw.split(/[/?]/);
+  if (REDIRECTS[first]) {
+    raw = REDIRECTS[first] + raw.slice(first.length);
+    window.history.replaceState(null, '', location.pathname + location.search + '#/' + raw);
+  }
   const [path, query] = raw.split('?');
   const [name, param] = path.split('/');
   const q = new URLSearchParams(query || '');
   if (name === 'project' && param) return { name: 'project', params: { id: param }, query: q };
-  return { name: VIEWS[name] ? name : 'today', params: {}, query: q };
+  if (name === 'history') return { name, params: { tab: param === 'log' ? 'log' : '' }, query: q };
+  return { name: VIEWS[name] ? name : 'home', params: {}, query: q };
 }
 
 let rafId = null;
@@ -76,10 +98,16 @@ function render() {
   const keepId = active && active.dataset && active.dataset.keepFocus !== undefined ? active.id : null;
   const sel = keepId ? [active.selectionStart, active.selectionEnd] : null;
 
+  // Los valores que cambian en la misma vista (p. ej. el % de una barra) se animan desde el anterior.
+  const renderKey = route.name + JSON.stringify(route.params);
+  const previous = renderKey === lastRenderKey ? motion.capture(root) : new Map();
+  lastRenderKey = renderKey;
+  root.dataset.view = route.name === 'history' ? (route.params.tab || 'activity') : route.name;
   root.innerHTML = view.render(route.params);
+  motion.play(root, previous);
   $('#chip').innerHTML = syncChip();
   document.querySelectorAll('[data-nav]').forEach(a => {
-    const on = a.dataset.nav === route.name || (route.name === 'project' && a.dataset.nav === 'projects') || (route.name === 'tasks' && a.dataset.nav === 'today');
+    const on = a.dataset.nav === route.name || (route.name === 'project' && a.dataset.nav === 'projects') || (route.name === 'next' && a.dataset.nav === 'home');
     a.classList.toggle('on', on);
     a.setAttribute('aria-current', on ? 'page' : 'false');
   });
@@ -94,9 +122,9 @@ function navigate() {
   const next = parseHash();
   const same = next.name === route.name && JSON.stringify(next.params) === JSON.stringify(route.params);
   route = next;
-  // Acceso directo de la PWA: /#/today?capture=1 abre la captura al entrar.
+  // Acceso directo de la PWA: /#/home?capture=1 abre la captura al entrar.
   if (next.query.get('capture')) {
-    history.replaceState(null, '', location.pathname + location.search + '#/' + next.name);
+    window.history.replaceState(null, '', location.pathname + location.search + '#/' + (next.name === 'history' && next.params.tab ? 'history/' + next.params.tab : next.name));
     setTimeout(() => openCapture(), 60);
   }
   if (!same) { project.state.limit = 12; log.state.limit = 60; }
@@ -167,7 +195,7 @@ const ACTIONS = {
     if (!ok) return;
     try { if (!store.session.guest) await sync.deleteRemoteData(); } catch (e) { feedback({ title: 'No se pudo borrar en la nube', lines: [api.humanError(e)], tone: 'info' }); }
     await db.wipe();
-    location.hash = '#/today';
+    location.hash = '#/home';
     startAfterAuth({ fresh: true });
     feedback({ title: 'Datos borrados', tone: 'info' });
   },
@@ -222,7 +250,7 @@ function wire() {
     if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) { e.preventDefault(); openCapture(); return; }
     if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === 'n' || e.key === 'c') { e.preventDefault(); openCapture(); }
-    else if (e.key === '/' && route.name === 'log') { e.preventDefault(); document.getElementById('log-q')?.focus(); }
+    else if (e.key === '/' && route.name === 'history' && route.params.tab === 'log') { e.preventDefault(); document.getElementById('log-q')?.focus(); }
   });
 
   $('#import-file').addEventListener('change', async e => {
@@ -361,10 +389,15 @@ async function boot() {
 }
 
 // Barra de navegación (una sola vez).
-$('#nav').innerHTML = NAV.map(([k, l, ic]) => `<a data-nav="${k}" href="#/${k}">${icon(ic)}<span>${l}</span></a>`).join('');
-$('#navside').innerHTML = `<div class="brand">${icon('flame')}<span>Bitácora</span></div>` +
-  NAV.map(([k, l, ic]) => `<a data-nav="${k}" href="#/${k}">${icon(ic)}<span>${l}</span></a>`).join('') +
-  `<button class="btn primary side-cap" data-act="capture">${icon('plus')}Registrar <kbd>N</kbd></button>`;
+// Navegación (una sola vez). Móvil: Inicio · Proyectos · + · Historia · Tú. Escritorio: rail/barra lateral con Tú al pie.
+const navLink = ([k, l, ic], cls = '') => `<a data-nav="${k}" href="#/${k}" class="${cls}" title="${l}" aria-label="${l}">${icon(ic)}<span>${l}</span></a>`;
+$('#nav').innerHTML = NAV.slice(0, 2).map(n => navLink(n)).join('') +
+  `<button class="tab-add" data-act="capture" aria-label="Registrar actividad">${icon('plus')}</button>` +
+  NAV.slice(2).map(n => navLink(n)).join('');
+$('#navside').innerHTML = `<div class="brand"><span class="logo-mark" aria-hidden="true">B</span><span class="brand-name">Bitácora</span></div>` +
+  NAV.slice(0, 3).map(n => navLink(n)).join('') +
+  `<button class="btn primary side-cap" data-act="capture" title="Registrar (N)" aria-label="Registrar actividad">${icon('plus')}<span>Registrar</span> <kbd>N</kbd></button>` +
+  navLink(NAV[3], 'nav-you');
 
 boot().catch(err => {
   // Nunca dejar la pantalla en blanco: mostrar el error con una salida.

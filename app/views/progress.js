@@ -53,7 +53,7 @@ export function render() {
 
   return `
   <header class="view-head">
-    <div><h1>Progreso</h1><p class="date">${esc(label(state.range, p.start))}</p></div>
+    <div><h1>Historia</h1><p class="date">${esc(label(state.range, p.start))}</p></div>
   </header>
 
   <div class="filters between">

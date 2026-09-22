@@ -30,7 +30,7 @@ export function render() {
   const c = db.counts();
   const s = syncState();
   return `
-  <header class="view-head"><div><h1>Ajustes</h1><p class="date">${esc(store.session.guest ? 'Modo prueba, sin cuenta' : store.session.email || '')}</p></div></header>
+  <header class="view-head"><div><h1>Tú</h1><p class="date">${esc(store.session.guest ? 'Modo prueba, sin cuenta' : store.session.email || '')}</p></div></header>
 
   <section class="block">
     <div class="block-head"><h2 class="eyebrow">Perfil</h2></div>

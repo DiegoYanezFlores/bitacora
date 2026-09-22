@@ -141,7 +141,7 @@ export function notices() {
   if (dow <= 2) {
     const prev = period('week', -1);
     if (prev.activities) {
-      out.push({ id: `week:${prev.start}`, prio: 2, icon: 'chart', text: `Tu semana pasada: ${plural(prev.activities, 'actividad', 'actividades')} en ${plural(prev.activeDays, 'día activo', 'días activos')} y ${plural(prev.tasksDone, 'tarea cerrada', 'tareas cerradas')}.`, action: { label: 'Ver resumen', href: '#/progress' } });
+      out.push({ id: `week:${prev.start}`, prio: 2, icon: 'chart', text: `Tu semana pasada: ${plural(prev.activities, 'actividad', 'actividades')} en ${plural(prev.activeDays, 'día activo', 'días activos')} y ${plural(prev.tasksDone, 'tarea cerrada', 'tareas cerradas')}.`, action: { label: 'Ver resumen', href: '#/history' } });
     }
   }
 
