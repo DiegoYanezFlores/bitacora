@@ -7,7 +7,7 @@ Web estática (sin build, sin dependencias), instalable como PWA, con datos loca
 
 ## Puesta en marcha
 
-1. **Base de datos**: en Supabase → SQL Editor, ejecuta `supabase/migrations/002_v2.sql`. Es idempotente y no toca los datos de la versión 1.
+1. **Base de datos**: en Supabase → SQL Editor, ejecuta. Es idempotente y no toca los datos de la versión 1.
 2. **Acceso**: Authentication → URL Configuration → *Site URL* y *Redirect URLs* con la URL de la app. Para Google: Authentication → Sign In / Providers → Google (requiere un cliente OAuth en Google Cloud). El botón aparece solo si el proveedor está activo.
 3. **Configuración del cliente**: `config.js` con la URL del proyecto y la *publishable key* (públicas por diseño; nunca la secret).
 4. **Desplegar**: `vercel --prod --yes`.
