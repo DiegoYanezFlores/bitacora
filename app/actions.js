@@ -5,6 +5,7 @@ import * as db from './db.js';
 import { esc, nowIso, dayKey, plural } from './lib.js';
 import { feedback, celebrate, openSheet, closeSheet, confirmSheet, KINDS, TASK_STATUS, PROJECT_STATUS, COLORS, dot } from './ui.js';
 import { TEMPLATES } from './domain/templates.js';
+import { dateShortcuts } from './domain/calendar.js';
 
 // Estado del objetivo → tipo de registro de rumbo (goal_log).
 const STATUS_LOG = { paused: 'paused', done: 'closed', archived: 'archived' };
@@ -112,7 +113,9 @@ function milestoneOptions(selected) {
 }
 
 export function taskForm(task = null, defaults = {}) {
-  const t = task || { title: '', project_id: defaults.project_id || '', status: 'todo', priority: 2, due_date: '', waiting_on: '', notes: '' };
+  // defaults.due_date llega del calendario: la fecha del día elegido viene puesta.
+  const t = task || { title: '', project_id: defaults.project_id || '', status: 'todo', priority: 2, due_date: defaults.due_date || '', waiting_on: '', notes: '' };
+  const chips = dateShortcuts(dayKey());
   openSheet(`
     <form class="form">
       <div class="sheet-head"><h2 class="sheet-title">${task ? 'Editar tarea' : 'Nueva tarea'}</h2><button type="button" class="icon-btn" data-sheet="close" aria-label="Cerrar">✕</button></div>
@@ -122,7 +125,9 @@ export function taskForm(task = null, defaults = {}) {
       <div class="field"><span>Estado</span>${seg('status', Object.entries(TASK_STATUS), t.status)}</div>
       <div class="field"><span>Prioridad</span>${seg('priority', [[1, 'Alta'], [2, 'Media'], [3, 'Baja']], t.priority)}</div>
       <div class="row2">
-        <label class="field"><span>Fecha</span><input type="date" name="due_date" value="${esc(t.due_date || '')}"></label>
+        <label class="field"><span>Fecha</span><input type="date" name="due_date" value="${esc(t.due_date || '')}">
+          <span class="day-chips">${chips.map(c => `<button type="button" class="pill" data-day-set="${c.day}">${esc(c.label)}</button>`).join('')}${t.due_date ? '<button type="button" class="pill" data-day-set="">Sin fecha</button>' : ''}</span>
+        </label>
         <label class="field" data-waiting ${t.status === 'waiting' ? '' : 'hidden'}><span>Esperando a</span><input name="waiting_on" maxlength="200" value="${esc(t.waiting_on)}" placeholder="Persona o equipo"></label>
       </div>
       <label class="field"><span>Notas</span><textarea name="notes" rows="3" maxlength="4000">${esc(t.notes)}</textarea></label>
@@ -134,6 +139,9 @@ export function taskForm(task = null, defaults = {}) {
     onClick: (e, el) => {
       if (e.target.closest('[data-del]')) { closeSheet(); removeWithUndo('tasks', task.id, 'tarea'); }
       if (e.target.name === 'status') el.querySelector('[data-waiting]').hidden = e.target.value !== 'waiting';
+      // Atajos de fecha: rellenan el campo, no guardan solos (el usuario sigue decidiendo).
+      const chip = e.target.closest('[data-day-set]');
+      if (chip) { const input = el.querySelector('input[name=due_date]'); input.value = chip.dataset.daySet; input.focus(); }
     },
     onSubmit: fd => {
       const msId = val(fd, 'milestone_id') || null;

@@ -16,7 +16,7 @@ app/store.js        mutaciones, cola de cambios (outbox), perfil y preferencias
 app/sync.js         subida/bajada por filas con Supabase
 app/api.js          Auth + REST de Supabase con fetch (sin SDK)
 app/model.js        fachada memorizada: lee db y delega en app/domain/*
-app/domain/*.js     lógica pura y probada: days (racha/mapa), period, progress (motor de avance §8), templates
+app/domain/*.js     lógica pura y probada: days (racha/mapa), period, progress (motor de avance §8), templates, calendar (rejillas de mes/semana, reparto por día, vencidas)
 app/structure.js    etapas, hitos con criterios, panel y cierre de hito, evidencia (nota/enlace), plantillas, goal_log
 tests/*.test.js     node --test (entorno mínimo en tests/setup.js)
 scripts/check-precache.mjs  verifica la precaché del service worker
@@ -56,7 +56,9 @@ Blanco frío + **cobalto vivo como color protagonista**: bloques enteros donde e
 | `--block` (bloque protagonista, texto blanco) | #2F4BF5 | #3551F2 |
 | `--milestone` / `--milestone-ink` | #FFA826 / #A35A00 | #FFB547 |
 
-Navegación: móvil y tablet con barra inferior Inicio · Objetivos · + · Historia · Tú; rail de 72 px entre 1024 y 1199; barra lateral de 240 px desde 1200. Contenido centrado (máx. 1200, 1320 desde 1728; 760 en vistas de lista). Rutas: `#/home`, `#/goals`, `#/goal/:id`, `#/next`, `#/history` (Actividad) y `#/history/log` (Registro), `#/you`; las antiguas redirigen.
+Navegación: móvil y tablet con barra inferior Inicio · Objetivos · + · Calendario · Historia · Tú (a partir de 6 celdas el cuerpo baja a 10 px bajo 400 px para que quepa el nombre completo); rail de 72 px entre 1024 y 1199; barra lateral de 240 px desde 1200. Contenido centrado (máx. 1200, 1320 desde 1728; 760 en vistas de lista). Rutas: `#/home`, `#/goals`, `#/goal/:id`, `#/next`, `#/calendar`, `#/history` (Actividad) y `#/history/log` (Registro), `#/you`; las antiguas redirigen.
+
+**Calendario (`app/views/calendar.js`):** planificación temporal sobre las tareas que ya existen, sin tabla nueva. `due_date` = cuándo planeo hacerlo, `completed_at` = cuándo lo terminé, `occurred_at` = cuándo ocurrió la actividad; no se mezclan. Las fechas de tarea son fechas de calendario (`YYYY-MM-DD`), nunca marcas de tiempo, para que no se desplacen de día según la zona horaria. Las tareas sin fecha no se colocan en ningún día: se cuentan aparte y enlazan a `#/next`. Planificar no genera actividad ni mueve racha, avance ni estadísticas; solo completar lo hace, por el `completeTask()` de siempre.
 
 ## Modelo de datos (Supabase, todo con RLS por usuario)
 

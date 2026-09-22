@@ -5,6 +5,7 @@ import { dayKey, addDays, weekStart, daysBetween, parseDay, time, plural, fmtDay
 import { countByDay, streakOf, weekOf, heatmapOf } from './domain/days.js';
 import { goalProgress, metricIndicator, milestoneProgress, fmtNum } from './domain/progress.js';
 import { periodOf } from './domain/period.js';
+import { indexByDay, EMPTY_CELL } from './domain/calendar.js';
 
 // ---------- memo por revisión de datos ----------
 const memo = new Map();
@@ -69,6 +70,13 @@ export function sortTasks(list) {
     a.priority - b.priority ||
     time(a.created_at) - time(b.created_at));
 }
+
+// ---------- calendario ----------
+// Reparto por día de lo planificado (tareas con due_date) y lo ocurrido (actividades).
+// Se calcula una vez por revisión de datos y filtro: la vista no consulta nada más.
+export const calendarDays = (project = null) =>
+  cached('calendar:' + (project || 'all'), () => indexByDay({ tasks: tasks(), activities: activities(), dayOfActivity: actDay, project }));
+export const dayCell = (day, project = null) => calendarDays(project).get(day) || { day, ...EMPTY_CELL };
 
 // ---------- días activos y racha ----------
 export const activeDays = () => cached('activeDays', () => countByDay(activities(), actDay));

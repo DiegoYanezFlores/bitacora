@@ -94,7 +94,8 @@ export function activityRow(a, { showProject = true, showDate = false } = {}) {
 export function taskRow(t, { showProject = true } = {}) {
   const p = showProject ? model.project(t.project_id) : null;
   const due = t.due_date ? daysBetween(dayKey(), t.due_date) : null;
-  const dueTxt = due === null ? '' : due < 0 ? `Fecha: ${fmtDayShort(t.due_date)}` : due === 0 ? 'Hoy' : due === 1 ? 'Mañana' : fmtDayShort(t.due_date);
+  // Una fecha pasada se nombra sin culpa: dice desde cuándo espera, no que se falló.
+  const dueTxt = due === null ? '' : due < 0 ? `Desde ${fmtDayShort(t.due_date)}` : due === 0 ? 'Hoy' : due === 1 ? 'Mañana' : fmtDayShort(t.due_date);
   const meta = [
     t.status === 'doing' ? '<span class="tag tag-accent">En curso</span>' : '',
     t.status === 'waiting' ? `<span class="tag">${icon('wait')}En espera${t.waiting_on ? ' · ' + esc(t.waiting_on) : ''}</span>` : '',
