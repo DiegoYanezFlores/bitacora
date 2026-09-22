@@ -72,6 +72,15 @@ test('captura: tipo, #proyecto, "ayer" y tarea parecida', () => {
 
 test('migración local v3: respeta la meta semanal, guarda copia y es idempotente', async () => {
   const { migrateV3 } = await import('../app/migrate.js');
+  // Cuenta nueva sin datos: no deja ninguna copia en el navegador.
+  db.kvSet('migratedV3', false);
+  localStorage.removeItem('bitacora:backup:pre-v3:u1');
+  if (!db.counts().projects && !db.counts().activities) {
+    assert.equal(migrateV3(), true);
+    assert.equal(localStorage.getItem('bitacora:backup:pre-v3:u1'), null);
+  }
+  // Con datos previos sí se guarda la copia.
+  store.create('projects', { name: 'Previo' });
   db.kvSet('migratedV3', false);
   store.setProfile({ prefs: { weeklyGoal: 5 } });
   assert.equal(migrateV3(), true);

@@ -229,6 +229,7 @@ const ACTIONS = {
     if (!ok) return;
     try { if (!store.session.guest) await sync.deleteRemoteData(); } catch (e) { feedback({ title: 'No se pudo borrar en la nube', lines: [api.humanError(e)], tone: 'info' }); }
     await db.wipe();
+    forgetLocalCopies(store.session.userId || 'guest');
     location.hash = '#/home';
     startAfterAuth({ fresh: true });
     feedback({ title: 'Datos borrados', tone: 'info' });
@@ -237,14 +238,17 @@ const ACTIONS = {
     const pending = store.pendingCount();
     const ok = await confirmSheet('¿Cerrar sesión?', { confirm: 'Cerrar sesión', detail: pending ? `Tienes ${plural(pending, 'cambio', 'cambios')} sin subir. Se intentarán subir antes de salir.` : 'Tus datos quedan guardados en la nube.' });
     if (!ok) return;
-    if (pending && navigator.onLine) { try { await sync.syncNow(); } catch (e) { /* se avisa abajo */ } }
+    // Con mala conexión no se espera indefinidamente: tras 10 s se pregunta qué hacer.
+    if (pending && navigator.onLine) { try { await Promise.race([sync.syncNow(), new Promise(r => setTimeout(r, 10000))]); } catch (e) { /* se avisa abajo */ } }
     if (store.pendingCount() && !(await confirmSheet('Quedan cambios sin subir', { confirm: 'Salir igualmente', danger: true, detail: 'Si cierras sesión ahora, esos cambios se perderán en este dispositivo.' }))) return;
+    const uid = store.session.userId;
     await api.signOut();
     await db.wipe();
+    forgetLocalCopies(uid);
     store.session.userId = null; store.session.email = ''; store.session.guest = false;
     showAuth('welcome');
   },
-  'signup-from-guest': () => showAuth('signup')
+  'signup-from-guest': () => { adoptGuest = true; showAuth('signup'); }
 };
 
 function howItWorks() {
@@ -354,6 +358,18 @@ function enterApp() {
   navigate();
 }
 
+// Copias locales en texto plano (localStorage) de una cuenta: se borran al salir para no dejar
+// datos de nadie en un navegador compartido.
+function forgetLocalCopies(owner) {
+  if (!owner) return;
+  for (const k of [`bitacora:backup:${owner}`, `bitacora:backup:pre-v3:${owner}`]) {
+    try { localStorage.removeItem(k); } catch (e) { /* sin almacenamiento */ }
+  }
+}
+
+// Solo quien pulsa "Crear cuenta" desde el modo prueba adopta esos datos sin que se le pregunte.
+let adoptGuest = false;
+
 // Arranque tras identificarse (o como invitado).
 async function startAfterAuth({ session = null, guest = false, isNew = false, fresh = false } = {}) {
   if (guest) {
@@ -364,12 +380,19 @@ async function startAfterAuth({ session = null, guest = false, isNew = false, fr
   } else {
     const s = session || api.getSession();
     if (!s) { showAuth('welcome'); return; }
-    const prev = db.kvGet('owner');
+    let prev = db.kvGet('owner');
     if (prev && prev !== 'guest' && prev !== s.user.id) {
-      // Otra cuenta en este dispositivo: antes de limpiar se guarda una copia por si quedaban cambios sin subir.
-      try { localStorage.setItem(`bitacora:backup:${prev}`, exportBackup()); } catch (e) { /* sin espacio */ }
+      // Otra cuenta en este navegador (p. ej. un equipo compartido): sus datos no se copian ni se conservan.
       await db.wipe();
+      forgetLocalCopies(prev);
+      prev = null;
     }
+    if (prev === 'guest' && !adoptGuest && (db.counts().activities || db.counts().projects)) {
+      // Datos de "Probar sin cuenta" que pudo dejar otra persona: solo pasan a la cuenta si quien entra lo confirma.
+      const keep = await confirmSheet('¿Añadir los datos de prueba a tu cuenta?', { confirm: 'Añadirlos', detail: 'En este navegador hay datos registrados sin cuenta. Si no son tuyos, se borran de aquí y tu cuenta empieza limpia.' });
+      if (!keep) { await db.wipe(); forgetLocalCopies('guest'); prev = null; }
+    }
+    adoptGuest = false;
     const adopting = prev === 'guest';
     Object.assign(store.session, { userId: s.user.id, email: s.user.email, guest: false }); // las importaciones de módulo son de solo lectura
     db.kvSet('owner', s.user.id);

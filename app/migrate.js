@@ -132,7 +132,10 @@ export async function importBackup(json) {
 // dispositivos: solo guarda una copia de seguridad y fija la preferencia de constancia semanal.
 export function migrateV3() {
   if (db.kvGet('migratedV3')) return false;
-  try { localStorage.setItem(`bitacora:backup:pre-v3:${store.session.userId || 'guest'}`, exportBackup()); } catch (e) { /* sin espacio: no bloquea */ }
+  // Solo hay algo que respaldar si este navegador ya tenía datos (una cuenta nueva no deja copias).
+  if (db.counts().projects || db.counts().activities) {
+    try { localStorage.setItem(`bitacora:backup:pre-v3:${store.session.userId || 'guest'}`, exportBackup()); } catch (e) { /* sin espacio: no bloquea */ }
+  }
   const raw = store.profile().prefs || {};
   if (raw.activeWeekDays === undefined) store.setPrefs({ activeWeekDays: raw.weeklyGoal ?? 2 });
   db.kvSet('migratedV3', true);

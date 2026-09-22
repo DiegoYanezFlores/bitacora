@@ -25,8 +25,8 @@ app/capture.js      captura rápida y detección local (tipo, #proyecto, "ayer",
 app/migrate.js      conversión v1 → v2 (determinista), exportar/importar
 app/ui.js           iconos, hoja modal, toast, filas, barras
 app/views/*.js      Hoy, Proyectos, Proyecto, Tareas, Calendario, Registro, Progreso, Ajustes, Acceso, Onboarding
-supabase/migrations 001_v1.sql (modelo viejo, intacto), 002_v2.sql (+down), 003_impacable.sql (+down): etapas, criterios, evidencia, reflexiones, logros, descansos, cambios de rumbo, recaps
-supabase/tests      00_supabase_stub.sql (simula roles y auth.uid en Postgres local) + 003_test.sql
+supabase/migrations 001_v1.sql (modelo viejo, intacto), 002_v2.sql (+down), 003_impacable.sql (+down): etapas, criterios, evidencia, reflexiones, logros, descansos, cambios de rumbo, recaps; 004_hardening.sql (+down): sin acceso anónimo a ninguna tabla, funciones de trigger no invocables
+supabase/tests      00_supabase_stub.sql (simula roles y auth.uid en Postgres local) + 003_test.sql + 004_isolation_test.sql (un usuario no ve, edita, borra ni suplanta nada de otro, en todas las tablas)
 docs/               auditoría, investigación, diseño, informe final, métricas.sql
 ```
 
@@ -34,6 +34,7 @@ docs/               auditoría, investigación, diseño, informe final, métrica
 
 - **Sin frameworks, sin build, sin dependencias.** Módulos ES nativos servidos tal cual. Si algo necesita un bundler, se replantea.
 - **Ediciones parciales.** No reescribas archivos completos salvo que el cambio lo exija de verdad.
+- **Multiusuario y repositorio público:** cualquiera puede crear cuenta. El aislamiento lo da RLS (`auth.uid() = user_id`) en todas las tablas; nunca añadas una tabla sin RLS ni acceso anónimo (004 falla si pasa). En el navegador, cerrar sesión o entrar con otra cuenta borra los datos locales y las copias `bitacora:backup:*` de la anterior; los datos de "Probar sin cuenta" solo pasan a una cuenta si quien entra lo confirma.
 - **El esquema no se cambia sin migración** (SQL numerado + conversión en cliente + rollback). Los datos v1 (`bitacora_state`, `bitacora_history`, `bitacora_state_backup_v1`) no se tocan nunca.
 - **Nada de patrones oscuros**: sin culpa, sin miedo a perder rachas, sin recompensas variables, sin notificaciones para inflar métricas, sin scroll infinito. Ver `docs/02-investigacion.md`.
 - **Todo lo que se muestra se explica** (Ajustes → Cómo funciona). Si un número no se puede explicar, no se muestra.
