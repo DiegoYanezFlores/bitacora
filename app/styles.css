@@ -94,6 +94,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; } /* ninguna regla de display debe ganarle a hidden */
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; background: var(--bg); color: var(--text);
@@ -126,8 +127,8 @@ button { cursor: pointer; background: none; border: 0; padding: 0; -webkit-tap-h
 .main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); } /* despeja la barra inferior (64) con margen */
 .view { max-width: 1200px; margin: 0 auto; padding: 0 var(--sp) 32px; }
 /* Vistas de lista y lectura: columna cómoda y centrada; las de datos usan el ancho completo. */
-.view[data-view="log"], .view[data-view="activity"], .view[data-view="tasks"], .view[data-view="settings"], .view[data-view="project"] { max-width: 760px; }
-.main:has(.view[data-view="log"], .view[data-view="activity"], .view[data-view="tasks"], .view[data-view="settings"], .view[data-view="project"]) .chip-slot { max-width: 760px; }
+.view[data-view="log"], .view[data-view="activity"], .view[data-view="tasks"], .view[data-view="settings"], .view[data-view="goal"] { max-width: 760px; }
+.main:has(.view[data-view="log"], .view[data-view="activity"], .view[data-view="tasks"], .view[data-view="settings"], .view[data-view="goal"]) .chip-slot { max-width: 760px; }
 .view-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: calc(18px + env(safe-area-inset-top)) 0 14px; }
 .view-head h1 { font-size: 26px; font-weight: 750; letter-spacing: -.025em; line-height: 1.2; }
 .head-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
@@ -307,7 +308,7 @@ kbd { font: 600 11px var(--font); background: color-mix(in srgb, currentColor 12
 .pcard-name { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pcard-pct { font-size: 13px; color: var(--text-2); }
 .pcard-meta { display: grid; gap: 4px; margin-top: 9px; font-size: 13px; color: var(--text-2); }
-.pcard-meta span { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.pcard-meta > span { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .pcard-meta .i { width: 14px; height: 14px; flex: none; }
 .prog-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
 .prog-pct { font-size: 28px; font-weight: 700; letter-spacing: -.02em; }
@@ -317,6 +318,77 @@ kbd { font: 600 11px var(--font); background: color-mix(in srgb, currentColor 12
 .bar.big { height: 10px; }
 .bar.thin { height: 6px; }
 .bar span { display: block; height: 100%; width: var(--p, 0%); background: var(--accent); border-radius: 999px; }
+
+/* ---------- objetivos: avance por hitos (F3) ---------- */
+.segbar { display: flex; gap: 3px; height: 10px; }
+.segbar.thin { height: 6px; }
+.segbar-seg { min-width: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.segbar-seg i { display: block; height: 100%; width: var(--p, 0%); background: var(--accent); border-radius: 999px; }
+.goal-progress-title { font-size: 18px; font-weight: 700; letter-spacing: -.01em; margin-bottom: 6px; }
+.prog-foot { margin-top: 10px; }
+.link.inline { display: inline; padding: 0; font-size: inherit; }
+.indicator { display: grid; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.indicator-head { display: flex; justify-content: space-between; gap: 10px; }
+.indicator .btn { justify-self: start; }
+.head-links { display: flex; gap: 16px; }
+.center-actions { justify-content: center; }
+
+.chapter { margin-top: 12px; }
+.chapter-title { font-size: 15px; font-weight: 650; }
+.stage-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 0 14px; }
+.stage-card[open] { padding-bottom: 12px; }
+.stage-card summary { display: flex; align-items: center; gap: 10px; min-height: 50px; cursor: pointer; list-style: none; }
+.stage-card summary::-webkit-details-marker { display: none; }
+.stage-card summary::before { content: ""; width: 7px; height: 7px; border-right: 1.8px solid var(--text-3); border-bottom: 1.8px solid var(--text-3); transform: rotate(-45deg); transition: transform .15s ease; flex: none; }
+.stage-card[open] summary::before { transform: rotate(45deg); }
+.stage-tools { margin-left: auto; display: flex; gap: 2px; }
+.stage-card.is-skipped { opacity: .62; }
+.ms-list { display: grid; margin: 0 0 8px; }
+/* Filas con divisor fino (no tarjetas dentro de la tarjeta de etapa). */
+.ms-row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 8px; min-height: 52px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: none; text-align: left; transition: background .12s ease; }
+.ms-list li:last-child .ms-row { border-bottom: 0; }
+.ms-row:hover { background: var(--surface-2); border-radius: var(--r-xs); }
+.ms-row.is-skipped { opacity: .55; }
+.ms-main { flex: 1; min-width: 0; }
+.ms-name { display: block; font-weight: 550; overflow-wrap: anywhere; }
+.ms-meta { display: block; font-size: 13px; color: var(--text-2); margin-top: 1px; }
+/* Rombo de hito: contorno neutro; relleno ámbar al cerrarse (el ámbar solo vive aquí y en logros reales). */
+.ms-diamond { width: 24px; height: 24px; display: grid; place-items: center; color: var(--text-3); flex: none; }
+.ms-diamond .i { width: 20px; height: 20px; }
+.ms-diamond.on { color: var(--milestone-ink); }
+.ms-diamond.on .i path { fill: var(--milestone); }
+.weight { display: grid; place-items: center; min-width: 24px; height: 22px; padding: 0 5px; border-radius: var(--r-xs); background: var(--surface-2); color: var(--text-2); font-size: 11px; font-weight: 700; flex: none; }
+.crit-bar { display: flex; gap: 3px; }
+.crit-bar span { flex: 1; height: 6px; border-radius: 3px; background: var(--surface-2); }
+.crit-bar span.on { background: var(--accent); }
+.crit-bar.mini { width: 64px; flex: none; }
+.crit-bar.on-block { margin: -4px 0 16px; max-width: 320px; }
+.crit-bar.on-block span { background: var(--block-fill); }
+.crit-bar.on-block span.on { background: var(--block-ink); }
+.goal-next { margin-top: 16px; }
+
+/* Panel del hito */
+.ms-title { display: flex; align-items: center; gap: 8px; }
+.ms-progress { display: grid; gap: 8px; margin: 14px 0 10px; }
+.criteria { display: grid; }
+.criterion { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); }
+.criterion:last-child { border-bottom: 0; }
+.criterion-title { flex: 1; min-width: 0; padding: 10px 0; overflow-wrap: anywhere; }
+.criterion.is-met .criterion-title { color: var(--text-2); }
+.crit-add { display: flex; gap: 8px; margin-top: 10px; }
+.crit-add input { flex: 1; min-width: 0; }
+.evs { display: grid; gap: 6px; }
+.ev { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.ev > .i { color: var(--text-3); }
+.ev-body { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ev-body a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.ev-level { display: flex; gap: 2px; }
+.ev-level i { width: 4px; height: 12px; border-radius: 2px; background: var(--accent); }
+
+/* Selector de plantillas */
+.template-list { display: grid; gap: 8px; margin-top: 12px; }
+.template { display: grid; gap: 3px; padding: 12px 14px; border: 1px solid var(--line-2); border-radius: var(--r-sm); background: var(--surface); text-align: left; }
+.template:hover { border-color: var(--accent); }
 
 /* ---------- progreso ---------- */
 .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 18px; }
@@ -385,7 +457,7 @@ kbd { font: 600 11px var(--font); background: color-mix(in srgb, currentColor 12
 .form { display: grid; gap: 12px; }
 .field { display: grid; gap: 5px; }
 .field > span { font-size: 13px; color: var(--text-2); }
-input[type=text], input[type=email], input[type=password], input[type=date], input[type=datetime-local], input[type=number], input[type=search], select, textarea {
+input:not([type]), input[type=text], input[type=url], input[type=email], input[type=password], input[type=date], input[type=datetime-local], input[type=number], input[type=search], select, textarea {
   width: 100%; min-height: var(--tap); background: var(--surface); color: var(--text);
   border: 1px solid var(--line-2); border-radius: var(--r-sm); padding: 11px 13px; font-size: 16px;
 }
@@ -410,13 +482,14 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .search input:focus { outline: none; }
 
 /* ---------- hoja modal ---------- */
-.sheet { border: 0; padding: 0; background: transparent; width: 100%; max-width: 560px; max-height: 92dvh; color: var(--text); }
+.sheet { border: 0; padding: 0; background: transparent; width: 100%; max-width: none; max-height: 92dvh; margin: auto 0 0; color: var(--text); } /* móvil: hoja pegada al borde inferior */
 .sheet::backdrop { background: rgba(11, 16, 32, .45); }
 .sheet-inner { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r) var(--r) 0 0; padding: 18px var(--sp) calc(18px + env(safe-area-inset-bottom)); box-shadow: var(--shadow-lg); max-height: 92dvh; overflow-y: auto; }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .sheet-title { font-size: 18px; font-weight: 700; }
 .sheet-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: flex-end; margin-top: 14px; }
 .cap-row { display: flex; flex-wrap: wrap; gap: 7px; }
+.form.capture { gap: 16px; } /* grupos (tipo, objetivo, hito, cuándo) separados más que las píldoras de cada grupo */
 .cap-row:empty { display: none; }
 .cap-hint { margin-right: auto; }
 .pill.accent { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
@@ -425,7 +498,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .prose ul { display: grid; gap: 6px; padding-left: 18px; list-style: disc; }
 
 @media (min-width: 620px) {
-  .sheet { margin: auto; }
+  .sheet { margin: auto; max-width: 560px; }
   .sheet-inner { border-radius: var(--r); }
 }
 
@@ -433,7 +506,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .toast {
   position: fixed; z-index: 60; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom));
   transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
-  display: flex; align-items: center; gap: 11px; max-width: min(460px, calc(100vw - 24px));
+  display: flex; align-items: center; gap: 11px; width: max-content; max-width: min(460px, calc(100vw - 24px)); /* con left:50% el ancho se encogería a medio viewport */
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--r);
   padding: 11px 14px; box-shadow: var(--shadow-lg); transition: opacity .18s ease, transform .18s ease;
 }
@@ -444,6 +517,9 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .toast-body strong { font-size: 14px; color: var(--text); }
 .toast-undo { color: var(--accent); font-weight: 600; font-size: 13px; padding: 8px; flex: none; }
 .t-info .toast-icon { background: var(--surface-2); color: var(--text-2); }
+/* Cierre de hito: el único toast con ámbar (el ámbar es de hitos y logros reales). */
+.t-milestone .toast-icon { background: var(--milestone-soft); color: var(--milestone-ink); }
+.t-milestone .toast-icon .i path { fill: var(--milestone); stroke: var(--milestone-ink); }
 .draw { stroke-dasharray: 24; stroke-dashoffset: 24; animation: draw .34s ease forwards; }
 
 /* ---------- acceso y onboarding ---------- */
@@ -468,7 +544,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 @media (min-width: 640px) {
   .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 24px; }
   :root { --sp: 20px; }
-  .pcards { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .pcards { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
   .records { grid-template-columns: repeat(3, 1fr); }
 }
 

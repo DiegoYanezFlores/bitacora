@@ -14,6 +14,7 @@ import * as motion from './motion.js';
 import * as today from './views/today.js';
 import * as projects from './views/projects.js';
 import * as project from './views/project.js';
+import * as structure from './structure.js';
 import * as tasks from './views/tasks.js';
 import * as log from './views/log.js';
 import * as progress from './views/progress.js';
@@ -33,10 +34,10 @@ const historyView = {
   }
 };
 
-const VIEWS = { home: today, projects, project, next: tasks, history: historyView, you: settings };
+const VIEWS = { home: today, goals: projects, goal: project, next: tasks, history: historyView, you: settings };
 // Rutas anteriores: siguen funcionando (atajos de la PWA, enlaces guardados) y se reescriben a la nueva.
-const REDIRECTS = { today: 'home', log: 'history/log', progress: 'history', settings: 'you', tasks: 'next' };
-const NAV = [['home', 'Inicio', 'home'], ['projects', 'Proyectos', 'folder'], ['history', 'Historia', 'chart'], ['you', 'Tú', 'user']];
+const REDIRECTS = { today: 'home', log: 'history/log', progress: 'history', settings: 'you', tasks: 'next', projects: 'goals', project: 'goal' };
+const NAV = [['home', 'Inicio', 'home'], ['goals', 'Objetivos', 'target'], ['history', 'Historia', 'chart'], ['you', 'Tú', 'user']];
 const $ = s => document.querySelector(s);
 const scrolls = new Map();
 let route = { name: 'home', params: {} };
@@ -79,7 +80,7 @@ function parseHash() {
   const [path, query] = raw.split('?');
   const [name, param] = path.split('/');
   const q = new URLSearchParams(query || '');
-  if (name === 'project' && param) return { name: 'project', params: { id: param }, query: q };
+  if (name === 'goal' && param) return { name: 'goal', params: { id: param }, query: q };
   if (name === 'history') return { name, params: { tab: param === 'log' ? 'log' : '' }, query: q };
   return { name: VIEWS[name] ? name : 'home', params: {}, query: q };
 }
@@ -107,7 +108,7 @@ function render() {
   motion.play(root, previous);
   $('#chip').innerHTML = syncChip();
   document.querySelectorAll('[data-nav]').forEach(a => {
-    const on = a.dataset.nav === route.name || (route.name === 'project' && a.dataset.nav === 'projects') || (route.name === 'next' && a.dataset.nav === 'home');
+    const on = a.dataset.nav === route.name || (route.name === 'goal' && a.dataset.nav === 'goals') || (route.name === 'next' && a.dataset.nav === 'home');
     a.classList.toggle('on', on);
     a.setAttribute('aria-current', on ? 'page' : 'false');
   });
@@ -138,7 +139,7 @@ const ACTIONS = {
   capture: () => openCapture(),
   'capture-note': () => openCapture({ kind: 'note' }),
   'capture-project': el => openCapture({ projectId: el.dataset.id }),
-  'new-task': el => actions.taskForm(null, { project_id: el.dataset.project || (route.name === 'project' ? route.params.id : '') }),
+  'new-task': el => actions.taskForm(null, { project_id: el.dataset.project || (route.name === 'goal' ? route.params.id : '') }),
   'edit-task': el => actions.taskForm(db.get('tasks', el.dataset.id)),
   'toggle-task': el => actions.toggleTask(el.dataset.id),
   'complete-next': el => actions.completeTask(el.dataset.id),
@@ -146,15 +147,25 @@ const ACTIONS = {
   'next-other': () => { today.state.next++; render(); },
   'new-project': () => actions.projectForm(null),
   'edit-project': el => actions.projectForm(db.get('projects', el.dataset.id)),
-  'pause-project': el => { store.update('projects', el.dataset.id, { status: 'paused' }); if (el.dataset.notice) model.dismissNotice(el.dataset.notice); feedback({ title: 'Proyecto pausado', lines: ['Puedes reactivarlo cuando quieras'], tone: 'info' }); },
-  'new-milestone': el => actions.milestoneForm(null, el.dataset.project || route.params.id),
-  'edit-milestone': el => actions.milestoneForm(db.get('milestones', el.dataset.id)),
-  'toggle-milestone': el => actions.toggleMilestone(el.dataset.id),
+  'pause-project': el => { store.update('projects', el.dataset.id, { status: 'paused' }); structure.logGoal(el.dataset.id, 'paused'); if (el.dataset.notice) model.dismissNotice(el.dataset.notice); feedback({ title: 'Objetivo pausado', lines: ['Lo que construiste sigue aquí; reactívalo cuando quieras'], tone: 'info' }); },
+  'new-milestone': el => structure.milestoneForm(null, el.dataset.project || route.params.id, { stageId: el.dataset.stage || null }),
+  'edit-milestone': el => structure.milestoneForm(model.milestone(el.dataset.id)),
+  'open-milestone': el => structure.openMilestone(el.dataset.id),
+  'toggle-milestone': el => structure.openMilestone(el.dataset.id), // desde la siguiente acción: abre el hito (cerrar pide confirmación)
+  'new-stage': el => structure.stageForm(null, el.dataset.project || route.params.id),
+  'edit-stage': el => structure.stageForm(model.stage(el.dataset.id)),
+  'stage-up': el => structure.moveStage(el.dataset.id, -1),
+  'skip-stage': el => structure.toggleSkipStage(el.dataset.id),
+  'use-template': el => structure.templatePicker(el.dataset.id),
   'edit-activity': el => actions.activityForm(db.get('activities', el.dataset.id)),
   metric: el => actions.metricForm(db.get('projects', el.dataset.id)),
-  'explain-progress': el => openSheet(`<h2 class="sheet-title">Cómo se calcula el progreso</h2>
-      <p>${el.dataset.mode === 'metric' ? 'Este proyecto usa una <strong>métrica</strong>: el avance va del valor inicial al valor meta.' : el.dataset.mode === 'auto' ? 'Se calcula con lo que ya tienes: cada <strong>hito</strong> pesa el doble que una <strong>tarea</strong>. No hay estimaciones ocultas.' : 'Aún no hay tareas, hitos ni métrica: añade alguno y el progreso se calculará solo.'}</p>
-      <p class="muted small">Puedes cambiar el método editando el proyecto.</p>
+  'explain-progress': () => openSheet(`<h2 class="sheet-title">Cómo se calcula el avance</h2>
+      <div class="prose">
+        <p>El avance sale solo de <strong>hitos</strong> y de sus <strong>criterios de “hecho”</strong>. Un hito con 2 de 4 criterios cumplidos va al 50 %; al cerrarlo cuenta completo.</p>
+        <p>Cada hito pesa según su tamaño: <strong>S</strong> cuenta 1, <strong>M</strong> 2 y <strong>L</strong> 3. El objetivo es la media ponderada de todos sus hitos; las etapas o hitos marcados como “no aplica” no cuentan.</p>
+        <p>Registrar acciones y completar próximos pasos <strong>no sube el porcentaje</strong>: eso es tu constancia. Así, cien tareas pequeñas no fingen un avance que no hubo.</p>
+        <p>Si el objetivo tiene una métrica (páginas, dinero, km), se muestra aparte como <strong>indicador</strong>.</p>
+      </div>
       <div class="sheet-actions"><button class="btn primary" data-sheet="close">Entendido</button></div>`),
   'more-activity': () => { project.state.limit += 20; render(); },
   'toggle-done-tasks': () => { project.state.showDone = !project.state.showDone; render(); },
@@ -218,8 +229,8 @@ function howItWorks() {
   <div class="prose">
     <p><strong>Día activo</strong>: un día en el que registraste al menos una actividad. Tu meta semanal la eliges tú en Ajustes y no pasa nada si no llegas.</p>
     <p><strong>Racha</strong>: días activos seguidos. Se muestra como dato, nunca como algo que "pierdes". Si olvidaste registrar ayer, puedes hacerlo con el botón "Ayer" de la captura.</p>
-    <p><strong>Progreso de un proyecto</strong>: si defines una métrica, va del valor inicial al objetivo. Si no, cuenta hitos (peso doble) y tareas completadas. Sin estimaciones inventadas.</p>
-    <p><strong>Siguiente acción</strong>: ordena tus tareas abiertas por estado, prioridad, fecha y días sin avance del proyecto, y te muestra la primera con el motivo a la vista.</p>
+    <p><strong>Avance de un objetivo</strong>: sale solo de hitos y de sus criterios de “hecho”, ponderados por tamaño (S = 1, M = 2, L = 3). Las acciones y los próximos pasos no suben el porcentaje: son tu constancia. Si hay métrica, se muestra aparte como indicador.</p>
+    <p><strong>Siguiente acción</strong>: ordena tus tareas abiertas por estado, prioridad, fecha y días sin avance del objetivo, y te muestra la primera con el motivo a la vista.</p>
     <p><strong>Logros y récords</strong>: se calculan de tus datos reales; no hay premios aleatorios ni puntos inventados.</p>
     <p><strong>Tus datos</strong>: se guardan en este dispositivo y, si tienes cuenta, en tu fila de Supabase, a la que solo accede tu usuario. Puedes exportarlos o borrarlos cuando quieras.</p>
   </div>
@@ -266,6 +277,8 @@ function wire() {
     }
   });
 
+  // Recuerda qué etapas abrió o cerró el usuario (el evento toggle no burbujea: se escucha en captura).
+  document.addEventListener('toggle', e => { if (e.target.matches?.('details[data-stage]')) project.state.open.set(e.target.dataset.stage, e.target.open); }, true);
   window.addEventListener('hashchange', navigate);
   window.addEventListener('bitacora:signedout', () => { store.session.userId = null; showAuth('signin', 'Tu sesión expiró. Vuelve a entrar.'); });
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
@@ -296,6 +309,7 @@ function showOnboarding() {
   $('#overlay').hidden = false;
   mountOnboarding($('#overlay'), {
     onDone: ({ logged }) => {
+      db.kvSet('seenProgressV3', true); // quien empieza ya conoce el modelo nuevo
       enterApp();
       if (logged) feedback({ title: 'Ya empezaste', lines: ['Tu historial acaba de arrancar'] });
     }
@@ -351,8 +365,24 @@ async function startAfterAuth({ session = null, guest = false, isNew = false, fr
   else {
     enterApp();
     if (migrated && Object.values(migrated).some(Boolean)) welcomeBack(migrated);
+    else explainNewProgress();
   }
   if (!guest) sync.syncNow();
+}
+
+// Una sola vez: explica el cambio de cálculo del avance (plan técnico §8.6, riesgo R2). Nada se borró.
+function explainNewProgress() {
+  if (db.kvGet('seenProgressV3')) return;
+  db.kvSet('seenProgressV3', true);
+  if (!model.projects().length) return;
+  const sinHitos = model.projects().filter(p => model.progress(p).mode === 'none').length;
+  openSheet(`<h2 class="sheet-title">Así se mide ahora tu avance</h2>
+    <div class="prose">
+      <p>Los proyectos ahora son <strong>objetivos</strong>, con etapas e <strong>hitos</strong> que tienen criterios de “hecho”.</p>
+      <p>El porcentaje sale solo de esos hitos y criterios. Las tareas y actividades <strong>ya no suben el %</strong>: cuentan como tu constancia. Así el avance refleja lo que de verdad lograste.</p>
+      ${sinHitos ? `<p>${plural(sinHitos, 'objetivo muestra', 'objetivos muestran')} “Sin hitos” hasta que le definas hitos; puedes empezar con una plantilla. <strong>Nada se borró.</strong></p>` : '<p><strong>Nada se borró.</strong></p>'}
+    </div>
+    <div class="sheet-actions"><button class="btn ghost" data-sheet="close">Entendido</button><a class="btn primary" href="#/goals" data-sheet="close">Ver mis objetivos</a></div>`, { wide: true });
 }
 
 function welcomeBack(t) {

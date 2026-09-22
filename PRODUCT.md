@@ -8,11 +8,11 @@ web
 
 ## Users
 
-El dueño (ingeniero de datos en Quito) como único usuario real: un registro de trabajo personal para sostener un plan de largo plazo con pocas horas semanales disponibles. La app es técnicamente multiusuario (Supabase Auth + RLS por fila), pero eso es una decisión de robustez y seguridad, no una meta de producto — no se espera ni se diseña activamente para que otras personas se registren.
+El dueño (ingeniero de datos en Quito) es hoy el único usuario real: un registro de trabajo personal para sostener un plan de largo plazo con pocas horas semanales. Decisión del 2026-09-18: **uso personal ahora, comercialización después**. La arquitectura ya es multiusuario y segura (Supabase Auth, RLS y FK compuestas de propiedad); lo específico de abrir a terceros (borrado de cuenta, cuotas, correo propio, textos legales) se agrupa en el gate F9b del plan técnico.
 
 ## Product Purpose
 
-Responder, en segundos, tres preguntas: qué hice, en qué avanzo, qué sigue. Captura rápida de actividades y tareas por proyecto, con progreso derivado (barras, racha sin castigo, patrones) y una "siguiente acción" calculada localmente. Éxito = el dueño mantiene el hábito de registrar con fricción mínima y siempre sabe, sin pensar, cuál es el siguiente paso.
+Ver y construir progreso real en objetivos importantes: qué intento lograr, en qué punto estoy, qué sigue y qué he construido. Objetivos con etapas e hitos que tienen criterios de "hecho"; el avance sale solo de esos criterios e hitos (las acciones alimentan la constancia, nunca el %). Captura rápida vinculada al hito activo, evidencia y reflexión de una línea. Éxito = el dueño mantiene el hábito de registrar con fricción mínima y, con el tiempo, puede decir "realmente construí algo".
 
 ## Positioning
 
@@ -24,19 +24,19 @@ Uso diario breve (captura en 1 toque, atajos `N` / `⌘K`) y una reflexión sema
 
 ## Capabilities and Constraints
 
-- Pantallas: Hoy, Proyectos (+detalle), Registro, Progreso, Ajustes, Captura rápida, Acceso, Onboarding.
-- Modelo relacional en Supabase con RLS por usuario: `profiles`, `projects`, `milestones`, `tasks` (todo/doing/waiting/done), `activities` (done/progress/note/win), `events`, vista `daily_stats`.
+- Pantallas: Inicio, Objetivos (+detalle con camino: etapas → hitos → criterios; panel de hito), Historia (Actividad y Registro), Tú, Captura rápida, Acceso, Onboarding.
+- Modelo relacional en Supabase con RLS por usuario y FK compuestas `(user_id, padre)`: `profiles`, `projects` (objetivos), `stages`, `milestones` (peso S/M/L), `criteria`, `tasks`, `activities`, `evidence`, `reflections`, `achievements`, `day_marks`, `goal_log`, `recaps`, `events`, vista `daily_stats`. Migraciones 002 y 003 aplicadas.
 - Sincronización: cada fila con `updated_at`/`deleted_at`/`synced_at`; conflictos resueltos por "gana la edición más reciente", reforzado por trigger en servidor. v1 (`bitacora_state`, `bitacora_history`, `bitacora_state_backup_v1`) intacto; migración v1→v2 determinista e idempotente en el cliente.
 - Auth: email/contraseña y Google (botón visible solo si el proveedor está activo en Supabase) vía REST directo (sin SDK), recuperación de contraseña, sesión persistente, perfil.
 - **Restricción técnica dura**: sin frameworks, sin build, sin dependencias. Todo en ES modules nativos servidos tal cual. Si algo requiere un bundler, se replantea el enfoque en vez de añadirlo.
 - **El esquema no cambia sin migración** (SQL numerado + conversión en cliente + rollback); los datos v1 no se tocan nunca.
-- Pendiente / no resuelto: notificaciones push (requiere Edge Function + VAPID; en iOS solo con la PWA instalada), empaquetado móvil con Capacitor si se decide publicar en tiendas. El owner aún debe ejecutar `supabase/migrations/002_v2.sql` en producción y, opcionalmente, activar el proveedor Google.
+- Pendiente / no resuelto: notificaciones push (requiere Edge Function + VAPID; en iOS solo con la PWA instalada), evidencia en archivo (Supabase Storage, F6), empaquetado móvil con Capacitor si se decide publicar en tiendas; el proveedor Google es opcional.
 
 ## Brand Commitments
 
 - Nombre: Bitácora. Voz breve, directa, sin lenguaje de videojuego.
 - **Sin patrones oscuros**: sin culpa, sin miedo a perder rachas, sin recompensas variables, sin notificaciones para inflar métricas, sin scroll infinito.
-- Gamificación deliberadamente moderada: sí barras de progreso, feedback de completado, días activos con meta propia, racha sin castigo, hitos, récords y logros informativos; explícitamente no XP, niveles, clasificaciones, recompensas variables ni confeti (decisión basada en evidencia, ver `docs/02-investigacion.md` y `docs/03-diseno.md`).
+- Gamificación deliberadamente moderada (Blueprint): sí avance por hitos con criterios, constancia semanal, momentum, logros reales/de progreso/de recuperación y celebraciones proporcionales; explícitamente no XP, puntos, niveles arbitrarios (los "niveles" son las etapas), clasificaciones, recompensas variables, confeti ni racha diaria (decisión basada en evidencia, ver `docs/IMPACABLE PRODUCT BLUEPRINT v1.0.md`).
 - "Todo lo que se muestra se explica": si un número no se puede explicar (Ajustes → Cómo funciona), no se muestra.
 - Tipografía del sistema exclusivamente (0 KB, sin terceros, sin enviar la IP del usuario a Google Fonts — decisión tomada tras auditar v1).
 - Contenido de usuario siempre escapado (`esc()`) antes de insertarse en HTML.

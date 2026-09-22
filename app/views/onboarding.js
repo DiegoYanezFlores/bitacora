@@ -31,11 +31,11 @@ export function mountOnboarding(root, { onDone }) {
     } else if (st.step === 3) {
       const suggestions = [...new Set(st.areas.flatMap(a => (AREAS.find(x => x[0] === a) || [])[2] || []))].slice(0, 4);
       root.innerHTML = `<div class="auth-card">${head()}
-        <h1>Tu primer proyecto</h1><p class="muted">Un proyecto agrupa lo que haces y muestra el avance.</p>
+        <h1>¿Qué quieres construir?</h1><p class="muted">Tu primer objetivo. Puedes cambiarlo después.</p>
         <form class="form">
-          <label class="field"><span>Nombre del proyecto</span><input name="project" maxlength="120" value="${esc(st.projectName)}" autofocus placeholder="Ej.: Certificación Google Cloud"></label>
+          <label class="field"><span>Objetivo</span><input name="project" maxlength="120" value="${esc(st.projectName)}" autofocus placeholder="Ej.: Certificación Google Cloud"></label>
           ${suggestions.length ? `<div class="filters">${suggestions.map(s => `<button type="button" class="pill" data-sug="${esc(s)}">${esc(s)}</button>`).join('')}</div>` : ''}
-          <button class="btn primary block-btn" type="submit">Crear proyecto</button>
+          <button class="btn primary block-btn" type="submit">Crear objetivo</button>
         </form>
         <button class="link center" data-skip>Ahora no</button></div>`;
     } else {

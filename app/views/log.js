@@ -34,8 +34,8 @@ export function render() {
   <div class="filters">
     <button class="pill ${!state.kind ? 'on' : ''}" data-act="filter-kind" data-v="">Todo</button>
     ${Object.entries(KINDS).map(([k, v]) => `<button class="pill ${state.kind === k ? 'on' : ''}" data-act="filter-kind" data-v="${k}">${icon(v.icon)}${v.label}</button>`).join('')}
-    ${projects.length ? `<select class="pill-select" data-act="filter-project" aria-label="Proyecto">
-      <option value="">Todos los proyectos</option>
+    ${projects.length ? `<select class="pill-select" data-act="filter-project" aria-label="Objetivo">
+      <option value="">Todos los objetivos</option>
       ${projects.map(p => `<option value="${p.id}" ${state.project === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}
     </select>` : ''}
   </div>
@@ -46,6 +46,6 @@ export function render() {
         <ul class="acts">${g.items.map(a => activityRow(a)).join('')}</ul>
       </section>`).join('') + (all.length > shown.length ? `<button class="btn ghost block-btn" data-act="more-log">Cargar más (${all.length - shown.length})</button>` : '')
     : empty('list', state.q || state.kind || state.project ? 'Nada con esos filtros' : 'Tu historial empieza aquí',
-        state.q || state.kind || state.project ? 'Prueba con otra búsqueda.' : 'Cada cosa que registres queda con su fecha y su proyecto: usa el botón de abajo.',
+        state.q || state.kind || state.project ? 'Prueba con otra búsqueda.' : 'Cada cosa que registres queda con su fecha y su objetivo: usa el botón de abajo.',
         state.q || state.kind || state.project ? '<button class="btn ghost" data-act="clear-filters">Quitar filtros</button>' : '')}`;
 }

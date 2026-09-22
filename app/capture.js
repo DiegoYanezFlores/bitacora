@@ -82,15 +82,17 @@ const CAPTURE_KINDS = [['done', 'Hecho', 'check'], ['progress', 'Avance', 'arrow
 
 export function openCapture({ text = '', kind = null, projectId = null } = {}) {
   store.track('capture_open', {});
-  const st = { kind: kind || db.kvGet('lastKind', 'done'), projectId, daysAgo: 0, taskId: null, completeTask: true, manual: { kind: Boolean(kind), project: Boolean(projectId), when: false } };
+  const st = { kind: kind || db.kvGet('lastKind', 'done'), projectId, milestoneId: null, milestoneFor: null, learned: false, daysAgo: 0, taskId: null, completeTask: true, manual: { kind: Boolean(kind), project: Boolean(projectId), when: false, milestone: false } };
   const el = openSheet(`
     <form class="form capture" autocomplete="off">
       <div class="sheet-head"><h2 class="sheet-title">Registrar</h2><button type="button" class="icon-btn" data-sheet="close" aria-label="Cerrar">✕</button></div>
       <label class="sr-only" for="cap-text">Qué hiciste</label>
       <textarea id="cap-text" name="text" rows="2" maxlength="500" required placeholder="¿Qué hiciste? Ej.: Terminé el informe #IoT" enterkeyhint="done">${esc(text)}</textarea>
       <div class="cap-row" data-kinds role="radiogroup" aria-label="Tipo"></div>
-      <div class="cap-row" data-projects aria-label="Proyecto"></div>
+      <div class="cap-row" data-projects aria-label="Objetivo"></div>
+      <div class="cap-row" data-milestones aria-label="Hito"></div>
       <div class="cap-row" data-extra></div>
+      <label class="field" data-learned hidden><span>¿Qué aprendiste? (una línea, opcional)</span><input name="learned" maxlength="300" autocomplete="off"></label>
       <div class="sheet-actions">
         <span class="muted small cap-hint" data-hint></span>
         <button type="submit" class="btn primary" data-save>Guardar</button>
@@ -98,13 +100,15 @@ export function openCapture({ text = '', kind = null, projectId = null } = {}) {
     </form>`, {
     onOpen: root => { const ta = root.querySelector('textarea'); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); refresh(root); },
     onClick: (e, root) => {
-      const b = e.target.closest('[data-k],[data-p],[data-when],[data-task],[data-more-projects]');
+      const b = e.target.closest('[data-k],[data-p],[data-m],[data-when],[data-task],[data-more-projects],[data-learn]');
       if (!b) return;
       if (b.dataset.k) { st.kind = b.dataset.k; st.manual.kind = true; }
       if (b.dataset.p !== undefined) { st.projectId = b.dataset.p || null; st.manual.project = true; }
       if (b.dataset.when !== undefined) { st.daysAgo = Number(b.dataset.when); st.manual.when = true; }
       if (b.dataset.task !== undefined) st.completeTask = !st.completeTask;
       if (b.dataset.moreProjects !== undefined) { st.showAll = true; }
+      if (b.dataset.m !== undefined) { st.milestoneId = b.dataset.m || null; st.manual.milestone = true; }
+      if (b.dataset.learn !== undefined) { st.learned = true; render(root); root.querySelector('[name=learned]').focus(); return; }
       render(root);
       root.querySelector('textarea').focus();
     },
@@ -139,13 +143,25 @@ export function openCapture({ text = '', kind = null, projectId = null } = {}) {
     const list = selected && !recents.some(p => p.id === selected.id) ? [selected, ...recents.slice(0, 3)] : recents;
     const all = model.projects().filter(p => p.status !== 'archived');
     root.querySelector('[data-projects]').innerHTML = all.length
-      ? `<button type="button" class="pill ${!st.projectId ? 'on' : ''}" data-p="">Sin proyecto</button>` +
+      ? `<button type="button" class="pill ${!st.projectId ? 'on' : ''}" data-p="">Sin objetivo</button>` +
         list.map(p => `<button type="button" class="pill ${st.projectId === p.id ? 'on' : ''}" data-p="${p.id}">${dot(p.color)}${esc(p.name)}</button>`).join('') +
         (all.length > list.length ? (st.showAll
-          ? `<select class="pill-select" aria-label="Otro proyecto"><option value="">Otro…</option>${all.filter(p => !list.includes(p)).map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>`
+          ? `<select class="pill-select" aria-label="Otro objetivo"><option value="">Otro…</option>${all.filter(p => !list.includes(p)).map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>`
           : '<button type="button" class="pill ghost" data-more-projects>Más…</button>') : '')
-      : '<span class="muted small">Sin proyectos todavía: puedes crear uno después.</span>';
+      : '<span class="muted small">Sin objetivos todavía: puedes crear uno después.</span>';
     root.querySelector('[data-projects] select')?.addEventListener('change', e => { st.projectId = e.target.value || null; st.manual.project = true; render(root); });
+
+    // Hito: por defecto el siguiente hito abierto del objetivo elegido (la acción cuenta para la constancia y queda vinculada).
+    const openMs = st.projectId ? model.milestones().filter(m => m.project_id === st.projectId && !m.done_at && m.status !== 'skipped') : [];
+    if (st.milestoneFor !== st.projectId) {
+      st.milestoneFor = st.projectId;
+      if (!st.manual.milestone || !openMs.some(m => m.id === st.milestoneId)) st.milestoneId = st.projectId ? (model.progress(model.project(st.projectId)).nextMilestone?.id || null) : null;
+    }
+    const msList = openMs.slice().sort((a, b) => (a.id === st.milestoneId ? -1 : b.id === st.milestoneId ? 1 : (a.sort || 0) - (b.sort || 0))).slice(0, 3);
+    root.querySelector('[data-milestones]').innerHTML = st.kind === 'note' || !openMs.length ? '' :
+      `<button type="button" class="pill ${!st.milestoneId ? 'on' : ''}" data-m="">Sin hito</button>` +
+      msList.map(m => `<button type="button" class="pill ${st.milestoneId === m.id ? 'on' : ''}" data-m="${m.id}">${icon('diamond')}${esc(m.title.slice(0, 40))}</button>`).join('');
+    root.querySelector('[data-learned]').hidden = !st.learned || st.kind === 'task';
 
     const task = st.taskId ? db.get('tasks', st.taskId) : null;
     const extra = [];
@@ -156,10 +172,11 @@ export function openCapture({ text = '', kind = null, projectId = null } = {}) {
     if (task && (st.kind === 'done' || st.kind === 'progress')) {
       extra.push(`<button type="button" class="pill ${st.completeTask ? 'on accent' : ''}" data-task aria-pressed="${st.completeTask}">${icon('check')}Completar “${esc(task.title.slice(0, 40))}”</button>`);
     }
+    if (!st.learned && st.kind !== 'task' && st.kind !== 'note') extra.push(`<button type="button" class="pill" data-learn>${icon('plus')}Qué aprendí</button>`);
     root.querySelector('[data-extra]').innerHTML = extra.join('');
     const hints = [];
-    if (st.projectBy && !st.manual.project) hints.push(`Proyecto por ${st.projectBy}`);
-    if (!hints.length) hints.push('Enter para guardar');
+    if (st.projectBy && !st.manual.project) hints.push(`Objetivo por ${st.projectBy}`);
+    if (!hints.length && !matchMedia('(hover: none)').matches) hints.push('Enter para guardar'); // en táctil no hay tecla Enter a mano
     root.querySelector('[data-hint]').textContent = hints.join(' · ');
     root.querySelector('[data-save]').textContent = st.kind === 'task' ? 'Añadir tarea' : 'Guardar';
   }
@@ -172,7 +189,7 @@ export function openCapture({ text = '', kind = null, projectId = null } = {}) {
     closeSheet();
 
     if (st.kind === 'task') {
-      const created = store.create('tasks', { title: title.replace(/^(tengo que|hay que|debo|necesito|pendiente:?|recordar|por hacer:?|todo:?)\s+/i, '').replace(/^./, c => c.toUpperCase()), project_id: st.projectId });
+      const created = store.create('tasks', { title: title.replace(/^(tengo que|hay que|debo|necesito|pendiente:?|recordar|por hacer:?|todo:?)\s+/i, '').replace(/^./, c => c.toUpperCase()), project_id: st.projectId, milestone_id: st.milestoneId });
       store.track('task_create', { from: 'capture' });
       feedback({ title: 'Tarea añadida', lines: [model.project(st.projectId)?.name ? `En ${model.project(st.projectId).name}` : 'Aparece en tus pendientes'], undo: () => store.remove('tasks', created.id) });
       return;
@@ -186,7 +203,10 @@ export function openCapture({ text = '', kind = null, projectId = null } = {}) {
     }
     const when = new Date();
     if (st.daysAgo) { when.setDate(when.getDate() - st.daysAgo); if (when.getHours() < 9 || when.getHours() > 21) when.setHours(18, 0, 0, 0); }
-    logActivity({ title, kind: st.kind, project_id: st.projectId, task_id: task && st.completeTask ? task.id : null, occurred_at: when.toISOString(), source: 'capture' });
+    const act = logActivity({ title, kind: st.kind, project_id: st.projectId, milestone_id: st.kind === 'note' ? null : st.milestoneId, task_id: task && st.completeTask ? task.id : null, occurred_at: when.toISOString(), source: 'capture' });
+    // Reflexión de una línea ligada a la acción (P0): alimenta el recap y la historia.
+    const learned = String(form.elements.learned?.value || '').trim();
+    if (learned) store.create('reflections', { type: 'learning', body: learned.slice(0, 4000), prompt: '¿Qué aprendiste?', activity_id: act.id, milestone_id: act.milestone_id, goal_id: st.projectId, occurred_at: act.occurred_at });
     if (task && st.completeTask && st.kind === 'done') store.update('tasks', task.id, { status: 'done', completed_at: when.toISOString() });
   }
 }

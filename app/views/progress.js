@@ -76,9 +76,9 @@ export function render() {
   ${p.activities ? chart(p) : empty('chart', 'Sin actividad en este periodo', 'Cuando registres algo aparecerá aquí.')}
 
   ${p.byProject.length ? `<section class="block">
-    <div class="block-head"><h2 class="eyebrow">Por proyecto</h2></div>
+    <div class="block-head"><h2 class="eyebrow">Por objetivo</h2></div>
     <ul class="dist">${p.byProject.slice(0, 6).map(x => `<li>
-      <span class="dist-name">${x.project ? dot(x.project.color) + esc(x.project.name) : '<span class="muted">Sin proyecto</span>'}</span>
+      <span class="dist-name">${x.project ? dot(x.project.color) + esc(x.project.name) : '<span class="muted">Sin objetivo</span>'}</span>
       ${bar((x.count / p.activities) * 100, 'thin')}
       <span class="num dist-n">${x.count}</span>
     </li>`).join('')}</ul>

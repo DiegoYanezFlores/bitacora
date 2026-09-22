@@ -4,6 +4,11 @@ import * as model from './model.js';
 import * as db from './db.js';
 import { esc, nowIso, dayKey, plural } from './lib.js';
 import { feedback, celebrate, openSheet, closeSheet, confirmSheet, KINDS, TASK_STATUS, PROJECT_STATUS, COLORS, dot } from './ui.js';
+import { TEMPLATES } from './domain/templates.js';
+
+// Estado del objetivo → tipo de registro de rumbo (goal_log).
+const STATUS_LOG = { paused: 'paused', done: 'closed', archived: 'archived' };
+const logGoal = (goalId, type, meta = {}) => store.create('goal_log', { goal_id: goalId, type, meta, note: '', occurred_at: nowIso() });
 
 // ---------- feedback con el cambio real ----------
 function snapshot(projectId) {
@@ -16,8 +21,9 @@ function deltaLines(before, projectId) {
   const after = snapshot(projectId);
   const p = model.project(projectId);
   const lines = [];
-  if (p && before.pct !== null && after.pct !== before.pct) lines.push(`${p.name} ${before.pct}% → ${after.pct}%`);
-  else if (p) lines.push(`${p.name} actualizado`);
+  // Las acciones no mueven el avance (solo hitos y criterios): aquí se nombra el objetivo y la constancia.
+  if (p && before.pct !== null && after.pct !== null && after.pct !== before.pct) lines.push(`${p.name} ${before.pct}% → ${after.pct}%`);
+  else if (p) lines.push(p.name);
   if (!before.today && after.today) {
     const goal = store.prefs().weeklyGoal;
     lines.push(`Día activo · ${after.week}/${goal} esta semana${after.streak > 1 ? ` · racha ${after.streak} días` : ''}`);
@@ -49,7 +55,7 @@ export function completeTask(id) {
   const before = snapshot(t.project_id);
   const prevStatus = t.status;
   store.update('tasks', id, { status: 'done', completed_at: nowIso() });
-  const a = store.create('activities', { kind: 'done', title: t.title, project_id: t.project_id, task_id: t.id, source: 'task' });
+  const a = store.create('activities', { kind: 'done', title: t.title, project_id: t.project_id, task_id: t.id, milestone_id: t.milestone_id || null, source: 'task' });
   store.track('task_complete', {});
   celebrate();
   feedback({
@@ -75,23 +81,6 @@ export function startTask(id) {
   feedback({ title: 'En curso', lines: ['Aparecerá primero en tus pendientes'], tone: 'info' });
 }
 
-// ---------- hitos ----------
-export function toggleMilestone(id) {
-  const m = db.get('milestones', id);
-  if (!m) return;
-  if (m.done_at) {
-    store.update('milestones', id, { done_at: null });
-    model.activities().filter(a => a.source === 'milestone' && a.title === `Hito: ${m.title}` && a.project_id === m.project_id).forEach(a => store.remove('activities', a.id));
-    feedback({ title: 'Hito reabierto', tone: 'info' });
-    return;
-  }
-  const before = snapshot(m.project_id);
-  store.update('milestones', id, { done_at: nowIso() });
-  const a = store.create('activities', { kind: 'win', title: `Hito: ${m.title}`, project_id: m.project_id, source: 'milestone' });
-  celebrate();
-  feedback({ title: 'Hito alcanzado', lines: deltaLines(before, m.project_id), undo: () => { store.update('milestones', id, { done_at: null }); store.remove('activities', a.id); } });
-}
-
 // ---------- borrar con deshacer ----------
 export async function removeWithUndo(table, id, label, { ask = false } = {}) {
   if (ask && !(await confirmSheet(`¿Eliminar ${label}?`, { confirm: 'Eliminar', danger: true }))) return false;
@@ -101,7 +90,7 @@ export async function removeWithUndo(table, id, label, { ask = false } = {}) {
 }
 
 // ---------- formularios ----------
-const projectOptions = (selected, { none = 'Sin proyecto' } = {}) =>
+const projectOptions = (selected, { none = 'Sin objetivo' } = {}) =>
   `<option value="">${none}</option>` + model.projects().filter(p => p.status !== 'archived' || p.id === selected)
     .map(p => `<option value="${p.id}" ${p.id === selected ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
 
@@ -112,13 +101,24 @@ const toLocalInput = iso => { const d = new Date(iso); d.setMinutes(d.getMinutes
 const val = (fd, k) => String(fd.get(k) ?? '').trim();
 const numOrNull = v => (v === '' || v === null || !isFinite(Number(v)) ? null : Number(v));
 
+// Hitos abiertos agrupados por objetivo: vincular una tarea a un hito la asigna también a su objetivo.
+function milestoneOptions(selected) {
+  const open = model.milestones().filter(m => !m.done_at && m.status !== 'skipped' && model.project(m.project_id));
+  if (!open.length) return '';
+  const byGoal = new Map();
+  open.forEach(m => { if (!byGoal.has(m.project_id)) byGoal.set(m.project_id, []); byGoal.get(m.project_id).push(m); });
+  return `<label class="field"><span>Hito (opcional)</span><select name="milestone_id"><option value="">Sin hito</option>${[...byGoal].map(([gid, list]) =>
+    `<optgroup label="${esc(model.project(gid).name)}">${list.map(m => `<option value="${m.id}" ${m.id === selected ? 'selected' : ''}>${esc(m.title)}</option>`).join('')}</optgroup>`).join('')}</select></label>`;
+}
+
 export function taskForm(task = null, defaults = {}) {
   const t = task || { title: '', project_id: defaults.project_id || '', status: 'todo', priority: 2, due_date: '', waiting_on: '', notes: '' };
   openSheet(`
     <form class="form">
       <div class="sheet-head"><h2 class="sheet-title">${task ? 'Editar tarea' : 'Nueva tarea'}</h2><button type="button" class="icon-btn" data-sheet="close" aria-label="Cerrar">✕</button></div>
       <label class="field"><span>Tarea</span><input name="title" required maxlength="300" value="${esc(t.title)}" autocomplete="off" ${task ? '' : 'autofocus'}></label>
-      <label class="field"><span>Proyecto</span><select name="project_id">${projectOptions(t.project_id)}</select></label>
+      <label class="field"><span>Objetivo</span><select name="project_id">${projectOptions(t.project_id)}</select></label>
+      ${milestoneOptions(t.milestone_id)}
       <div class="field"><span>Estado</span>${seg('status', Object.entries(TASK_STATUS), t.status)}</div>
       <div class="field"><span>Prioridad</span>${seg('priority', [[1, 'Alta'], [2, 'Media'], [3, 'Baja']], t.priority)}</div>
       <div class="row2">
@@ -136,7 +136,9 @@ export function taskForm(task = null, defaults = {}) {
       if (e.target.name === 'status') el.querySelector('[data-waiting]').hidden = e.target.value !== 'waiting';
     },
     onSubmit: fd => {
-      const data = { title: val(fd, 'title'), project_id: val(fd, 'project_id') || null, status: val(fd, 'status') || 'todo', priority: Number(val(fd, 'priority')) || 2, due_date: val(fd, 'due_date') || null, waiting_on: val(fd, 'waiting_on'), notes: val(fd, 'notes') };
+      const msId = val(fd, 'milestone_id') || null;
+      const ms = msId ? model.milestone(msId) : null;
+      const data = { title: val(fd, 'title'), project_id: ms ? ms.project_id : (val(fd, 'project_id') || null), milestone_id: msId, status: val(fd, 'status') || 'todo', priority: Number(val(fd, 'priority')) || 2, due_date: val(fd, 'due_date') || null, waiting_on: val(fd, 'waiting_on'), notes: val(fd, 'notes') };
       if (!data.title) return;
       closeSheet();
       if (task) {
@@ -159,9 +161,10 @@ export function projectForm(project = null, { onCreated } = {}) {
   const hasMetric = p.metric_target !== null && p.metric_target !== '' && p.metric_target !== undefined;
   openSheet(`
     <form class="form">
-      <div class="sheet-head"><h2 class="sheet-title">${project ? 'Editar proyecto' : 'Nuevo proyecto'}</h2><button type="button" class="icon-btn" data-sheet="close" aria-label="Cerrar">✕</button></div>
-      <label class="field"><span>Nombre</span><input name="name" required maxlength="120" value="${esc(p.name)}" autocomplete="off" ${project ? '' : 'autofocus'} placeholder="Ej.: Certificación Google Cloud"></label>
-      <label class="field"><span>Objetivo</span><input name="goal" maxlength="500" value="${esc(p.goal)}" placeholder="¿Qué quieres conseguir?"></label>
+      <div class="sheet-head"><h2 class="sheet-title">${project ? 'Editar objetivo' : 'Nuevo objetivo'}</h2><button type="button" class="icon-btn" data-sheet="close" aria-label="Cerrar">✕</button></div>
+      <label class="field"><span>¿Qué quieres construir?</span><input name="name" required maxlength="120" value="${esc(p.name)}" autocomplete="off" ${project ? '' : 'autofocus'} placeholder="Ej.: Certificación Google Cloud"></label>
+      ${project ? '' : `<label class="field"><span>Estructura (opcional)</span><select name="template"><option value="">Empezar sin plantilla</option>${TEMPLATES.map(t => `<option value="${t.key}">${esc(t.label)}</option>`).join('')}</select><small class="muted">Crea etapas e hitos con criterios sugeridos; todo es editable.</small></label>`}
+      <label class="field"><span>Por qué (opcional)</span><input name="goal" maxlength="500" value="${esc(p.goal)}" placeholder="Una o dos frases: qué cambia cuando lo logres"></label>
       <label class="field"><span>Descripción</span><textarea name="description" rows="2" maxlength="2000">${esc(p.description)}</textarea></label>
       ${project ? `<div class="field"><span>Estado</span>${seg('status', Object.entries(PROJECT_STATUS), p.status)}</div>` : ''}
       <div class="field"><span>Color</span><div class="swatches">${COLORS.map(c => `<label><input type="radio" name="color" value="${c}" ${c === p.color ? 'checked' : ''}><span class="swatch c-${c}" aria-label="${c}"></span></label>`).join('')}</div></div>
@@ -171,8 +174,8 @@ export function projectForm(project = null, { onCreated } = {}) {
         <label class="field"><span>Fecha objetivo</span><input type="date" name="due_date" value="${esc(p.due_date || '')}"></label>
       </div>
       <details class="more" ${hasMetric ? 'open' : ''}>
-        <summary>Medir con un número (opcional)</summary>
-        <p class="muted small">Para metas cuantificables: páginas, clientes, dinero, km… El progreso se calcula de inicio a meta.</p>
+        <summary>Indicador numérico (opcional)</summary>
+        <p class="muted small">Para seguir un número (páginas, clientes, dinero, km). Se muestra aparte del avance, que sale de los hitos.</p>
         <div class="row3">
           <label class="field"><span>Inicio</span><input type="number" step="any" inputmode="decimal" name="metric_start" value="${esc(p.metric_start ?? '')}"></label>
           <label class="field"><span>Actual</span><input type="number" step="any" inputmode="decimal" name="metric_current" value="${esc(p.metric_current ?? '')}"></label>
@@ -182,19 +185,23 @@ export function projectForm(project = null, { onCreated } = {}) {
       </details>
       <div class="sheet-actions">
         ${project ? '<button type="button" class="btn ghost danger-text" data-del>Eliminar</button><span class="spacer"></span>' : ''}
-        <button type="submit" class="btn primary">${project ? 'Guardar' : 'Crear proyecto'}</button>
+        <button type="submit" class="btn primary">${project ? 'Guardar' : 'Crear objetivo'}</button>
       </div>
     </form>`, {
     onClick: async e => {
       if (!e.target.closest('[data-del]')) return;
       closeSheet();
       const n = model.activities().filter(a => a.project_id === project.id).length;
-      const ok = await confirmSheet(`¿Eliminar “${project.name}”?`, { confirm: 'Eliminar', danger: true, detail: `Sus ${plural(n, 'actividad', 'actividades')} y tareas se conservan sin proyecto. Si solo quieres dejarlo de lado, usa “Archivado”.` });
+      const ok = await confirmSheet(`¿Eliminar “${project.name}”?`, { confirm: 'Eliminar', danger: true, detail: `Sus etapas, hitos y criterios se eliminan; sus ${plural(n, 'actividad', 'actividades')} y tareas se conservan sin objetivo. Si solo quieres dejarlo de lado, usa “Archivado”.` });
       if (!ok) return;
-      model.milestones().filter(m => m.project_id === project.id).forEach(m => store.remove('milestones', m.id));
+      const ms = model.milestones().filter(m => m.project_id === project.id);
+      ms.forEach(m => model.criteriaOf(m.id).forEach(c => store.remove('criteria', c.id)));
+      ms.forEach(m => store.remove('milestones', m.id));
+      model.stages().filter(s => s.goal_id === project.id).forEach(s => store.remove('stages', s.id));
+      model.evidence().filter(e => e.goal_id === project.id).forEach(e => store.remove('evidence', e.id));
       store.remove('projects', project.id);
-      location.hash = '#/projects';
-      feedback({ title: 'Proyecto eliminado', tone: 'info' });
+      location.hash = '#/goals';
+      feedback({ title: 'Objetivo eliminado', tone: 'info' });
     },
     onSubmit: fd => {
       const data = {
@@ -210,12 +217,21 @@ export function projectForm(project = null, { onCreated } = {}) {
       if (project) data.status = val(fd, 'status') || project.status;
       if (!data.name) return;
       closeSheet();
-      if (project) { store.update('projects', project.id, data); feedback({ title: 'Proyecto actualizado', tone: 'info' }); }
-      else {
+      if (project) {
+        if (data.status !== project.status) {
+          data.completed_at = data.status === 'done' ? nowIso() : null;
+          logGoal(project.id, STATUS_LOG[data.status] || (project.status === 'paused' ? 'resumed' : 'reopened'), { from: project.status });
+        }
+        store.update('projects', project.id, data);
+        feedback({ title: 'Objetivo actualizado', tone: 'info' });
+      } else {
         const created = store.create('projects', data);
-        store.track('project_create', {});
-        feedback({ title: 'Proyecto creado', lines: ['Añade una tarea o registra tu primer avance'] });
-        if (onCreated) onCreated(created); else location.hash = `#/project/${created.id}`;
+        logGoal(created.id, 'created');
+        const tpl = val(fd, 'template');
+        if (tpl) { applyTemplateFn?.(created.id, tpl, { endowed: true }); store.update('projects', created.id, { template: tpl }); }
+        store.track('project_create', { template: tpl || null });
+        feedback({ title: 'Objetivo creado', lines: [tpl ? 'Con etapas e hitos sugeridos: edítalos a tu medida' : 'Añade su primer hito con criterios de “hecho”'] });
+        if (onCreated) onCreated(created); else location.hash = `#/goal/${created.id}`;
       }
     }
   });
@@ -242,30 +258,6 @@ export function metricForm(p) {
   });
 }
 
-export function milestoneForm(ms = null, projectId = null) {
-  const m = ms || { title: '', due_date: '', project_id: projectId };
-  openSheet(`
-    <form class="form">
-      <div class="sheet-head"><h2 class="sheet-title">${ms ? 'Editar hito' : 'Nuevo hito'}</h2><button type="button" class="icon-btn" data-sheet="close" aria-label="Cerrar">✕</button></div>
-      <label class="field"><span>Hito</span><input name="title" required maxlength="200" value="${esc(m.title)}" autocomplete="off" ${ms ? '' : 'autofocus'} placeholder="Ej.: Aprobar el examen"></label>
-      <label class="field"><span>Fecha</span><input type="date" name="due_date" value="${esc(m.due_date || '')}"></label>
-      <div class="sheet-actions">
-        ${ms ? '<button type="button" class="btn ghost danger-text" data-del>Eliminar</button><span class="spacer"></span>' : ''}
-        <button type="submit" class="btn primary">Guardar</button>
-      </div>
-    </form>`, {
-    onClick: e => { if (e.target.closest('[data-del]')) { closeSheet(); removeWithUndo('milestones', ms.id, 'hito'); } },
-    onSubmit: fd => {
-      const data = { title: val(fd, 'title'), due_date: val(fd, 'due_date') || null };
-      if (!data.title) return;
-      closeSheet();
-      if (ms) store.update('milestones', ms.id, data);
-      else store.create('milestones', { ...data, project_id: m.project_id, sort: model.milestones().filter(x => x.project_id === m.project_id).length });
-      feedback({ title: ms ? 'Hito actualizado' : 'Hito creado', tone: 'info' });
-    }
-  });
-}
-
 export function activityForm(a) {
   openSheet(`
     <form class="form">
@@ -273,7 +265,7 @@ export function activityForm(a) {
       <label class="field"><span>Qué</span><input name="title" required maxlength="500" value="${esc(a.title)}" autocomplete="off"></label>
       <div class="field"><span>Tipo</span>${seg('kind', Object.entries(KINDS).map(([k, v]) => [k, v.label]), a.kind)}</div>
       <div class="row2">
-        <label class="field"><span>Proyecto</span><select name="project_id">${projectOptions(a.project_id)}</select></label>
+        <label class="field"><span>Objetivo</span><select name="project_id">${projectOptions(a.project_id)}</select></label>
         <label class="field"><span>Cuándo</span><input type="datetime-local" name="occurred_at" value="${toLocalInput(a.occurred_at)}" required></label>
       </div>
       <label class="field"><span>Detalle</span><textarea name="body" rows="3" maxlength="20000">${esc(a.body)}</textarea></label>
@@ -293,5 +285,9 @@ export function activityForm(a) {
     }
   });
 }
+
+// structure.js registra aquí cómo aplicar plantillas (evita una importación circular).
+let applyTemplateFn = null;
+export const setTemplateApplier = fn => { applyTemplateFn = fn; };
 
 export { projectOptions, seg, dot };
