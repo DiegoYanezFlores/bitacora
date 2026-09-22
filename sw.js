@@ -1,7 +1,7 @@
 // Service worker de Bitácora v2.
 // Navegación y módulos: red primero con respaldo de caché (para que las actualizaciones lleguen solas).
 // Estáticos (iconos): caché primero. Supabase nunca pasa por aquí.
-const CACHE = 'bitacora-v7';
+const CACHE = 'bitacora-v8';
 const NETWORK_TIMEOUT_MS = 3500;
 const PRECACHE = [
   '/', '/index.html', '/config.js', '/manifest.json',
