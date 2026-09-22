@@ -3,3 +3,4 @@
 .claude
 .env*
 .impeccable/review/
+.impeccable/hook.cache.json
