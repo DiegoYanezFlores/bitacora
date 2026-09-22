@@ -18,7 +18,10 @@ export function render() {
   return `
   <header class="view-head">
     <div><h1>Tareas</h1><p class="date">${plural(by.open.length, 'abierta', 'abiertas')}</p></div>
-    <button class="icon-btn" data-act="new-task" aria-label="Nueva tarea">${icon('plus')}</button>
+    <div class="head-links">
+      <a class="link" href="#/calendar">${icon('calendar')}Calendario</a>
+      <button class="icon-btn" data-act="new-task" aria-label="Nueva tarea">${icon('plus')}</button>
+    </div>
   </header>
   <div class="filters" role="tablist">
     ${FILTERS.map(([k, l]) => `<button class="pill ${state.filter === k ? 'on' : ''}" data-act="filter-tasks" data-v="${k}" role="tab" aria-selected="${state.filter === k}">${l}${by[k].length ? ` <span class="num">${by[k].length}</span>` : ''}</button>`).join('')}

@@ -151,12 +151,15 @@ button { cursor: pointer; background: none; border: 0; padding: 0; -webkit-tap-h
 .logo-mark { width: 30px; height: 30px; border-radius: 9px; background: var(--block); color: var(--block-ink); display: grid; place-items: center; font-weight: 750; font-size: 16px; flex: none; }
 .tabbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
-  display: grid; grid-template-columns: repeat(5, 1fr); align-items: end;
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; align-items: end;
   background: color-mix(in srgb, var(--surface) 94%, transparent);
   backdrop-filter: blur(12px); border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom);
 }
-.tabbar a { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 0 8px; font-size: 11px; font-weight: 550; color: var(--text-2); min-height: 56px; position: relative; }
+.tabbar a { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 2px 8px; font-size: 11px; font-weight: 550; color: var(--text-2); min-height: 56px; position: relative; min-width: 0; }
+.tabbar a span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Pantallas estrechas: el nombre completo cabe con un cuerpo algo menor. */
+@media (max-width: 400px) { .tabbar a { font-size: 10px; letter-spacing: -.01em; } }
 .tabbar a .i { width: 22px; height: 22px; }
 .tabbar a.on { color: var(--accent); font-weight: 700; }
 .tabbar a.on::before { content: ""; position: absolute; top: 0; left: 28%; right: 28%; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent); }
@@ -540,9 +543,79 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .ob-dots span.done { background: color-mix(in srgb, var(--accent) 50%, var(--line)); }
 .ob-areas { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 8px; }
 
+/* ---------- calendario (planificación temporal) ---------- */
+/* Móvil primero: rejilla compacta y legible desde 360 px; el detalle del día va debajo. */
+.cal-bar { gap: 10px; margin-bottom: 6px; }
+.cal-filter .pill-select { flex: 0 1 auto; max-width: 320px; min-width: 0; }
+.cal-nav { display: flex; align-items: center; gap: 2px; }
+.cal-period { font-size: 15px; font-weight: 650; color: var(--text); margin-bottom: 12px; }
+.cal-grid { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 8px 6px 10px; box-shadow: var(--shadow); }
+.cal-weekdays, .cal-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+.cal-weekdays { margin-bottom: 4px; }
+.cal-weekdays span { text-align: center; font-size: 11px; font-weight: 650; letter-spacing: .04em; color: var(--text-2); padding: 4px 0; }
+.cal-day {
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 3px;
+  min-height: 46px; padding: 5px 2px 6px; border-radius: var(--r-sm);
+  border: 1px solid transparent; color: var(--text); background: transparent;
+}
+.cal-day:hover { background: var(--surface-2); }
+.cal-num { font-size: 15px; font-weight: 600; line-height: 1.1; }
+.cal-day.is-outside .cal-num { color: var(--text-3); opacity: .55; }
+.cal-day.is-today { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.cal-day.is-today .cal-num { color: var(--accent); font-weight: 750; }
+/* Día elegido: bloque cobalto, la única superficie fuerte de la rejilla. */
+.cal-day.is-selected { background: var(--block); color: var(--block-ink); border-color: transparent; }
+.cal-day.is-selected .cal-num { color: var(--block-ink); }
+.cal-marks { display: flex; align-items: center; justify-content: center; gap: 3px; min-height: 10px; }
+/* La forma distingue: aro = planificado, check = completado, punto lleno = actividad. */
+.cal-mark { box-sizing: border-box; width: 8px; height: 8px; min-height: 8px; border-radius: 50%; flex: 0 0 auto; align-self: center; display: inline-grid; place-items: center; line-height: 0; }
+.cal-mark.cal-pend { border: 1.6px solid var(--accent); }
+.cal-mark.cal-pend.is-overdue { border-style: dashed; }
+.cal-mark.cal-act { background: var(--text-2); }
+.cal-mark.cal-done { width: 10px; height: 10px; min-height: 10px; border-radius: 0; color: var(--accent); }
+.cal-mark.cal-done .i { width: 10px; height: 10px; stroke-width: 3.2; }
+.is-selected .cal-mark.cal-pend { border-color: var(--block-line); }
+.is-selected .cal-mark.cal-act { background: var(--block-ink-2); }
+.is-selected .cal-mark.cal-done { color: var(--block-ink); }
+.cal-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; font-size: 12px; color: var(--text-2); }
+.cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.cal-legend i { font-style: normal; box-sizing: border-box; width: 8px; height: 8px; border-radius: 50%; display: inline-grid; place-items: center; flex: none; }
+.cal-legend i.cal-done { width: 10px; height: 10px; border-radius: 0; }
+/* Semana: una fila por día, pensada para planificar. */
+.cal-week-list { display: flex; flex-direction: column; gap: 8px; }
+.cal-wday { display: flex; flex-direction: column; align-items: stretch; gap: 6px; width: 100%; text-align: left; padding: 12px 14px; border-radius: var(--r-sm); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.cal-wday.is-today { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.cal-wday.is-selected { background: var(--block); color: var(--block-ink); border-color: transparent; }
+.cal-wday-head { display: flex; align-items: center; gap: 8px; }
+.cal-wday-name { font-weight: 650; font-size: 14px; }
+.cal-wday .cal-marks { margin-left: auto; }
+.cal-wday-items { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cal-item { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-wday.is-selected .cal-item, .cal-wday.is-selected .muted { color: var(--block-ink-2); }
+.cal-item i { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.cal-item.cal-pend i { border: 1.5px solid currentColor; }
+.cal-item.cal-done i { background: var(--accent); }
+.cal-item.cal-act i { background: var(--text-2); }
+.cal-wday.is-selected .cal-item.cal-done i, .cal-wday.is-selected .cal-item.cal-act i { background: var(--block-ink-2); }
+.cal-item.cal-more { color: var(--text-3); }
+.cal-wday.is-selected .cal-item.cal-more { color: var(--block-ink-2); }
+/* Detalle del día. */
+.cal-panel { margin-top: 18px; }
+.cal-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.cal-panel-title { font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+.cal-sec + .cal-sec { margin-top: 16px; }
+.cal-sec .eyebrow { margin-bottom: 8px; }
+.cal-extra { margin-top: 24px; }
+.due-line { margin: -4px 0 8px; }
+/* Atajos de fecha en el formulario de tarea. */
+.day-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.day-chips .pill { min-height: 32px; padding: 4px 11px; }
+
 /* ---------- tablet ---------- */
 @media (min-width: 640px) {
   .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 24px; }
+  .cal-day { min-height: 60px; }
+  .cal-num { font-size: 16px; }
   :root { --sp: 20px; }
   .pcards { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
   .records { grid-template-columns: repeat(3, 1fr); }
@@ -574,6 +647,10 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
   .navside .brand { justify-content: center; padding-inline: 0; }
   .view { padding-top: 8px; }
   .chip-slot { max-width: 1200px; }
+  /* Escritorio: rejilla a la izquierda, detalle del día a la derecha. */
+  .cal-layout { display: grid; grid-template-columns: minmax(0, 7fr) minmax(320px, 4fr); gap: 28px; align-items: start; }
+  .cal-panel { margin-top: 0; position: sticky; top: 16px; }
+  .cal-day { min-height: 76px; }
   .tiles { grid-template-columns: repeat(4, 1fr); }
   .records { grid-template-columns: repeat(6, 1fr); }
   .toast { bottom: 24px; left: auto; right: 24px; transform: translate(0, 16px); }

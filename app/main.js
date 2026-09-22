@@ -8,7 +8,8 @@ import * as actions from './actions.js';
 import { openCapture } from './capture.js';
 import { runMigration, migrateV3, exportBackup, importBackup } from './migrate.js';
 import { icon, initSheet, openSheet, closeSheet, confirmSheet, feedback, busy, hideToast } from './ui.js';
-import { esc, debounce, plural, dayKey } from './lib.js';
+import { esc, debounce, plural, dayKey, addDays } from './lib.js';
+import { addMonths } from './domain/calendar.js';
 import * as motion from './motion.js';
 
 import * as today from './views/today.js';
@@ -16,6 +17,7 @@ import * as projects from './views/projects.js';
 import * as project from './views/project.js';
 import * as structure from './structure.js';
 import * as tasks from './views/tasks.js';
+import * as calendar from './views/calendar.js';
 import * as log from './views/log.js';
 import * as progress from './views/progress.js';
 import * as settings from './views/settings.js';
@@ -34,10 +36,10 @@ const historyView = {
   }
 };
 
-const VIEWS = { home: today, goals: projects, goal: project, next: tasks, history: historyView, you: settings };
+const VIEWS = { home: today, goals: projects, goal: project, next: tasks, calendar, history: historyView, you: settings };
 // Rutas anteriores: siguen funcionando (atajos de la PWA, enlaces guardados) y se reescriben a la nueva.
 const REDIRECTS = { today: 'home', log: 'history/log', progress: 'history', settings: 'you', tasks: 'next', projects: 'goals', project: 'goal' };
-const NAV = [['home', 'Inicio', 'home'], ['goals', 'Objetivos', 'target'], ['history', 'Historia', 'chart'], ['you', 'Tú', 'user']];
+const NAV = [['home', 'Inicio', 'home'], ['goals', 'Objetivos', 'target'], ['calendar', 'Calendario', 'calendar'], ['history', 'Historia', 'chart'], ['you', 'Tú', 'user']];
 const $ = s => document.querySelector(s);
 const scrolls = new Map();
 let route = { name: 'home', params: {} };
@@ -82,6 +84,7 @@ function parseHash() {
   const q = new URLSearchParams(query || '');
   if (name === 'goal' && param) return { name: 'goal', params: { id: param }, query: q };
   if (name === 'history') return { name, params: { tab: param === 'log' ? 'log' : '' }, query: q };
+  if (name === 'calendar') return { name, params: {}, query: q };
   return { name: VIEWS[name] ? name : 'home', params: {}, query: q };
 }
 
@@ -134,12 +137,32 @@ function navigate() {
   window.scrollTo(0, same ? window.scrollY : y);
 }
 
+// Un paso adelante o atrás en el calendario: un mes en la vista de mes, una semana en la de semana.
+function calStep(dir) {
+  if (calendar.state.mode === 'week') {
+    calendar.state.day = addDays(calendar.state.day, 7 * dir);
+    calendar.state.month = calendar.state.day.slice(0, 8) + '01';
+  } else {
+    calendar.state.month = addMonths(calendar.state.month, dir);
+    // El día seleccionado acompaña al mes visible para que el detalle siempre corresponda.
+    const same = calendar.state.month.slice(0, 7) === calendar.state.day.slice(0, 7);
+    if (!same) calendar.state.day = calendar.state.month.slice(0, 7) === dayKey().slice(0, 7) ? dayKey() : calendar.state.month;
+  }
+}
+
 // ---------- acciones ----------
 const ACTIONS = {
   capture: () => openCapture(),
   'capture-note': () => openCapture({ kind: 'note' }),
   'capture-project': el => openCapture({ projectId: el.dataset.id }),
   'new-task': el => actions.taskForm(null, { project_id: el.dataset.project || (route.name === 'goal' ? route.params.id : '') }),
+  // Nueva tarea desde un día del calendario: la fecha ya viene puesta (§8).
+  'new-task-day': el => actions.taskForm(null, { due_date: el.dataset.day || '', project_id: calendar.state.project || '' }),
+  'cal-day': el => { calendar.state.day = el.dataset.day; calendar.state.month = el.dataset.day.slice(0, 8) + '01'; render(); },
+  'cal-mode': el => { calendar.state.mode = el.dataset.v; render(); },
+  'cal-prev': () => { calStep(-1); render(); },
+  'cal-next': () => { calStep(1); render(); },
+  'cal-today': () => { calendar.state.day = dayKey(); calendar.state.month = dayKey().slice(0, 8) + '01'; render(); },
   'edit-task': el => actions.taskForm(db.get('tasks', el.dataset.id)),
   'toggle-task': el => actions.toggleTask(el.dataset.id),
   'complete-next': el => actions.completeTask(el.dataset.id),
@@ -254,6 +277,7 @@ function wire() {
 
   document.addEventListener('change', e => {
     if (e.target.dataset.act === 'filter-project') { log.state.project = e.target.value; render(); }
+    if (e.target.dataset.act === 'cal-project') { calendar.state.project = e.target.value; render(); }
   });
 
   document.addEventListener('keydown', e => {
@@ -262,6 +286,12 @@ function wire() {
     if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === 'n' || e.key === 'c') { e.preventDefault(); openCapture(); }
     else if (e.key === '/' && route.name === 'history' && route.params.tab === 'log') { e.preventDefault(); document.getElementById('log-q')?.focus(); }
+    // Calendario: las flechas mueven el día seleccionado y el foco se queda en la rejilla.
+    else if (route.name === 'calendar' && calendar.moveSelection(e.key)) {
+      e.preventDefault();
+      render();
+      document.querySelector('.cal-day.is-selected, .cal-wday.is-selected')?.focus();
+    }
   });
 
   $('#import-file').addEventListener('change', async e => {
@@ -419,15 +449,15 @@ async function boot() {
 }
 
 // Barra de navegación (una sola vez).
-// Navegación (una sola vez). Móvil: Inicio · Proyectos · + · Historia · Tú. Escritorio: rail/barra lateral con Tú al pie.
+// Navegación (una sola vez). Móvil: Inicio · Objetivos · + · Calendario · Historia · Tú. Escritorio: rail/barra lateral con Tú al pie.
 const navLink = ([k, l, ic], cls = '') => `<a data-nav="${k}" href="#/${k}" class="${cls}" title="${l}" aria-label="${l}">${icon(ic)}<span>${l}</span></a>`;
 $('#nav').innerHTML = NAV.slice(0, 2).map(n => navLink(n)).join('') +
   `<button class="tab-add" data-act="capture" aria-label="Registrar actividad">${icon('plus')}</button>` +
   NAV.slice(2).map(n => navLink(n)).join('');
 $('#navside').innerHTML = `<div class="brand"><span class="logo-mark" aria-hidden="true">B</span><span class="brand-name">Bitácora</span></div>` +
-  NAV.slice(0, 3).map(n => navLink(n)).join('') +
+  NAV.slice(0, -1).map(n => navLink(n)).join('') +
   `<button class="btn primary side-cap" data-act="capture" title="Registrar (N)" aria-label="Registrar actividad">${icon('plus')}<span>Registrar</span> <kbd>N</kbd></button>` +
-  navLink(NAV[3], 'nav-you');
+  navLink(NAV.at(-1), 'nav-you');
 
 boot().catch(err => {
   // Nunca dejar la pantalla en blanco: mostrar el error con una salida.

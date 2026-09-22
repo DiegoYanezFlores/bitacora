@@ -2,6 +2,7 @@
 import * as model from './../model.js';
 import * as store from './../store.js';
 import { esc, dayKey, plural, fmtDayLong, cap } from './../lib.js';
+import { overdueTasks } from './../domain/calendar.js';
 import { icon, bar, empty, activityRow, taskRow, projectCard, dot } from './../ui.js';
 
 export const state = { next: 0 }; // permite ver otra recomendación
@@ -77,8 +78,15 @@ function closingCard(acts) {
 export function render() {
   const today = dayKey();
   const acts = model.activities().filter(a => model.actDay(a) === today);
-  const open = model.sortTasks(model.openTasks()).slice(0, 5);
-  const openTotal = model.openTasks().length;
+  const allOpen = model.openTasks();
+  const open = model.sortTasks(allOpen).slice(0, 5);
+  const openTotal = allOpen.length;
+  // Qué toca hoy y qué sigue esperando desde antes: sin culpa, solo para orientar.
+  const forToday = allOpen.filter(t => t.due_date === today).length;
+  const waiting = overdueTasks(allOpen, today).length;
+  const dueLine = forToday || waiting
+    ? `<p class="muted small due-line">${[forToday ? `${plural(forToday, 'tarea', 'tareas')} para hoy` : '', waiting ? `${waiting === 1 ? 'una' : waiting} esperando desde antes` : ''].filter(Boolean).join(' · ')}</p>`
+    : '';
   const projects = model.activeProjects()
     .map(p => ({ p, info: model.projectInfo(p) }))
     .sort((a, b) => (a.info.idle ?? 999) - (b.info.idle ?? 999))
@@ -110,7 +118,9 @@ export function render() {
   </div>
   <div class="home-side">
   <section class="block">
-    <div class="block-head"><h2 class="eyebrow">Pendientes</h2>${openTotal > open.length ? `<a class="link" href="#/next">Ver las ${openTotal}${icon('arrow')}</a>` : ''}</div>
+    <div class="block-head"><h2 class="eyebrow">Pendientes</h2>
+      <span class="head-links">${openTotal > open.length ? `<a class="link" href="#/next">Ver las ${openTotal}</a>` : ''}<a class="link" href="#/calendar">Calendario${icon('arrow')}</a></span></div>
+    ${dueLine}
     ${open.length
       ? `<ul class="tasks">${open.map(t => taskRow(t)).join('')}</ul>`
       : empty('check', 'Sin tareas abiertas', 'Anota lo siguiente que quieras hacer y no tendrás que recordarlo.', '<button class="btn ghost" data-act="new-task">Nueva tarea</button>')}
