@@ -24,7 +24,7 @@ app/actions.js      acciones con feedback y deshacer + formularios
 app/capture.js      captura rápida y detección local (tipo, #proyecto, "ayer", tarea parecida)
 app/migrate.js      conversión v1 → v2 (determinista), exportar/importar
 app/ui.js           iconos, hoja modal, toast, filas, barras
-app/views/*.js      Hoy, Proyectos, Proyecto, Tareas, Registro, Progreso, Ajustes, Acceso, Onboarding
+app/views/*.js      Hoy, Proyectos, Proyecto, Tareas, Calendario, Registro, Progreso, Ajustes, Acceso, Onboarding
 supabase/migrations 001_v1.sql (modelo viejo, intacto), 002_v2.sql (+down), 003_impacable.sql (+down): etapas, criterios, evidencia, reflexiones, logros, descansos, cambios de rumbo, recaps; 004_hardening.sql (+down): sin acceso anónimo a ninguna tabla, funciones de trigger no invocables
 supabase/tests      00_supabase_stub.sql (simula roles y auth.uid en Postgres local) + 003_test.sql + 004_isolation_test.sql (un usuario no ve, edita, borra ni suplanta nada de otro, en todas las tablas)
 docs/               auditoría, investigación, diseño, informe final, métricas.sql
