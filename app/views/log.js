@@ -1,28 +1,41 @@
 // Registro: línea temporal por día, con búsqueda y filtros. Paginado con botón (nunca scroll infinito).
 import * as model from './../model.js';
 import { esc, norm, dayLabel, plural } from './../lib.js';
-import { icon, empty, activityRow, KINDS } from './../ui.js';
+import { icon, empty, activityRow, taskEventRow, KINDS } from './../ui.js';
+import { dayKey } from './../lib.js';
 
 export const state = { q: '', kind: '', project: '', limit: 60 };
 
 export function render() {
   const q = norm(state.q);
-  const all = model.activities().filter(a =>
+  const acts = model.activities().filter(a =>
     (!state.kind || a.kind === state.kind) &&
     (!state.project || a.project_id === state.project) &&
-    (!q || norm(a.title + ' ' + a.body).includes(q)));
+    (!q || norm(a.title + ' ' + a.body).includes(q)))
+    .map(a => ({ kind: 'activity', day: model.actDay(a), at: a.occurred_at, row: a }));
+
+  // Lo que pasó con las tareas (no realizadas y movidas) se ve aquí como información,
+  // nunca como actividad: no cuenta para la constancia y se puede ocultar con los filtros.
+  const events = state.kind ? [] : model.taskLog()
+    .filter(e => e.type === 'rescheduled' || (e.type === 'closed' && e.result && e.result !== 'done'))
+    .map(e => ({ e, task: model.tasks().find(t => t.id === e.task_id) }))
+    .filter(({ e, task }) =>
+      (!state.project || (task && task.project_id === state.project)) &&
+      (!q || norm((task ? task.title : '') + ' ' + (e.note || '')).includes(q)))
+    .map(({ e, task }) => ({ kind: 'event', day: dayKey(new Date(e.occurred_at)), at: e.occurred_at, row: e, task }));
+
+  const all = [...acts, ...events].sort((a, b) => String(b.at).localeCompare(String(a.at)));
   const shown = all.slice(0, state.limit);
   const groups = [];
-  for (const a of shown) {
-    const k = model.actDay(a);
-    if (!groups.length || groups[groups.length - 1].day !== k) groups.push({ day: k, items: [] });
-    groups[groups.length - 1].items.push(a);
+  for (const item of shown) {
+    if (!groups.length || groups[groups.length - 1].day !== item.day) groups.push({ day: item.day, items: [] });
+    groups[groups.length - 1].items.push(item);
   }
   const projects = model.projects();
 
   return `
   <header class="view-head">
-    <div><h1>Historia</h1><p class="date">${state.q || state.kind || state.project ? plural(all.length, 'resultado', 'resultados') : plural(all.length, 'actividad', 'actividades')}</p></div>
+    <div><h1>Historia</h1><p class="date">${state.q || state.kind || state.project ? plural(all.length, 'resultado', 'resultados') : `${plural(acts.length, 'actividad', 'actividades')}${events.length ? ` · ${events.length} en tareas` : ''}`}</p></div>
     <button class="icon-btn" data-act="capture" aria-label="Registrar">${icon('plus')}</button>
   </header>
 
@@ -43,7 +56,7 @@ export function render() {
   ${groups.length
     ? groups.map(g => `<section class="day">
         <h2 class="day-head"><span>${esc(dayLabel(g.day))}</span><span class="day-n num">${g.items.length}</span></h2>
-        <ul class="acts">${g.items.map(a => activityRow(a)).join('')}</ul>
+        <ul class="acts">${g.items.map(i => i.kind === 'event' ? taskEventRow(i.row, i.task) : activityRow(i.row)).join('')}</ul>
       </section>`).join('') + (all.length > shown.length ? `<button class="btn ghost block-btn" data-act="more-log">Cargar más (${all.length - shown.length})</button>` : '')
     : empty('list', state.q || state.kind || state.project ? 'Nada con esos filtros' : 'Tu historial empieza aquí',
         state.q || state.kind || state.project ? 'Prueba con otra búsqueda.' : 'Cada cosa que registres queda con su fecha y su objetivo: usa el botón de abajo.',

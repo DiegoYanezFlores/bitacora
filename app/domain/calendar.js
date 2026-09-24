@@ -100,6 +100,32 @@ export const undatedOpen = (tasks, project = null) =>
 export const overdueTasks = (tasks, today, project = null) =>
   tasks.filter(t => isOverdue(t, today) && (!project || t.project_id === project));
 
+// Resumen de un periodo: qué se hizo, qué no y qué se movió. Descriptivo, nunca una nota al usuario.
+// Cuenta tareas por su día previsto y actividades por su día real; los días activos salen de lo registrado.
+export function rangeSummary(cells, days) {
+  const out = { done: 0, notDone: 0, moved: 0, pending: 0, activities: 0, activeDays: 0 };
+  for (const day of days) {
+    const c = cells.get(day);
+    if (!c) continue;
+    out.done += c.done.length;
+    out.notDone += (c.notDone || []).length;
+    out.moved += (c.moved || []).length;
+    out.pending += c.pending.length;
+    out.activities += c.activities.length;
+    if (c.activities.length) out.activeDays++;
+  }
+  return out;
+}
+
+// Todos los días de un mes (para el resumen del mes visible).
+export function monthDays(monthKey) {
+  const first = monthKeyOf(monthKey);
+  const last = addDays(addMonths(first, 1), -1);
+  const out = [];
+  for (let d = first; d <= last; d = addDays(d, 1)) out.push(d);
+  return out;
+}
+
 // Atajos de fecha para reprogramar (plan §10). "Próxima semana" = lunes siguiente.
 export function dateShortcuts(today) {
   return [

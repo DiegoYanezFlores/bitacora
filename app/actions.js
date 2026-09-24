@@ -129,7 +129,7 @@ export function startTask(id) {
 
 // Hoja "¿Qué ocurrió?": cerrar una tarea con lo que pasó de verdad, o moverla de día.
 // Sin formulario grande: la nota y la fecha solo aparecen cuando hacen falta.
-export function outcomeSheet(id) {
+export function outcomeSheet(id, { start = null } = {}) {
   const t = db.get('tasks', id);
   if (!t) return;
   const st = { result: null, mode: null, day: t.due_date || dayKey() };
@@ -177,6 +177,8 @@ export function outcomeSheet(id) {
     }
   });
   el.querySelector('input[name=day]')?.addEventListener('change', e => { st.day = e.target.value; el.querySelectorAll('[data-day]').forEach(b => b.classList.toggle('on', b.dataset.day === e.target.value)); });
+  // Desde una tarea vencida se entra directamente a elegir el día nuevo.
+  if (start) el.querySelector(`[data-res="${start}"]`)?.click();
 }
 
 // ---------- borrar con deshacer ----------

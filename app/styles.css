@@ -295,6 +295,9 @@ kbd { font: 600 11px var(--font); background: color-mix(in srgb, currentColor 12
 .act-dot { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--text-2); margin-top: 1px; }
 .act-dot .i { width: 14px; height: 14px; }
 .k-done .act-dot { background: var(--accent-soft); color: var(--accent); }
+/* Lo que pasó con una tarea: se distingue de una actividad sin gritar. */
+.k-event .act-dot { background: var(--surface-2); color: var(--text-2); border: 1px dashed var(--line-2); }
+.k-event .act-title { color: var(--text-2); }
 .k-win .act-dot { background: var(--streak-soft); color: var(--streak); }
 .act-body { text-align: left; padding: 6px 0; min-width: 0; min-height: 32px; }
 .act-title { display: block; overflow-wrap: anywhere; }
@@ -577,6 +580,9 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .is-selected .cal-mark.cal-pend { border-color: var(--block-line); }
 .is-selected .cal-mark.cal-act { background: var(--block-ink-2); }
 .is-selected .cal-mark.cal-done { color: var(--block-ink); }
+.cal-summary { margin-top: 12px; font-size: 13px; color: var(--text-2); }
+.cal-summary strong { color: var(--text); font-weight: 650; }
+.task-move { align-self: center; flex: none; }
 .cal-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; font-size: 12px; color: var(--text-2); }
 .cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .cal-legend i { font-style: normal; box-sizing: border-box; width: 8px; height: 8px; border-radius: 50%; display: inline-grid; place-items: center; flex: none; }
