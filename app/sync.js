@@ -13,6 +13,9 @@ const ORDER = db.TABLES; // padres antes que hijos: respeta las claves foráneas
 // Tablas y columnas de la migración 003. Mientras el servidor no la tenga, no se suben ni se bajan
 // (se quedan en la cola) y las columnas nuevas se quitan de lo que se envía.
 const V3_TABLES = ['stages', 'criteria', 'evidence', 'reflections', 'achievements', 'day_marks', 'goal_log', 'recaps'];
+// Igual con la migración 005 (resultado real de la tarea y su registro).
+const V5_TABLES = ['task_log'];
+const V5_COLUMNS = { tasks: ['result', 'result_note', 'result_at'] };
 const V3_COLUMNS = {
   projects: ['template', 'completed_at', 'success_indicator'],
   milestones: ['stage_id', 'weight', 'description', 'expected_evidence', 'status'],
@@ -20,20 +23,29 @@ const V3_COLUMNS = {
   activities: ['milestone_id', 'criterion_id', 'duration_min'],
   profiles: ['vision']
 };
-export const schema = { v3: null }; // null = sin comprobar en esta sesión
-const tables = () => (schema.v3 ? ORDER : ORDER.filter(t => !V3_TABLES.includes(t)));
+export const schema = { v3: null, v5: null }; // null = sin comprobar en esta sesión
+const skipped = () => [...(schema.v3 ? [] : V3_TABLES), ...(schema.v5 ? [] : V5_TABLES)];
+const tables = () => ORDER.filter(t => !skipped().includes(t));
 
-async function detectSchema(t) {
-  if (schema.v3 !== null) return;
+async function probe(path, t) {
   try {
-    await deps.api('/rest/v1/stages?select=id&limit=1', { token: t });
-    schema.v3 = true;
+    await deps.api(path, { token: t });
+    return true;
   } catch (e) {
-    if (e instanceof ApiError && (e.status === 404 || e.code === 'PGRST205')) schema.v3 = false;
-    else throw e;
+    if (e instanceof ApiError && (e.status === 404 || e.code === 'PGRST205')) return false;
+    throw e;
   }
 }
-const stripV3 = (table, row) => { if (!schema.v3) (V3_COLUMNS[table] || []).forEach(k => delete row[k]); return row; };
+
+async function detectSchema(t) {
+  if (schema.v3 === null) schema.v3 = await probe('/rest/v1/stages?select=id&limit=1', t);
+  if (schema.v5 === null) schema.v5 = await probe('/rest/v1/task_log?select=id&limit=1', t);
+}
+const stripV3 = (table, row) => {
+  if (!schema.v3) (V3_COLUMNS[table] || []).forEach(k => delete row[k]);
+  if (!schema.v5) (V5_COLUMNS[table] || []).forEach(k => delete row[k]);
+  return row;
+};
 const CHUNK = 200;
 const OVERLAP_MS = 30000; // solapamiento de seguridad para commits concurrentes
 const SERVER_ONLY = ['synced_at'];

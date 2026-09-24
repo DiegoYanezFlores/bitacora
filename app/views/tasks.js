@@ -3,7 +3,7 @@ import * as model from './../model.js';
 import { icon, empty, taskRow } from './../ui.js';
 import { plural } from './../lib.js';
 
-const FILTERS = [['open', 'Abiertas'], ['doing', 'En curso'], ['waiting', 'En espera'], ['done', 'Hechas']];
+const FILTERS = [['open', 'Abiertas'], ['doing', 'En curso'], ['waiting', 'En espera'], ['done', 'Cerradas']];
 export const state = { filter: 'open' };
 
 export function render() {

@@ -3,7 +3,7 @@
 import * as store from './store.js';
 import * as model from './model.js';
 import * as db from './db.js';
-import { esc, norm, addDays, dayKey } from './lib.js';
+import { esc, norm, addDays, dayKey, fmtDayShort } from './lib.js';
 import { openSheet, closeSheet, feedback, icon, dot, KINDS } from './ui.js';
 import { logActivity, completeTask } from './actions.js';
 
@@ -82,7 +82,8 @@ const CAPTURE_KINDS = [['done', 'Hecho', 'check'], ['progress', 'Avance', 'arrow
 
 export function openCapture({ text = '', kind = null, projectId = null } = {}) {
   store.track('capture_open', {});
-  const st = { kind: kind || db.kvGet('lastKind', 'done'), projectId, milestoneId: null, milestoneFor: null, learned: false, daysAgo: 0, taskId: null, completeTask: true, manual: { kind: Boolean(kind), project: Boolean(projectId), when: false, milestone: false } };
+  // day = el día al que pertenece lo registrado (no el día en que se escribe); time = hora opcional.
+  const st = { kind: kind || db.kvGet('lastKind', 'done'), projectId, milestoneId: null, milestoneFor: null, learned: false, day: dayKey(), time: '', taskId: null, completeTask: true, manual: { kind: Boolean(kind), project: Boolean(projectId), when: false, milestone: false } };
   const el = openSheet(`
     <form class="form capture" autocomplete="off">
       <div class="sheet-head"><h2 class="sheet-title">Registrar</h2><button type="button" class="icon-btn" data-sheet="close" aria-label="Cerrar">✕</button></div>
@@ -100,14 +101,15 @@ export function openCapture({ text = '', kind = null, projectId = null } = {}) {
     </form>`, {
     onOpen: root => { const ta = root.querySelector('textarea'); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); refresh(root); },
     onClick: (e, root) => {
-      const b = e.target.closest('[data-k],[data-p],[data-m],[data-when],[data-task],[data-more-projects],[data-learn]');
+      const b = e.target.closest('[data-k],[data-p],[data-m],[data-when],[data-task],[data-more-projects],[data-learn],[data-time-add]');
       if (!b) return;
       if (b.dataset.k) { st.kind = b.dataset.k; st.manual.kind = true; }
       if (b.dataset.p !== undefined) { st.projectId = b.dataset.p || null; st.manual.project = true; }
-      if (b.dataset.when !== undefined) { st.daysAgo = Number(b.dataset.when); st.manual.when = true; }
+      if (b.dataset.when !== undefined) { st.day = b.dataset.when; st.manual.when = true; }
       if (b.dataset.task !== undefined) st.completeTask = !st.completeTask;
       if (b.dataset.moreProjects !== undefined) { st.showAll = true; }
       if (b.dataset.m !== undefined) { st.milestoneId = b.dataset.m || null; st.manual.milestone = true; }
+      if (b.dataset.timeAdd !== undefined) { st.showTime = true; render(root); root.querySelector('[name=time]').focus(); return; }
       if (b.dataset.learn !== undefined) { st.learned = true; render(root); root.querySelector('[name=learned]').focus(); return; }
       render(root);
       root.querySelector('textarea').focus();
@@ -128,7 +130,7 @@ export function openCapture({ text = '', kind = null, projectId = null } = {}) {
     const p = parse(root.querySelector('textarea').value);
     if (!st.manual.kind && p.kind) st.kind = p.kind;
     if (!st.manual.project) st.projectId = p.projectId || (st.manual.project ? st.projectId : projectId);
-    if (!st.manual.when) st.daysAgo = p.daysAgo;
+    if (!st.manual.when) st.day = addDays(dayKey(), -p.daysAgo);
     st.taskId = p.taskId;
     st.projectBy = p.projectBy;
     render(root);
@@ -165,16 +167,31 @@ export function openCapture({ text = '', kind = null, projectId = null } = {}) {
 
     const task = st.taskId ? db.get('tasks', st.taskId) : null;
     const extra = [];
+    // Fecha de la actividad: a qué día pertenece lo que hiciste, no cuándo lo escribes.
+    // De noche, pasada la medianoche, "Ayer" evita que el trabajo salte al día siguiente.
     if (st.kind !== 'task') {
-      extra.push(`<button type="button" class="pill ${st.daysAgo === 0 ? 'on' : ''}" data-when="0">${icon('clock')}Ahora</button>`);
-      extra.push(`<button type="button" class="pill ${st.daysAgo === 1 ? 'on' : ''}" data-when="1">Ayer</button>`);
+      const hoy = dayKey();
+      const ayer = addDays(hoy, -1);
+      const otro = st.day !== hoy && st.day !== ayer;
+      extra.push(`<button type="button" class="pill ${st.day === hoy ? 'on' : ''}" data-when="${hoy}">${icon('clock')}Hoy</button>`);
+      extra.push(`<button type="button" class="pill ${st.day === ayer ? 'on' : ''}" data-when="${ayer}">Ayer</button>`);
+      extra.push(`<label class="pill pill-field ${otro ? 'on' : ''}"><span class="sr-only">Otra fecha</span><input type="date" name="day" value="${esc(st.day)}" max="${esc(hoy)}"></label>`);
+      // La hora es opcional: solo aparece si se pide, para no llenar la pantalla de campos.
+      extra.push(st.showTime || st.time
+        ? `<label class="pill pill-field on"><span class="sr-only">Hora</span>${icon('clock')}<input type="time" name="time" value="${esc(st.time)}"></label>`
+        : `<button type="button" class="pill" data-time-add>${icon('clock')}Hora</button>`);
     }
     if (task && (st.kind === 'done' || st.kind === 'progress')) {
       extra.push(`<button type="button" class="pill ${st.completeTask ? 'on accent' : ''}" data-task aria-pressed="${st.completeTask}">${icon('check')}Completar “${esc(task.title.slice(0, 40))}”</button>`);
     }
     if (!st.learned && st.kind !== 'task' && st.kind !== 'note') extra.push(`<button type="button" class="pill" data-learn>${icon('plus')}Qué aprendí</button>`);
     root.querySelector('[data-extra]').innerHTML = extra.join('');
+    root.querySelector('[data-extra] input[name=day]')?.addEventListener('change', e => {
+      if (e.target.value) { st.day = e.target.value; st.manual.when = true; render(root); }
+    });
+    root.querySelector('[data-extra] input[name=time]')?.addEventListener('change', e => { st.time = e.target.value; st.manual.when = true; });
     const hints = [];
+    if (st.kind !== 'task' && st.day !== dayKey()) hints.push(`Se guarda en el ${fmtDayShort(st.day)}`);
     if (st.projectBy && !st.manual.project) hints.push(`Objetivo por ${st.projectBy}`);
     if (!hints.length && !matchMedia('(hover: none)').matches) hints.push('Enter para guardar'); // en táctil no hay tecla Enter a mano
     root.querySelector('[data-hint]').textContent = hints.join(' · ');
@@ -195,20 +212,30 @@ export function openCapture({ text = '', kind = null, projectId = null } = {}) {
       return;
     }
     const task = st.taskId ? db.get('tasks', st.taskId) : null;
-    if (task && st.completeTask && st.kind === 'done' && st.daysAgo === 0) {
+    if (task && st.completeTask && st.kind === 'done' && st.day === dayKey() && !st.time) {
       // Completar la tarea ya registra la actividad (con el texto de la tarea) y muestra el feedback.
       if (norm(title) !== norm(task.title)) store.update('tasks', task.id, { notes: [task.notes, title].filter(Boolean).join('\n') });
       completeTask(task.id);
       return;
     }
-    const when = new Date();
-    if (st.daysAgo) { when.setDate(when.getDate() - st.daysAgo); if (when.getHours() < 9 || when.getHours() > 21) when.setHours(18, 0, 0, 0); }
+    const when = whenOf(st.day, st.time);
     const act = logActivity({ title, kind: st.kind, project_id: st.projectId, milestone_id: st.kind === 'note' ? null : st.milestoneId, task_id: task && st.completeTask ? task.id : null, occurred_at: when.toISOString(), source: 'capture' });
     // Reflexión de una línea ligada a la acción (P0): alimenta el recap y la historia.
     const learned = String(form.elements.learned?.value || '').trim();
     if (learned) store.create('reflections', { type: 'learning', body: learned.slice(0, 4000), prompt: '¿Qué aprendiste?', activity_id: act.id, milestone_id: act.milestone_id, goal_id: st.projectId, occurred_at: act.occurred_at });
-    if (task && st.completeTask && st.kind === 'done') store.update('tasks', task.id, { status: 'done', completed_at: when.toISOString() });
+    if (task && st.completeTask && st.kind === 'done') store.update('tasks', task.id, { status: 'done', result: 'done', result_at: when.toISOString(), completed_at: when.toISOString() });
   }
 }
 
-export const _test = { parse, cleanTitle };
+// Marca de tiempo local del día elegido. Sin hora: mediodía, para que ningún cambio de zona
+// horaria mueva la actividad de día. Nunca se usa toISOString() sobre "hoy" para deducir el día.
+export function whenOf(day, time = '') {
+  const [y, m, d] = String(day || dayKey()).split('-').map(Number);
+  const isToday = day === dayKey();
+  const now = new Date();
+  const [hh, mm] = time ? time.split(':').map(Number) : [isToday ? now.getHours() : 12, isToday ? now.getMinutes() : 0];
+  const out = new Date(y, m - 1, d, hh || 0, mm || 0, isToday && !time ? now.getSeconds() : 0, 0);
+  return isNaN(out) ? new Date() : out;
+}
+
+export const _test = { parse, cleanTitle, whenOf };

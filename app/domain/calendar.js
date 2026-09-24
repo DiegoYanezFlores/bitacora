@@ -8,6 +8,7 @@
 // Planificar nunca cuenta como trabajo: las actividades solo salen de lo registrado.
 
 import { dayKey, addDays, parseDay, weekStart } from '../lib.js';
+import { wasDone, notDone as notDoneTask, isOpen } from './outcomes.js';
 
 export const monthKeyOf = day => day.slice(0, 7) + '-01';
 export const addMonths = (monthKey, n) => {
@@ -37,40 +38,55 @@ export function monthGrid(monthKey) {
 export const weekGrid = day => Array.from({ length: 7 }, (_, i) => ({ day: addDays(weekStart(day), i), outside: false }));
 
 // Una tarea está vencida si su fecha ya pasó y sigue abierta. Sin culpa: es solo un estado.
-export const isOverdue = (task, today) => Boolean(task.due_date) && task.status !== 'done' && task.due_date < today;
+export const isOverdue = (task, today) => Boolean(task.due_date) && isOpen(task) && task.due_date < today;
 
-// Índice día → { pending, done, activities } con lo que toca ver en el calendario.
-// tasks se reparten por due_date (lo planificado); las actividades por su día real.
-export function indexByDay({ tasks = [], activities = [], dayOfActivity, project = null }) {
+// Índice día → { pending, done, notDone, moved, activities } con lo que toca ver en el calendario.
+// Las tareas se reparten por due_date (lo planificado) y las actividades por su día real.
+// `moved` son tareas que ese día estaban previstas y se pasaron a otra fecha: el día conserva su historia.
+export function indexByDay({ tasks = [], activities = [], taskLog = [], dayOfActivity, project = null }) {
   const map = new Map();
   const cell = day => {
-    if (!map.has(day)) map.set(day, { day, pending: [], done: [], activities: [] });
+    if (!map.has(day)) map.set(day, { day, pending: [], done: [], notDone: [], moved: [], activities: [] });
     return map.get(day);
   };
+  const byId = new Map();
   for (const t of tasks) {
+    byId.set(t.id, t);
     if (!t.due_date) continue; // sin fecha: nunca se coloca en un día inventado
     if (project && t.project_id !== project) continue;
-    cell(t.due_date)[t.status === 'done' ? 'done' : 'pending'].push(t);
+    cell(t.due_date)[wasDone(t) ? 'done' : notDoneTask(t) ? 'notDone' : 'pending'].push(t);
   }
   for (const a of activities) {
     if (project && a.project_id !== project) continue;
     cell(dayOfActivity(a)).activities.push(a);
   }
+  // Movimientos: la tarea vive ahora en su nueva fecha, pero el día previsto guarda lo que pasó.
+  for (const e of taskLog) {
+    if (e.deleted_at || e.type !== 'rescheduled' || !e.from_date) continue;
+    const task = byId.get(e.task_id);
+    if (!task || (project && task.project_id !== project)) continue;
+    if (task.due_date === e.from_date) continue; // volvió al mismo día: no hay nada que contar
+    cell(e.from_date).moved.push({ task, to: e.to_date, note: e.note || '' });
+  }
   return map;
 }
 
-export const EMPTY_CELL = { pending: [], done: [], activities: [] };
+export const EMPTY_CELL = { pending: [], done: [], notDone: [], moved: [], activities: [] };
 
 // Resumen de un día para pintar la celda: cantidades y si hay algo vencido.
 export function daySummary(cell, day, today) {
   const c = cell || EMPTY_CELL;
   const overdue = c.pending.filter(t => day < today).length;
+  const notDoneN = (c.notDone || []).length;
+  const movedN = (c.moved || []).length;
   return {
     pending: c.pending.length,
     done: c.done.length,
+    notDone: notDoneN,
+    moved: movedN,
     activities: c.activities.length,
     overdue,
-    total: c.pending.length + c.done.length + c.activities.length,
+    total: c.pending.length + c.done.length + notDoneN + movedN + c.activities.length,
     isToday: day === today,
     isPast: day < today
   };
@@ -78,7 +94,7 @@ export function daySummary(cell, day, today) {
 
 // Tareas abiertas sin fecha: se cuentan aparte, nunca se colocan en el calendario.
 export const undatedOpen = (tasks, project = null) =>
-  tasks.filter(t => t.status !== 'done' && !t.due_date && (!project || t.project_id === project));
+  tasks.filter(t => isOpen(t) && !t.due_date && (!project || t.project_id === project));
 
 // Vencidas de días anteriores: se muestran juntas para poder reprogramarlas.
 export const overdueTasks = (tasks, today, project = null) =>

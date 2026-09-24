@@ -144,7 +144,7 @@ export function migrateV3() {
 
 export function exportBackup() {
   return JSON.stringify({
-    version: 3,
+    version: 4, // 4: incluye task_log (qué pasó con cada tarea) y el resultado de las tareas
     exported_at: new Date().toISOString(),
     profile: store.profile(),
     rows: Object.fromEntries(db.TABLES.map(t => [t, db.raw(t)]))

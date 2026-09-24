@@ -91,16 +91,25 @@ test('migración local v3: respeta la meta semanal, guarda copia y es idempotent
   assert.equal(store.prefs().activeWeekDays, 3);
 });
 
-test('copia de seguridad v3: incluye tablas nuevas y se puede reimportar', async () => {
+test('copia de seguridad: incluye tablas nuevas, el resultado de las tareas y se puede reimportar', async () => {
   const { exportBackup, importBackup } = await import('../app/migrate.js');
   const p = store.create('projects', { name: 'P' });
   store.create('stages', { goal_id: p.id, title: 'Etapa' });
   store.create('day_marks', { day: '2026-09-20' });
+  const t = store.create('tasks', { title: 'Reunión', due_date: '2026-09-25', result: 'no_show', result_note: 'No asistieron.', status: 'done' });
+  store.create('task_log', { task_id: t.id, type: 'rescheduled', from_date: '2026-09-25', to_date: '2026-09-27', note: 'Faltaban datos.' });
   const json = exportBackup();
-  assert.equal(JSON.parse(json).version, 3);
+  const backup = JSON.parse(json);
+  assert.equal(backup.version, 4);
+  // Lo que pasó con la tarea viaja en la copia: resultado, motivo y cambio de fecha.
+  assert.equal(backup.rows.tasks[0].result, 'no_show');
+  assert.equal(backup.rows.tasks[0].result_note, 'No asistieron.');
+  assert.deepEqual([backup.rows.task_log[0].from_date, backup.rows.task_log[0].to_date], ['2026-09-25', '2026-09-27']);
   await db.wipe();
   const totals = await importBackup(json);
   assert.equal(totals.projects, 1);
   assert.equal(totals.stages, 1);
   assert.equal(totals.day_marks, 1);
+  assert.equal(totals.task_log, 1);
+  assert.equal(db.live('tasks')[0].result, 'no_show');
 });

@@ -5,6 +5,7 @@ import * as model from './../model.js';
 import { esc, dayKey, parseDay, plural, fmtDayShort, cap, addDays } from './../lib.js';
 import { icon, empty, activityRow, taskRow, dot } from './../ui.js';
 import { monthGrid, weekGrid, monthKeyOf, daySummary, EMPTY_CELL, undatedOpen, overdueTasks } from './../domain/calendar.js';
+import { outcomeLabel, resultInfo } from './../domain/outcomes.js';
 
 // month: mes visible; day: día seleccionado; mode: mes o semana; project: filtro por objetivo.
 export const state = { month: monthKeyOf(dayKey()), day: dayKey(), mode: 'month', project: '' };
@@ -29,6 +30,8 @@ function marks(s) {
   const out = [];
   if (s.pending) out.push(`<span class="cal-mark cal-pend ${s.overdue ? 'is-overdue' : ''}"></span>`);
   if (s.done) out.push(`<span class="cal-mark cal-done">${icon('check')}</span>`);
+  if (s.notDone) out.push(`<span class="cal-mark cal-undone">${icon('x')}</span>`);
+  if (s.moved) out.push(`<span class="cal-mark cal-moved">${icon('undo')}</span>`);
   if (s.activities) out.push(`<span class="cal-mark cal-act"></span>`);
   return `<span class="cal-marks" aria-hidden="true">${out.join('')}</span>`;
 }
@@ -39,6 +42,8 @@ function dayAria(day, s) {
   if (s.isToday) parts.push('hoy');
   if (s.pending) parts.push(plural(s.pending, s.overdue ? 'tarea pendiente' : 'tarea planificada', s.overdue ? 'tareas pendientes' : 'tareas planificadas'));
   if (s.done) parts.push(plural(s.done, 'tarea completada', 'tareas completadas'));
+  if (s.notDone) parts.push(plural(s.notDone, 'tarea no realizada', 'tareas no realizadas'));
+  if (s.moved) parts.push(plural(s.moved, 'tarea movida a otra fecha', 'tareas movidas a otra fecha'));
   if (s.activities) parts.push(plural(s.activities, 'actividad registrada', 'actividades registradas'));
   if (!s.total) parts.push('sin nada anotado');
   return parts.join(', ');
@@ -66,7 +71,9 @@ function weekView(cells, today) {
   return `<ul class="cal-week-list">${weekGrid(state.day).map(({ day }) => {
     const c = cells.get(day) || EMPTY_CELL;
     const s = daySummary(c, day, today);
-    const items = [...c.pending.map(t => ({ cls: 'cal-pend', text: t.title })), ...c.done.map(t => ({ cls: 'cal-done', text: t.title })), ...c.activities.map(a => ({ cls: 'cal-act', text: a.title }))];
+    const items = [...c.pending.map(t => ({ cls: 'cal-pend', text: t.title })), ...c.done.map(t => ({ cls: 'cal-done', text: t.title })),
+      ...(c.notDone || []).map(t => ({ cls: 'cal-undone', text: t.title })), ...(c.moved || []).map(m => ({ cls: 'cal-moved', text: m.task.title })),
+      ...c.activities.map(a => ({ cls: 'cal-act', text: a.title }))];
     return `<li>
       <button class="cal-wday ${s.isToday ? 'is-today' : ''} ${day === state.day ? 'is-selected' : ''}" data-act="cal-day" data-day="${day}" aria-label="${esc(dayAria(day, s))}" aria-pressed="${day === state.day}">
         <span class="cal-wday-head"><span class="cal-wday-name">${esc(cap(parseDay(day).toLocaleDateString(LOCALE, { weekday: 'short' }).replace('.', '')))}</span><span class="cal-num num">${Number(day.slice(8))}</span>${marks(s)}</span>
@@ -89,6 +96,19 @@ function dayPanel(today) {
     c.done.length ? `<section class="cal-sec">
         <h3 class="eyebrow">Completadas</h3>
         <ul class="tasks">${c.done.map(t => taskRow(t)).join('')}</ul>
+      </section>` : '',
+    (c.notDone || []).length ? `<section class="cal-sec">
+        <h3 class="eyebrow">No realizadas</h3>
+        <ul class="tasks">${c.notDone.map(t => taskRow(t)).join('')}</ul>
+      </section>` : '',
+    (c.moved || []).length ? `<section class="cal-sec">
+        <h3 class="eyebrow">Movidas a otra fecha</h3>
+        <ul class="moves">${c.moved.map(m => `<li class="move">
+          ${icon('undo')}
+          <button class="move-body" data-act="edit-task" data-id="${m.task.id}">
+            <span class="move-title">${esc(m.task.title)}</span>
+            <span class="move-meta">${m.to ? `Ahora prevista el ${esc(fmtDayShort(m.to))}` : 'Ahora sin fecha'}${m.note ? ` · ${esc(m.note.slice(0, 80))}` : ''}</span>
+          </button></li>`).join('')}</ul>
       </section>` : '',
     c.activities.length ? `<section class="cal-sec">
         <h3 class="eyebrow">Actividad registrada</h3>
@@ -150,6 +170,8 @@ export function render() {
       <p class="cal-legend">
         <span><i class="cal-mark cal-pend"></i>Planificado</span>
         <span><i class="cal-mark cal-done">${icon('check')}</i>Completado</span>
+        <span><i class="cal-mark cal-undone">${icon('x')}</i>No realizado</span>
+        <span><i class="cal-mark cal-moved">${icon('undo')}</i>Movido</span>
         <span><i class="cal-mark cal-act"></i>Actividad</span>
       </p>
     </div>

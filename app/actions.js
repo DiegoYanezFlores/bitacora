@@ -2,10 +2,11 @@
 import * as store from './store.js';
 import * as model from './model.js';
 import * as db from './db.js';
-import { esc, nowIso, dayKey, plural } from './lib.js';
-import { feedback, celebrate, openSheet, closeSheet, confirmSheet, KINDS, TASK_STATUS, PROJECT_STATUS, COLORS, dot } from './ui.js';
+import { esc, nowIso, dayKey, plural, fmtDayShort, addDays } from './lib.js';
+import { feedback, celebrate, openSheet, closeSheet, confirmSheet, icon, KINDS, TASK_STATUS, PROJECT_STATUS, COLORS, dot } from './ui.js';
 import { TEMPLATES } from './domain/templates.js';
 import { dateShortcuts } from './domain/calendar.js';
+import { RESULTS, RESULT_KEYS, resultInfo, closePatch, reopenPatch, reschedulePatch, closeEntry, rescheduleEntry, reopenEntry, isClosed } from './domain/outcomes.js';
 
 // Estado del objetivo → tipo de registro de rumbo (goal_log).
 const STATUS_LOG = { paused: 'paused', done: 'closed', archived: 'archived' };
@@ -50,36 +51,132 @@ export function logActivity(data, { quiet = false } = {}) {
 }
 
 // ---------- tareas ----------
-export function completeTask(id) {
+export function completeTask(id, { note = '' } = {}) {
   const t = db.get('tasks', id);
-  if (!t || t.status === 'done') return;
+  if (!t || isClosed(t)) return;
   const before = snapshot(t.project_id);
-  const prevStatus = t.status;
-  store.update('tasks', id, { status: 'done', completed_at: nowIso() });
-  const a = store.create('activities', { kind: 'done', title: t.title, project_id: t.project_id, task_id: t.id, milestone_id: t.milestone_id || null, source: 'task' });
+  const prev = prevResult(t);
+  const at = nowIso();
+  store.update('tasks', id, closePatch('done', { note, at }));
+  const entry = store.create('task_log', closeEntry(t, 'done', note, at));
+  const a = store.create('activities', { kind: 'done', title: t.title, project_id: t.project_id, task_id: t.id, milestone_id: t.milestone_id || null, source: 'task', occurred_at: at });
   store.track('task_complete', {});
   celebrate();
   feedback({
     title: 'Tarea completada',
     lines: deltaLines(before, t.project_id),
-    undo: () => { store.update('tasks', id, { status: prevStatus, completed_at: null }); store.remove('activities', a.id); }
+    undo: () => { store.update('tasks', id, prev); store.remove('task_log', entry.id); store.remove('activities', a.id); }
+  });
+}
+
+// ---------- resultado real de una tarea (migración 005) ----------
+// Una tarea puede cerrarse sin haberse hecho. Eso queda registrado tal cual: no crea actividad,
+// no toca la racha ni el avance, y nunca se muestra como un fallo del usuario.
+const prevResult = t => ({ status: t.status, result: t.result ?? null, result_note: t.result_note || '', result_at: t.result_at || null, completed_at: t.completed_at || null });
+
+export function closeTask(id, result, note = '') {
+  const t = db.get('tasks', id);
+  if (!t || isClosed(t)) return;
+  if (result === 'done') return completeTask(id, { note });
+  const prev = prevResult(t);
+  const at = nowIso();
+  store.update('tasks', id, closePatch(result, { note, at }));
+  const entry = store.create('task_log', closeEntry(t, result, note, at));
+  store.track('task_result', { result });
+  feedback({
+    title: RESULTS[result].label,
+    lines: [note ? note.slice(0, 90) : 'Queda registrado lo que pasó; no cuenta como hecha'],
+    tone: 'info',
+    undo: () => { store.update('tasks', id, prev); store.remove('task_log', entry.id); }
+  });
+}
+
+// Mover una tarea a otro día: sigue pendiente y el día previsto conserva su historia.
+export function rescheduleTask(id, day, note = '') {
+  const t = db.get('tasks', id);
+  if (!t) return;
+  if (t.due_date === day && !isClosed(t)) { feedback({ title: 'Ya estaba en esa fecha', tone: 'info' }); return; }
+  const prev = { ...prevResult(t), due_date: t.due_date ?? null };
+  const at = nowIso();
+  store.update('tasks', id, reschedulePatch(day, t));
+  const entry = store.create('task_log', rescheduleEntry(t, day, note, at));
+  store.track('task_reschedule', {});
+  feedback({
+    title: day ? `Movida al ${fmtDayShort(day)}` : 'Sin fecha',
+    lines: [t.due_date ? `Estaba prevista para el ${fmtDayShort(t.due_date)}` : 'Sigue pendiente'],
+    tone: 'info',
+    undo: () => { store.update('tasks', id, prev); store.remove('task_log', entry.id); }
   });
 }
 
 export function reopenTask(id) {
   const t = db.get('tasks', id);
   if (!t) return;
-  store.update('tasks', id, { status: 'todo', completed_at: null });
+  store.update('tasks', id, reopenPatch());
+  store.create('task_log', reopenEntry(t));
   // La actividad generada al completar se retira para que el historial sea fiel.
   model.activities().filter(a => a.task_id === id && a.source === 'task' && a.occurred_at >= (t.completed_at || '')).forEach(a => store.remove('activities', a.id));
   feedback({ title: 'Tarea reabierta', tone: 'info' });
 }
 
-export const toggleTask = id => { const t = db.get('tasks', id); if (!t) return; t.status === 'done' ? reopenTask(id) : completeTask(id); };
+// El tick pregunta qué pasó: completar es la opción principal, pero no la única realidad posible.
+export const toggleTask = id => { const t = db.get('tasks', id); if (!t) return; isClosed(t) ? reopenTask(id) : outcomeSheet(id); };
 
 export function startTask(id) {
   store.update('tasks', id, { status: 'doing' });
   feedback({ title: 'En curso', lines: ['Aparecerá primero en tus pendientes'], tone: 'info' });
+}
+
+// Hoja "¿Qué ocurrió?": cerrar una tarea con lo que pasó de verdad, o moverla de día.
+// Sin formulario grande: la nota y la fecha solo aparecen cuando hacen falta.
+export function outcomeSheet(id) {
+  const t = db.get('tasks', id);
+  if (!t) return;
+  const st = { result: null, mode: null, day: t.due_date || dayKey() };
+  const chips = [['today', 'Hoy', dayKey()], ['tomorrow', 'Mañana', addDays(dayKey(), 1)], ...dateShortcuts(dayKey()).slice(2).map(c => [c.key, c.label, c.day])];
+
+  const el = openSheet(`
+    <form class="form outcome">
+      <div class="sheet-head"><h2 class="sheet-title">¿Qué ocurrió?</h2><button type="button" class="icon-btn" data-sheet="close" aria-label="Cerrar">✕</button></div>
+      <p class="muted outcome-task">${esc(t.title)}${t.due_date ? ` · prevista el ${esc(fmtDayShort(t.due_date))}` : ''}</p>
+      <div class="outcome-opts" role="radiogroup" aria-label="Resultado">
+        ${RESULT_KEYS.map(k => `<button type="button" class="btn ${k === 'done' ? 'primary' : 'ghost'} outcome-opt" data-res="${k}" role="radio" aria-checked="false">${icon(RESULTS[k].icon)}${esc(RESULTS[k].label)}</button>`).join('')}
+        <button type="button" class="btn ghost outcome-opt" data-res="reschedule">${icon('undo')}Reprogramar</button>
+      </div>
+      <div data-detail hidden>
+        <div class="day-chips" data-days hidden>${chips.map(([k, l, d]) => `<button type="button" class="pill" data-day="${d}">${esc(l)}</button>`).join('')}
+          <label class="field day-pick"><span class="sr-only">Otra fecha</span><input type="date" name="day" value="${esc(t.due_date || dayKey())}"></label>
+        </div>
+        <label class="field"><span data-note-label>Nota (opcional)</span><input name="note" maxlength="500" autocomplete="off" placeholder="Ej.: No asistieron dos participantes."></label>
+        <div class="sheet-actions"><button type="submit" class="btn primary" data-confirm>Guardar</button></div>
+      </div>
+    </form>`, {
+    onClick: (e, root) => {
+      const opt = e.target.closest('[data-res]');
+      if (opt) {
+        st.result = opt.dataset.res;
+        if (st.result === 'done') { closeSheet(); completeTask(id); return; }
+        root.querySelectorAll('[data-res]').forEach(b => { const on = b === opt; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); });
+        const moving = st.result === 'reschedule';
+        root.querySelector('[data-detail]').hidden = false;
+        root.querySelector('[data-days]').hidden = !moving;
+        root.querySelector('[data-note-label]').textContent = moving ? 'Por qué la mueves (opcional)' : 'Nota (opcional)';
+        root.querySelector('[data-confirm]').textContent = moving ? 'Mover' : 'Guardar';
+        (moving ? root.querySelector('[data-days] .pill') : root.querySelector('[name=note]')).focus();
+        return;
+      }
+      const day = e.target.closest('[data-day]');
+      if (day) { st.day = day.dataset.day; root.querySelector('input[name=day]').value = day.dataset.day; root.querySelectorAll('[data-day]').forEach(b => b.classList.toggle('on', b === day)); }
+    },
+    onSubmit: (fd, form) => {
+      if (!st.result) return;
+      const note = String(fd.get('note') || '').trim();
+      closeSheet();
+      if (st.result === 'reschedule') rescheduleTask(id, String(fd.get('day') || st.day) || null, note);
+      else closeTask(id, st.result, note);
+    }
+  });
+  el.querySelector('input[name=day]')?.addEventListener('change', e => { st.day = e.target.value; el.querySelectorAll('[data-day]').forEach(b => b.classList.toggle('on', b.dataset.day === e.target.value)); });
 }
 
 // ---------- borrar con deshacer ----------
@@ -131,6 +228,7 @@ export function taskForm(task = null, defaults = {}) {
         <label class="field" data-waiting ${t.status === 'waiting' ? '' : 'hidden'}><span>Esperando a</span><input name="waiting_on" maxlength="200" value="${esc(t.waiting_on)}" placeholder="Persona o equipo"></label>
       </div>
       <label class="field"><span>Notas</span><textarea name="notes" rows="3" maxlength="4000">${esc(t.notes)}</textarea></label>
+      ${task && task.result && task.result !== 'done' ? `<p class="muted small">Resultado: ${esc(RESULTS[task.result].label)}${task.result_note ? ` · ${esc(task.result_note)}` : ''}. Cambia el estado a “Por hacer” para reabrirla.</p>` : ''}
       <div class="sheet-actions">
         ${task ? '<button type="button" class="btn ghost danger-text" data-del>Eliminar</button><span class="spacer"></span>' : ''}
         <button type="submit" class="btn primary">Guardar</button>
@@ -152,7 +250,7 @@ export function taskForm(task = null, defaults = {}) {
       if (task) {
         const wasDone = task.status === 'done';
         if (!wasDone && data.status === 'done') { store.update('tasks', task.id, { ...data, status: task.status }); completeTask(task.id); return; }
-        if (wasDone && data.status !== 'done') data.completed_at = null;
+        if (wasDone && data.status !== 'done') Object.assign(data, reopenPatch(), { status: data.status });
         store.update('tasks', task.id, data);
         feedback({ title: 'Tarea actualizada', tone: 'info' });
       } else {
@@ -274,7 +372,9 @@ export function activityForm(a) {
       <div class="field"><span>Tipo</span>${seg('kind', Object.entries(KINDS).map(([k, v]) => [k, v.label]), a.kind)}</div>
       <div class="row2">
         <label class="field"><span>Objetivo</span><select name="project_id">${projectOptions(a.project_id)}</select></label>
-        <label class="field"><span>Cuándo</span><input type="datetime-local" name="occurred_at" value="${toLocalInput(a.occurred_at)}" required></label>
+        <label class="field"><span>Cuándo ocurrió</span><input type="datetime-local" name="occurred_at" value="${toLocalInput(a.occurred_at)}" required>
+          <span class="day-chips">${[['Hoy', 0], ['Ayer', -1]].map(([l, n]) => `<button type="button" class="pill" data-when="${n}">${l}</button>`).join('')}</span>
+        </label>
       </div>
       <label class="field"><span>Detalle</span><textarea name="body" rows="3" maxlength="20000">${esc(a.body)}</textarea></label>
       <div class="sheet-actions">
@@ -282,9 +382,19 @@ export function activityForm(a) {
         <button type="submit" class="btn primary">Guardar</button>
       </div>
     </form>`, {
-    onClick: e => { if (e.target.closest('[data-del]')) { closeSheet(); removeWithUndo('activities', a.id, 'actividad'); } },
+    onClick: (e, el) => {
+      if (e.target.closest('[data-del]')) { closeSheet(); removeWithUndo('activities', a.id, 'actividad'); return; }
+      // Atajo: mueve el día y conserva la hora, para corregir lo registrado de madrugada.
+      const chip = e.target.closest('[data-when]');
+      if (chip) {
+        const input = el.querySelector('input[name=occurred_at]');
+        const hora = (input.value.split('T')[1] || '12:00').slice(0, 5);
+        input.value = `${addDays(dayKey(), Number(chip.dataset.when))}T${hora}`;
+      }
+    },
     onSubmit: fd => {
       const when = new Date(val(fd, 'occurred_at'));
+      // occurred_at = cuándo ocurrió (editable). created_at, la fecha de registro, no se toca nunca.
       const data = { title: val(fd, 'title'), kind: val(fd, 'kind') || a.kind, project_id: val(fd, 'project_id') || null, body: val(fd, 'body'), occurred_at: isNaN(when) ? a.occurred_at : when.toISOString() };
       if (!data.title) return;
       closeSheet();

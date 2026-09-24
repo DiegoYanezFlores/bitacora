@@ -611,6 +611,36 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .day-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .day-chips .pill { min-height: 32px; padding: 4px 11px; }
 
+/* ---------- resultado real de una tarea (qué pasó) ---------- */
+/* Una tarea no realizada se marca con peso de tinta, nunca con rojo de alarma ni lenguaje de culpa. */
+.task.is-unfinished .task-title { text-decoration: none; opacity: .85; }
+.tick.undone { border-color: var(--line-2); color: var(--text-2); background: var(--surface-2); }
+.tick.undone .i { opacity: .9; }
+.outcome-task { margin: -4px 0 12px; }
+.outcome-opts { display: flex; flex-direction: column; gap: 8px; }
+.outcome-opt { justify-content: flex-start; text-align: left; }
+.outcome-opt.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.outcome .day-chips { margin: 4px 0 12px; align-items: center; }
+.day-pick { margin: 0; }
+.day-pick input { min-height: 32px; padding: 2px 8px; }
+.pill-field { padding: 2px 8px; }
+.pill-field input { border: 0; background: none; font: inherit; color: inherit; min-height: 30px; padding: 0 2px; }
+/* Tareas movidas a otra fecha: el día previsto conserva su historia. */
+.moves { display: flex; flex-direction: column; gap: 2px; }
+.move { display: flex; align-items: flex-start; gap: 9px; padding: 8px 4px 8px 0; border-bottom: 1px solid var(--line); color: var(--text-2); }
+.move .i { width: 18px; height: 18px; flex: none; margin-top: 2px; }
+.move-body { display: flex; flex-direction: column; gap: 2px; text-align: left; min-width: 0; }
+.move-title { color: var(--text); font-weight: 550; }
+.move-meta { font-size: 12px; color: var(--text-2); }
+.cal-mark.cal-undone { width: 10px; height: 10px; min-height: 10px; border-radius: 0; color: var(--text-2); }
+.cal-mark.cal-undone .i { width: 10px; height: 10px; stroke-width: 3; }
+.cal-mark.cal-moved { width: 10px; height: 10px; min-height: 10px; border-radius: 0; color: var(--text-3); }
+.cal-mark.cal-moved .i { width: 10px; height: 10px; stroke-width: 2.6; }
+.is-selected .cal-mark.cal-undone, .is-selected .cal-mark.cal-moved { color: var(--block-ink-2); }
+.cal-item.cal-undone i { background: var(--text-2); clip-path: polygon(50% 0, 100% 100%, 0 100%); border-radius: 0; }
+.cal-item.cal-moved i { border: 1.5px dashed currentColor; }
+.cal-legend i.cal-undone, .cal-legend i.cal-moved { border-radius: 0; width: 10px; height: 10px; }
+
 /* ---------- tablet ---------- */
 @media (min-width: 640px) {
   .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 24px; }

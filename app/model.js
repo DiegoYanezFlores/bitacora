@@ -6,6 +6,7 @@ import { countByDay, streakOf, weekOf, heatmapOf } from './domain/days.js';
 import { goalProgress, metricIndicator, milestoneProgress, fmtNum } from './domain/progress.js';
 import { periodOf } from './domain/period.js';
 import { indexByDay, EMPTY_CELL } from './domain/calendar.js';
+import { wasDone, notDone, isOpen, outcomeLabel, plannedDate } from './domain/outcomes.js';
 
 // ---------- memo por revisión de datos ----------
 const memo = new Map();
@@ -22,6 +23,11 @@ export const projects = () => cached('projects', () => db.live('projects').sort(
 // Un objetivo (tabla projects) borrado no existe para la interfaz (antes aparecía como chip con nombre vacío).
 export const project = id => { const p = id ? db.get('projects', id) : null; return p && !p.deleted_at ? p : null; };
 export const tasks = () => cached('tasks', () => db.live('tasks'));
+export const taskLog = () => cached('taskLog', () => db.live('task_log').sort((a, b) => time(b.occurred_at) - time(a.occurred_at)));
+// Lo que le pasó a una tarea: cierres, reaperturas y cambios de fecha, del más reciente al más antiguo.
+export const taskLogOf = id => taskLog().filter(e => e.task_id === id);
+export const taskPlannedDate = t => plannedDate(t, taskLog());
+export { wasDone, notDone, outcomeLabel };
 export const milestones = () => cached('milestones', () => db.live('milestones'));
 export const stages = () => cached('stages', () => db.live('stages'));
 export const criteria = () => cached('criteria', () => db.live('criteria'));
@@ -57,7 +63,7 @@ export const msProgress = m => milestoneProgress(m, criteriaByMilestone().get(m.
 export const activities = () => cached('activities', () => db.live('activities').sort((a, b) => time(b.occurred_at) - time(a.occurred_at)));
 export const actDay = a => dayKey(new Date(a.occurred_at));
 
-export const openTasks = () => tasks().filter(t => t.status !== 'done');
+export const openTasks = () => tasks().filter(isOpen);
 export const activeProjects = () => projects().filter(p => p.status === 'active');
 
 const byProject = (list, id) => list.filter(x => x.project_id === id);
@@ -75,7 +81,7 @@ export function sortTasks(list) {
 // Reparto por día de lo planificado (tareas con due_date) y lo ocurrido (actividades).
 // Se calcula una vez por revisión de datos y filtro: la vista no consulta nada más.
 export const calendarDays = (project = null) =>
-  cached('calendar:' + (project || 'all'), () => indexByDay({ tasks: tasks(), activities: activities(), dayOfActivity: actDay, project }));
+  cached('calendar:' + (project || 'all'), () => indexByDay({ tasks: tasks(), activities: activities(), taskLog: taskLog(), dayOfActivity: actDay, project }));
 export const dayCell = (day, project = null) => calendarDays(project).get(day) || { day, ...EMPTY_CELL };
 
 // ---------- días activos y racha ----------
@@ -278,7 +284,7 @@ export function records() {
 export function achievements() {
   return cached('achievements', () => {
     const r = records();
-    const done = tasks().filter(t => t.status === 'done').length;
+    const done = tasks().filter(wasDone).length; // solo lo que se hizo de verdad cuenta como cerrado
     const msDone = milestones().filter(m => m.done_at).length;
     const wins = activities().filter(a => a.kind === 'win').length;
     const projDone = projects().filter(p => p.status === 'done').length;
