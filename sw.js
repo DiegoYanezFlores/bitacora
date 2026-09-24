@@ -1,14 +1,14 @@
 // Service worker de Bitácora v2.
 // Navegación y módulos: red primero con respaldo de caché (para que las actualizaciones lleguen solas).
 // Estáticos (iconos): caché primero. Supabase nunca pasa por aquí.
-const CACHE = 'bitacora-v10';
+const CACHE = 'bitacora-v11';
 const NETWORK_TIMEOUT_MS = 3500;
 const PRECACHE = [
   '/', '/index.html', '/config.js', '/manifest.json',
   '/app/styles.css', '/app/main.js', '/app/lib.js', '/app/db.js', '/app/store.js', '/app/model.js',
   '/app/api.js', '/app/sync.js', '/app/ui.js', '/app/actions.js', '/app/capture.js', '/app/migrate.js',
   '/app/motion.js', '/app/structure.js', '/app/domain/days.js', '/app/domain/templates.js',
-  '/app/domain/calendar.js', '/app/domain/period.js', '/app/domain/progress.js',
+  '/app/domain/calendar.js', '/app/domain/outcomes.js', '/app/domain/period.js', '/app/domain/progress.js',
   '/app/views/today.js', '/app/views/projects.js', '/app/views/project.js', '/app/views/tasks.js',
   '/app/views/calendar.js',
   '/app/views/log.js', '/app/views/progress.js', '/app/views/settings.js', '/app/views/auth.js', '/app/views/onboarding.js',

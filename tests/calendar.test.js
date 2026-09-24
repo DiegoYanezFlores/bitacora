@@ -110,3 +110,39 @@ test('atajos de fecha: hoy, mañana y el lunes siguiente', () => {
   assert.deepEqual(s.map(x => x.day), ['2026-09-24', '2026-09-25', '2026-09-28']);
   assert.equal(dateShortcuts(dayKey())[0].day, dayKey());
 });
+
+// --- resultados y reprogramación en el calendario (005) ---
+import { closePatch, rescheduleEntry } from '../app/domain/outcomes.js';
+
+test('una tarea no realizada no se cuenta como completada y sigue en su día', () => {
+  const t = task({ id: 'r1', due_date: '2026-09-25', ...closePatch('no_show') });
+  const map = indexByDay({ tasks: [t], activities: [], dayOfActivity });
+  const c = map.get('2026-09-25');
+  assert.deepEqual([c.done.length, c.notDone.length, c.pending.length], [0, 1, 0]);
+  const s = daySummary(c, '2026-09-25', '2026-09-26');
+  assert.deepEqual([s.notDone, s.done, s.overdue, s.total], [1, 0, 0, 1]);
+  assert.equal(overdueTasks([t], '2026-09-26').length, 0); // cerrada: ya no espera nada
+  assert.equal(undatedOpen([t]).length, 0);
+});
+
+test('reprogramar deja huella en el día previsto y la tarea pendiente en el nuevo', () => {
+  const original = task({ id: 'r2', due_date: '2026-09-25' });
+  const log = [{ id: 'l1', ...rescheduleEntry(original, '2026-09-27', 'Faltaban documentos.') }];
+  const movida = { ...original, due_date: '2026-09-27' };
+  const map = indexByDay({ tasks: [movida], activities: [], taskLog: log, dayOfActivity });
+  const viejo = map.get('2026-09-25');
+  assert.equal(viejo.moved.length, 1);
+  assert.equal(viejo.moved[0].to, '2026-09-27');
+  assert.equal(viejo.moved[0].note, 'Faltaban documentos.');
+  assert.equal(viejo.pending.length, 0); // ya no está prevista ahí
+  assert.equal(map.get('2026-09-27').pending.length, 1); // sigue siendo una tarea por hacer
+  assert.equal(daySummary(viejo, '2026-09-25', '2026-09-28').moved, 1);
+});
+
+test('si la tarea vuelve a su día original, el movimiento deja de contarse', () => {
+  const t = task({ id: 'r3', due_date: '2026-09-25' });
+  const log = [{ id: 'l2', ...rescheduleEntry(t, '2026-09-27') }];
+  const map = indexByDay({ tasks: [t], activities: [], taskLog: log, dayOfActivity });
+  assert.equal(map.get('2026-09-25').moved.length, 0);
+  assert.equal(map.get('2026-09-25').pending.length, 1);
+});

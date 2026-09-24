@@ -2,10 +2,10 @@
 // Si IndexedDB no está disponible (algún modo privado), la app funciona en memoria.
 
 // En orden de dependencias (padres antes que hijos): la sincronización sube en este orden.
-export const TABLES = ['projects', 'stages', 'milestones', 'criteria', 'tasks', 'activities',
+export const TABLES = ['projects', 'stages', 'milestones', 'criteria', 'tasks', 'task_log', 'activities',
   'evidence', 'reflections', 'achievements', 'day_marks', 'goal_log', 'recaps'];
 const DB_NAME = 'bitacora';
-const DB_VERSION = 2; // 2: tablas de la migración 003 + 'files' (archivos de evidencia pendientes de subir)
+const DB_VERSION = 3; // 2: tablas de 003 + 'files'; 3: task_log (qué pasó con cada tarea, migración 005)
 
 const mem = Object.fromEntries(TABLES.map(t => [t, new Map()]));
 const kv = new Map();

@@ -16,7 +16,7 @@ app/store.js        mutaciones, cola de cambios (outbox), perfil y preferencias
 app/sync.js         subida/bajada por filas con Supabase
 app/api.js          Auth + REST de Supabase con fetch (sin SDK)
 app/model.js        fachada memorizada: lee db y delega en app/domain/*
-app/domain/*.js     lógica pura y probada: days (racha/mapa), period, progress (motor de avance §8), templates, calendar (rejillas de mes/semana, reparto por día, vencidas)
+app/domain/*.js     lógica pura y probada: days (racha/mapa), period, progress (motor de avance §8), templates, calendar (rejillas de mes/semana, reparto por día, vencidas), outcomes (qué pasó con una tarea)
 app/structure.js    etapas, hitos con criterios, panel y cierre de hito, evidencia (nota/enlace), plantillas, goal_log
 tests/*.test.js     node --test (entorno mínimo en tests/setup.js)
 scripts/check-precache.mjs  verifica la precaché del service worker
@@ -25,8 +25,8 @@ app/capture.js      captura rápida y detección local (tipo, #proyecto, "ayer",
 app/migrate.js      conversión v1 → v2 (determinista), exportar/importar
 app/ui.js           iconos, hoja modal, toast, filas, barras
 app/views/*.js      Hoy, Proyectos, Proyecto, Tareas, Calendario, Registro, Progreso, Ajustes, Acceso, Onboarding
-supabase/migrations 001_v1.sql (modelo viejo, intacto), 002_v2.sql (+down), 003_impacable.sql (+down): etapas, criterios, evidencia, reflexiones, logros, descansos, cambios de rumbo, recaps; 004_hardening.sql (+down): sin acceso anónimo a ninguna tabla, funciones de trigger no invocables
-supabase/tests      00_supabase_stub.sql (simula roles y auth.uid en Postgres local) + 003_test.sql + 004_isolation_test.sql (un usuario no ve, edita, borra ni suplanta nada de otro, en todas las tablas)
+supabase/migrations 001_v1.sql (modelo viejo, intacto), 002_v2.sql (+down), 003_impacable.sql (+down): etapas, criterios, evidencia, reflexiones, logros, descansos, cambios de rumbo, recaps; 004_hardening.sql (+down): sin acceso anónimo a ninguna tabla, funciones de trigger no invocables; 005_resultados.sql (+down): resultado real de la tarea y tabla task_log
+supabase/tests      00_supabase_stub.sql (simula roles y auth.uid en Postgres local) + 003_test.sql + 004_isolation_test.sql (un usuario no ve, edita, borra ni suplanta nada de otro, en todas las tablas) + 005_test.sql
 docs/               auditoría, investigación, diseño, informe final, métricas.sql
 ```
 
@@ -60,9 +60,13 @@ Navegación: móvil y tablet con barra inferior Inicio · Objetivos · + · Cale
 
 **Calendario (`app/views/calendar.js`):** planificación temporal sobre las tareas que ya existen, sin tabla nueva. `due_date` = cuándo planeo hacerlo, `completed_at` = cuándo lo terminé, `occurred_at` = cuándo ocurrió la actividad; no se mezclan. Las fechas de tarea son fechas de calendario (`YYYY-MM-DD`), nunca marcas de tiempo, para que no se desplacen de día según la zona horaria. Las tareas sin fecha no se colocan en ningún día: se cuentan aparte y enlazan a `#/next`. Planificar no genera actividad ni mueve racha, avance ni estadísticas; solo completar lo hace, por el `completeTask()` de siempre.
 
+**Resultado de una tarea (`app/domain/outcomes.js`, migración 005):** al cerrar una tarea se elige qué ocurrió: completada, no realizada, falta de asistencia, inconveniente o cancelada; o se mueve a otro día. `status = 'done'` significa **cerrada**; `result` dice qué pasó y solo `done` cuenta como hecha (una tarea cerrada antes de 005, sin `result`, se lee como completada). Solo `done` crea actividad: lo no realizado nunca suma ni resta racha, avance ni logros, y se nombra sin culpa. `task_log` guarda cierres, reaperturas y cambios de fecha con `from_date`/`to_date`, así que el día previsto conserva su historia aunque la tarea se mueva.
+
+**Fecha de la actividad:** `occurred_at` es cuándo ocurrió (editable, con atajos Hoy/Ayer, fecha y hora opcional en la captura) y `created_at` cuándo se registró; nunca se sobrescriben entre sí. La fecha local se calcula con `whenOf()`/`dayKey()`, nunca con `toISOString().slice(0,10)`, para que registrar de madrugada no mueva el trabajo al día siguiente.
+
 ## Modelo de datos (Supabase, todo con RLS por usuario)
 
-`profiles` · `projects` (en la interfaz: **Objetivos**; `goal` = porqué, métrica = indicador aparte) · `stages` · `milestones` (peso 1/2/3 = S/M/L, `status` open/done/skipped) · `criteria` (criterios de "hecho", máx. 8) · `tasks` · `activities` (acciones; `milestone_id` opcional) · `evidence` · `reflections` · `achievements` · `day_marks` · `goal_log` (pausas, cierres, ajustes de alcance) · `recaps` · `events` · vista `daily_stats`. FK compuestas `(user_id, padre)`.
+`profiles` · `projects` (en la interfaz: **Objetivos**; `goal` = porqué, métrica = indicador aparte) · `stages` · `milestones` (peso 1/2/3 = S/M/L, `status` open/done/skipped) · `criteria` (criterios de "hecho", máx. 8) · `tasks` · `activities` (acciones; `milestone_id` opcional) · `evidence` · `reflections` · `achievements` · `day_marks` · `goal_log` (pausas, cierres, ajustes de alcance) · `recaps` · `task_log` (qué pasó con cada tarea) · `events` · vista `daily_stats`. FK compuestas `(user_id, padre)`.
 
 **Avance (app/domain/progress.js):** solo criterios e hitos lo mueven; hito = criterios cumplidos / totales (cerrado = 100 %), objetivo = media ponderada por peso de sus hitos no omitidos. Las acciones y tareas **nunca** suben el %: son constancia. Borrar u omitir un hito se registra como `scope_changed`.
 

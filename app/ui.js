@@ -2,6 +2,7 @@
 import { esc, fmtTime, ago, fmtDayShort, dayKey, daysBetween, plural } from './lib.js';
 import * as store from './store.js';
 import * as model from './model.js';
+import { wasDone, notDone, outcomeLabel, resultInfo } from './domain/outcomes.js';
 
 // ---------- iconos (trazo, 24×24) ----------
 const P = {
@@ -93,19 +94,23 @@ export function activityRow(a, { showProject = true, showDate = false } = {}) {
 
 export function taskRow(t, { showProject = true } = {}) {
   const p = showProject ? model.project(t.project_id) : null;
+  const closed = wasDone(t) || notDone(t);
+  const unfinished = notDone(t); // cerrada sin hacerse: información, no reproche
   const due = t.due_date ? daysBetween(dayKey(), t.due_date) : null;
   // Una fecha pasada se nombra sin culpa: dice desde cuándo espera, no que se falló.
   const dueTxt = due === null ? '' : due < 0 ? `Desde ${fmtDayShort(t.due_date)}` : due === 0 ? 'Hoy' : due === 1 ? 'Mañana' : fmtDayShort(t.due_date);
   const meta = [
     t.status === 'doing' ? '<span class="tag tag-accent">En curso</span>' : '',
     t.status === 'waiting' ? `<span class="tag">${icon('wait')}En espera${t.waiting_on ? ' · ' + esc(t.waiting_on) : ''}</span>` : '',
-    t.priority === 1 && t.status !== 'done' ? '<span class="tag tag-warn">Alta</span>' : '',
-    dueTxt && t.status !== 'done' ? `<span class="tag ${due < 0 ? 'tag-warn' : ''}">${icon('calendar')}${dueTxt}</span>` : '',
+    unfinished ? `<span class="tag tag-warn">${icon(resultInfo(t.result).icon)}${esc(outcomeLabel(t))}</span>` : '',
+    unfinished && t.result_note ? `<span class="tag">${esc(t.result_note.slice(0, 60))}</span>` : '',
+    t.priority === 1 && !closed ? '<span class="tag tag-warn">Alta</span>' : '',
+    dueTxt && !closed ? `<span class="tag ${due < 0 ? 'tag-warn' : ''}">${icon('calendar')}${dueTxt}</span>` : '',
     t.milestone_id && model.milestone(t.milestone_id) ? `<span class="tag">${icon('diamond')}${esc(model.milestone(t.milestone_id).title)}</span>` : '',
     p ? projectChip(p) : ''
   ].join('');
-  return `<li class="task ${t.status === 'done' ? 'is-done' : ''}" data-id="${t.id}">
-    <button class="tick ${t.status === 'done' ? 'on' : ''}" data-act="toggle-task" data-id="${t.id}" aria-pressed="${t.status === 'done'}" aria-label="${t.status === 'done' ? 'Marcar como pendiente' : 'Completar tarea'}">${icon('check')}</button>
+  return `<li class="task ${closed ? 'is-done' : ''} ${unfinished ? 'is-unfinished' : ''}" data-id="${t.id}">
+    <button class="tick ${wasDone(t) ? 'on' : ''} ${unfinished ? 'undone' : ''}" data-act="toggle-task" data-id="${t.id}" aria-pressed="${closed}" aria-label="${closed ? 'Reabrir tarea' : 'Cerrar tarea: elegir qué ocurrió'}">${icon(unfinished ? 'x' : 'check')}</button>
     <button class="task-body" data-act="edit-task" data-id="${t.id}">
       <span class="task-title">${esc(t.title)}</span>
       ${meta.trim() ? `<span class="task-meta">${meta}</span>` : ''}
