@@ -165,6 +165,7 @@ const ACTIONS = {
   'cal-today': () => { calendar.state.day = dayKey(); calendar.state.month = dayKey().slice(0, 8) + '01'; render(); },
   'edit-task': el => actions.taskForm(db.get('tasks', el.dataset.id)),
   'toggle-task': el => actions.toggleTask(el.dataset.id),
+  'move-task': el => actions.outcomeSheet(el.dataset.id, { start: 'reschedule' }),
   'complete-next': el => actions.completeTask(el.dataset.id),
   'start-task': el => actions.startTask(el.dataset.id),
   'next-other': () => { today.state.next++; render(); },

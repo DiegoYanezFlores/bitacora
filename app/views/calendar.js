@@ -4,7 +4,7 @@
 import * as model from './../model.js';
 import { esc, dayKey, parseDay, plural, fmtDayShort, cap, addDays } from './../lib.js';
 import { icon, empty, activityRow, taskRow, dot } from './../ui.js';
-import { monthGrid, weekGrid, monthKeyOf, daySummary, EMPTY_CELL, undatedOpen, overdueTasks } from './../domain/calendar.js';
+import { monthGrid, weekGrid, monthKeyOf, daySummary, EMPTY_CELL, undatedOpen, overdueTasks, rangeSummary, monthDays } from './../domain/calendar.js';
 import { outcomeLabel, resultInfo } from './../domain/outcomes.js';
 
 // month: mes visible; day: día seleccionado; mode: mes o semana; project: filtro por objetivo.
@@ -81,6 +81,22 @@ function weekView(cells, today) {
       </button>
     </li>`;
   }).join('')}</ul>`;
+}
+
+// Resumen del periodo visible: descriptivo, sin metas ni juicios. Cada número se explica solo.
+function periodSummary(cells) {
+  const days = state.mode === 'week' ? weekGrid(state.day).map(d => d.day) : monthDays(state.month);
+  const s = rangeSummary(cells, days);
+  if (!s.done && !s.notDone && !s.moved && !s.activities && !s.pending) return '';
+  const periodo = state.mode === 'week' ? 'Esta semana' : cap(parseDay(state.month).toLocaleDateString(LOCALE, { month: 'long' }));
+  const partes = [
+    s.done ? `${plural(s.done, 'tarea completada', 'tareas completadas')}` : '',
+    s.notDone ? `${plural(s.notDone, 'no realizada', 'no realizadas')}` : '',
+    s.moved ? `${plural(s.moved, 'movida a otra fecha', 'movidas a otra fecha')}` : '',
+    s.pending ? `${plural(s.pending, 'pendiente', 'pendientes')}` : '',
+    s.activities ? `${plural(s.activities, 'actividad', 'actividades')} en ${plural(s.activeDays, 'día', 'días')}` : ''
+  ].filter(Boolean);
+  return `<p class="cal-summary"><strong>${esc(periodo)}:</strong> ${partes.join(' · ')}</p>`;
 }
 
 // Detalle del día: pendientes, completadas y actividad, claramente separadas.
@@ -167,6 +183,7 @@ export function render() {
   <div class="cal-layout">
     <div class="cal-main">
       ${state.mode === 'week' ? weekView(cells, today) : monthView(cells, today)}
+      ${periodSummary(cells)}
       <p class="cal-legend">
         <span><i class="cal-mark cal-pend"></i>Planificado</span>
         <span><i class="cal-mark cal-done">${icon('check')}</i>Completado</span>
@@ -179,8 +196,8 @@ export function render() {
       ${dayPanel(today)}
       ${overdue.length ? `<section class="block cal-extra">
         <div class="block-head"><h2 class="eyebrow">Esperando desde antes</h2><span class="muted small num">${overdue.length}</span></div>
-        <ul class="tasks">${model.sortTasks(overdue).slice(0, 5).map(t => taskRow(t)).join('')}</ul>
-        <p class="muted small">Ábrelas para moverlas al día que quieras.</p>
+        <ul class="tasks">${model.sortTasks(overdue).slice(0, 5).map(t => taskRow(t, { move: true })).join('')}</ul>
+        <p class="muted small">Mover no las marca como hechas: solo cambia el día previsto.</p>
       </section>` : ''}
       ${undated.length ? `<section class="block cal-extra">
         <div class="block-head"><h2 class="eyebrow">Sin fecha</h2><span class="muted small num">${plural(undated.length, 'tarea', 'tareas')}</span></div>

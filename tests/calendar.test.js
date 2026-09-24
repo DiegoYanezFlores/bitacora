@@ -2,7 +2,7 @@
 import './setup.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { monthGrid, weekGrid, addMonths, monthKeyOf, indexByDay, daySummary, isOverdue, undatedOpen, overdueTasks, dateShortcuts } from '../app/domain/calendar.js';
+import { monthGrid, weekGrid, addMonths, monthKeyOf, indexByDay, daySummary, isOverdue, undatedOpen, overdueTasks, dateShortcuts, rangeSummary, monthDays } from '../app/domain/calendar.js';
 import { dayKey } from '../app/lib.js';
 
 const task = (o = {}) => ({ id: o.id || 't', status: 'todo', project_id: null, ...o });
@@ -145,4 +145,24 @@ test('si la tarea vuelve a su día original, el movimiento deja de contarse', ()
   const map = indexByDay({ tasks: [t], activities: [], taskLog: log, dayOfActivity });
   assert.equal(map.get('2026-09-25').moved.length, 0);
   assert.equal(map.get('2026-09-25').pending.length, 1);
+});
+
+test('resumen del periodo: cuenta lo hecho, lo no hecho y lo movido, sin juzgar', () => {
+  const cells = indexByDay({
+    tasks: [
+      task({ id: 'a', due_date: '2026-09-02', status: 'done' }),
+      task({ id: 'b', due_date: '2026-09-03', ...closePatch('blocked') }),
+      task({ id: 'c', due_date: '2026-09-30' }),
+      task({ id: 'd', due_date: '2026-10-05', status: 'done' }) // otro mes: fuera del resumen
+    ],
+    activities: [act('2026-09-02'), act('2026-09-02', { id: 'a2' }), act('2026-09-15', { id: 'a3' })],
+    taskLog: [{ id: 'l', ...rescheduleEntry(task({ id: 'c', due_date: '2026-09-10' }), '2026-09-30') }],
+    dayOfActivity
+  });
+  const s = rangeSummary(cells, monthDays('2026-09-01'));
+  assert.deepEqual([s.done, s.notDone, s.moved, s.pending, s.activities, s.activeDays], [1, 1, 1, 1, 3, 2]);
+  assert.equal(monthDays('2026-09-01').length, 30);
+  assert.equal(monthDays('2026-02-01').length, 28);
+  // Un mes sin nada no inventa números.
+  assert.deepEqual(rangeSummary(cells, monthDays('2026-11-01')), { done: 0, notDone: 0, moved: 0, pending: 0, activities: 0, activeDays: 0 });
 });

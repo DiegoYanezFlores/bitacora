@@ -2,7 +2,7 @@
 import { esc, fmtTime, ago, fmtDayShort, dayKey, daysBetween, plural } from './lib.js';
 import * as store from './store.js';
 import * as model from './model.js';
-import { wasDone, notDone, outcomeLabel, resultInfo } from './domain/outcomes.js';
+import { wasDone, notDone, outcomeLabel, resultInfo, RESULTS } from './domain/outcomes.js';
 
 // ---------- iconos (trazo, 24×24) ----------
 const P = {
@@ -92,7 +92,7 @@ export function activityRow(a, { showProject = true, showDate = false } = {}) {
   </li>`;
 }
 
-export function taskRow(t, { showProject = true } = {}) {
+export function taskRow(t, { showProject = true, move = false } = {}) {
   const p = showProject ? model.project(t.project_id) : null;
   const closed = wasDone(t) || notDone(t);
   const unfinished = notDone(t); // cerrada sin hacerse: información, no reproche
@@ -114,6 +114,29 @@ export function taskRow(t, { showProject = true } = {}) {
     <button class="task-body" data-act="edit-task" data-id="${t.id}">
       <span class="task-title">${esc(t.title)}</span>
       ${meta.trim() ? `<span class="task-meta">${meta}</span>` : ''}
+    </button>
+    ${move && !closed ? `<button class="icon-btn small task-move" data-act="move-task" data-id="${t.id}" aria-label="Mover “${esc(t.title)}” a otro día">${icon('undo')}</button>` : ''}
+  </li>`;
+}
+
+// Lo que pasó con una tarea (cierre sin hacerse o cambio de fecha): se ve en la historia
+// como información, no como actividad. Nunca cuenta para la constancia ni para el avance.
+export function taskEventRow(e, task, { showDate = false } = {}) {
+  const movida = e.type === 'rescheduled';
+  const info = RESULTS[e.result];
+  const p = model.project(task && task.project_id);
+  const titulo = task ? task.title : 'Tarea eliminada';
+  const meta = [
+    movida ? (e.to_date ? `Movida al ${fmtDayShort(e.to_date)}` : 'Se quedó sin fecha') : (info ? info.short : 'Cerrada'),
+    e.from_date ? `estaba prevista el ${fmtDayShort(e.from_date)}` : '',
+    e.note ? esc(e.note.slice(0, 120)) : ''
+  ].filter(Boolean).join(' · ');
+  return `<li class="act k-event" data-id="${e.id}">
+    <span class="act-time num">${showDate ? fmtDayShort(dayKey(new Date(e.occurred_at))) : fmtTime(e.occurred_at)}</span>
+    <span class="act-dot event" aria-label="${movida ? 'Tarea movida' : 'Tarea no realizada'}">${icon(movida ? 'undo' : 'x')}</span>
+    <button class="act-body" data-act="edit-task" data-id="${esc(e.task_id)}">
+      <span class="act-title">${esc(titulo)}</span>
+      <span class="act-meta">${meta}${p ? ' ' + projectChip(p) : ''}</span>
     </button>
   </li>`;
 }
