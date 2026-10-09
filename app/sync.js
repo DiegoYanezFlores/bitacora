@@ -23,9 +23,13 @@ const V3_COLUMNS = {
   activities: ['milestone_id', 'criterion_id', 'duration_min'],
   profiles: ['vision']
 };
-export const schema = { v3: null, v5: null }; // null = sin comprobar en esta sesión
+export const schema = { v3: null, v5: null }; // null = sin comprobar todavía
 const skipped = () => [...(schema.v3 ? [] : V3_TABLES), ...(schema.v5 ? [] : V5_TABLES)];
 const tables = () => ORDER.filter(t => !skipped().includes(t));
+// Cuánto se espera antes de volver a preguntar por una migración que faltaba: así, al aplicarla
+// en Supabase, la app lo nota sola (antes hacía falta recargar).
+const RECHECK_MS = 60000;
+let schemaCheckedAt = 0;
 
 async function probe(path, t) {
   try {
@@ -38,8 +42,24 @@ async function probe(path, t) {
 }
 
 async function detectSchema(t) {
-  if (schema.v3 === null) schema.v3 = await probe('/rest/v1/stages?select=id&limit=1', t);
-  if (schema.v5 === null) schema.v5 = await probe('/rest/v1/task_log?select=id&limit=1', t);
+  // Se vuelve a preguntar si pasó un minuto o si ya hay cambios esperando a esa migración:
+  // así, en cuanto se aplica en Supabase, la cola se destraba sola.
+  const recheck = Date.now() - schemaCheckedAt > RECHECK_MS || waitingForSchema().length > 0;
+  if (schema.v3 === null || (schema.v3 === false && recheck)) schema.v3 = await probe('/rest/v1/stages?select=id&limit=1', t);
+  if (schema.v5 === null || (schema.v5 === false && recheck)) schema.v5 = await probe('/rest/v1/task_log?select=id&limit=1', t);
+  schemaCheckedAt = Date.now();
+}
+
+// Mensaje entendible para cada fallo, sin jerga ni secretos. El detalle técnico va aparte.
+export function explainError(e) {
+  if (e instanceof TypeError) return 'Sin conexión con el servidor';
+  if (!(e instanceof ApiError)) return e && e.message ? e.message : 'Error desconocido';
+  if (e.status === 401 || e.code === 'PGRST301') return 'Tu sesión caducó: vuelve a entrar';
+  if (e.status === 403 || e.code === '42501') return 'El servidor rechazó el permiso para estos datos';
+  if (e.status === 404 || e.code === 'PGRST205') return 'Falta aplicar una migración en Supabase';
+  if (e.status === 429) return 'Demasiadas peticiones seguidas: se reintentará solo';
+  if (e.status >= 500) return 'El servidor falló: se reintentará solo';
+  return e.message || 'El servidor rechazó la petición';
 }
 const stripV3 = (table, row) => {
   if (!schema.v3) (V3_COLUMNS[table] || []).forEach(k => delete row[k]);
@@ -53,7 +73,7 @@ const SERVER_ONLY = ['synced_at'];
 // en lugar de descartarse; solo tras RETRY_LIMIT pasadas se aparta como rechazada.
 const RETRY_LIMIT = 5;
 
-export const state = { status: 'idle', error: '', lastSync: null };
+export const state = { status: 'idle', error: '', lastSync: null, lastErrorDetail: '', lastErrorAt: null };
 
 export let onStatus = () => {};
 export function setStatusListener(fn) { onStatus = fn; }
@@ -81,7 +101,8 @@ async function run() {
   setStatus('syncing');
   try {
     const t = await deps.token();
-    if (!t) return;
+    // Sin token no hay sesión utilizable: decirlo, en vez de quedarse en "Sincronizando" para siempre.
+    if (!t) { setStatus('idle', 'Sin sesión: entra de nuevo para sincronizar'); return; }
     await detectSchema(t);
     await pushProfile(t);
     await push(t);
@@ -90,12 +111,50 @@ async function run() {
     await pushEvents(t);
     state.lastSync = new Date().toISOString();
     db.kvSet('lastSync', state.lastSync);
-    setStatus(store.pendingCount() ? 'pending' : 'ok');
+    state.lastErrorDetail = '';
+    const esperando = waitingForSchema().length;
+    if (esperando) setStatus('migration', `${esperando} ${esperando === 1 ? 'cambio espera' : 'cambios esperan'} a que el servidor tenga la última migración`);
+    else setStatus(store.pendingCount() ? 'pending' : 'ok');
   } catch (e) {
-    if (e instanceof ApiError && (e.code === 'PGRST205' || e.status === 404)) setStatus('migration', 'Falta aplicar la migración 002 en Supabase.');
+    state.lastErrorAt = new Date().toISOString();
+    state.lastErrorDetail = e instanceof ApiError ? `HTTP ${e.status}${e.code ? ' ' + e.code : ''}: ${e.message}` : String((e && e.message) || e);
+    if (e instanceof ApiError && (e.code === 'PGRST205' || e.status === 404)) setStatus('migration', 'Falta aplicar una migración en Supabase');
     else if (e instanceof TypeError || !navigator.onLine) setStatus('offline');
-    else setStatus('error', e.message);
+    else if (e instanceof ApiError && (e.status === 401 || e.code === 'PGRST301')) {
+      // La sesión ya no vale: se pide entrar otra vez en lugar de reintentar en vano.
+      setStatus('idle', explainError(e));
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('bitacora:signedout'));
+    } else setStatus('error', explainError(e));
   }
+}
+
+// Filas en cola que esperan una migración: siguen guardadas aquí, pero no pueden subir todavía.
+const waitingForSchema = () => {
+  const falta = skipped();
+  return falta.length ? store.pendingKeys().filter(k => falta.includes(k.split(':')[0])) : [];
+};
+
+// Estado completo para el panel de diagnóstico (nunca incluye tokens ni claves).
+export function diagnostics() {
+  const porTabla = {};
+  for (const k of store.pendingKeys()) { const t = k.split(':')[0]; porTabla[t] = (porTabla[t] || 0) + 1; }
+  return {
+    status: state.status,
+    online: typeof navigator === 'undefined' ? true : navigator.onLine,
+    configurado: ENABLED,
+    sesion: store.session.guest ? 'modo prueba' : (store.session.userId ? 'con sesión' : 'sin sesión'),
+    email: store.session.email || '',
+    lastSync: state.lastSync,
+    pending: store.pendingCount(),
+    pendingByTable: porTabla,
+    waitingForSchema: waitingForSchema().length,
+    rejected: rejected().length,
+    schema: { v3: schema.v3, v5: schema.v5 },
+    running: Boolean(running),
+    error: state.error || '',
+    errorDetail: state.lastErrorDetail || '',
+    errorAt: state.lastErrorAt || null
+  };
 }
 
 const payload = (table, row) => {

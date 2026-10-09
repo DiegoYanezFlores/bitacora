@@ -144,7 +144,9 @@ test('sin 003 en el servidor: columnas nuevas fuera del envío y tablas nuevas e
   assert.equal('stage_id' in ms.body[0], false);
   assert.ok(!calls.some(c => c.path.startsWith('/rest/v1/stages') && c.method === 'POST'), 'las etapas no se suben');
   assert.deepEqual(store.pendingKeys(), [`stages:${st.id}`]);
-  assert.equal(sync.state.status, 'pending');
+  // El usuario ve por qué quedan cambios sin subir, en vez de un "pendiente" sin explicación.
+  assert.equal(sync.state.status, 'migration');
+  assert.match(sync.state.error, /migración/);
 });
 
 test('con 003: se suben las tablas nuevas en orden de dependencias', async () => {
