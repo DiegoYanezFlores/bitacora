@@ -76,6 +76,7 @@ export function kvSet(k, v) {
 export async function wipe() {
   rev++;
   for (const t of TABLES) mem[t].clear();
+  memFiles.clear();
   kv.clear();
   if (!idb) return;
   const stores = [...TABLES, 'kv', 'files'];
@@ -85,3 +86,44 @@ export async function wipe() {
 }
 
 export const counts = () => Object.fromEntries(TABLES.map(t => [t, live(t).length]));
+
+// ---------- archivos locales (fotos del usuario y evidencia pendiente de subir) ----------
+// El binario nunca va a la base de datos remota: aquí se guarda el original, y su referencia
+// viaja en las preferencias o en la fila de evidencia. Sin IndexedDB, se mantiene en memoria.
+const memFiles = new Map();
+
+export async function putFile(file) {
+  memFiles.set(file.id, file);
+  if (!idb) return file;
+  try {
+    const tx = idb.transaction('files', 'readwrite');
+    tx.objectStore('files').put(file);
+    await new Promise(r => { tx.oncomplete = r; tx.onerror = r; });
+  } catch (e) { console.warn('No se pudo guardar el archivo', e); }
+  return file;
+}
+
+export async function getFile(id) {
+  if (memFiles.has(id)) return memFiles.get(id);
+  if (!idb) return null;
+  try {
+    const row = await req(idb.transaction('files', 'readonly').objectStore('files').get(id));
+    if (row) memFiles.set(id, row);
+    return row || null;
+  } catch (e) { return null; }
+}
+
+export async function listFiles() {
+  if (!idb) return [...memFiles.values()];
+  try { return await req(idb.transaction('files', 'readonly').objectStore('files').getAll()); } catch (e) { return [...memFiles.values()]; }
+}
+
+export async function deleteFile(id) {
+  memFiles.delete(id);
+  if (!idb) return;
+  try {
+    const tx = idb.transaction('files', 'readwrite');
+    tx.objectStore('files').delete(id);
+    await new Promise(r => { tx.oncomplete = r; tx.onerror = r; });
+  } catch (e) { console.warn('No se pudo borrar el archivo', e); }
+}

@@ -32,6 +32,7 @@ function diagnosticsRow() {
     ['Rechazados por el servidor', d.rejected ? `${d.rejected}` : 'ninguno'],
     ['Migración 003 (objetivos y evidencia)', SCHEMA_LABEL[String(d.schema.v3)]],
     ['Migración 005 (resultados de tareas)', SCHEMA_LABEL[String(d.schema.v5)]],
+    ['Migración 006 (recurrencias y diario)', SCHEMA_LABEL[String(d.schema.v6)]],
     ['Sincronizando ahora', d.running ? 'sí' : 'no'],
     ['Último error', d.error ? `${d.error}${d.errorAt ? ` · ${ago(d.errorAt)}` : ''}` : 'ninguno']
   ];

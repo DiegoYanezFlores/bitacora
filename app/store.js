@@ -2,7 +2,9 @@
 import * as db from './db.js';
 import { uuid, nowIso } from './lib.js';
 
-export const DEFAULT_PREFS = { theme: 'system', weeklyGoal: 4, activeWeekDays: 2, sound: false, haptics: true, notices: 'all', analytics: true };
+import { DEFAULTS as PREF_DEFAULTS, resolve as resolvePrefs } from './domain/prefs.js';
+// Compatibilidad: el resto del código sigue leyendo DEFAULT_PREFS; la fuente de verdad es domain/prefs.js.
+export const DEFAULT_PREFS = PREF_DEFAULTS;
 
 // Valores por defecto por tabla (reflejan los de supabase/migrations/002 y 003).
 const DEFAULTS = {
@@ -10,11 +12,11 @@ const DEFAULTS = {
   stages: () => ({ goal_id: null, title: '', description: '', sort: 0, status: 'pending', started_at: null, completed_at: null }),
   milestones: () => ({ project_id: null, stage_id: null, title: '', description: '', expected_evidence: '', weight: 2, status: 'open', due_date: null, done_at: null, sort: 0 }),
   criteria: () => ({ milestone_id: null, title: '', sort: 0, met_at: null, requires_evidence: false }),
-  tasks: () => ({ project_id: null, milestone_id: null, title: '', notes: '', status: 'todo', priority: 2, due_date: null, waiting_on: '', completed_at: null, sort: 0, result: null, result_note: '', result_at: null }),
+  tasks: () => ({ project_id: null, milestone_id: null, title: '', notes: '', status: 'todo', priority: 2, due_date: null, waiting_on: '', completed_at: null, sort: 0, result: null, result_note: '', result_at: null, repeat: null, series_id: null, occurrence_date: null, start_time: null, end_time: null }),
   task_log: () => ({ task_id: null, type: 'closed', result: null, note: '', from_date: null, to_date: null, occurred_at: nowIso() }),
   activities: () => ({ project_id: null, task_id: null, milestone_id: null, criterion_id: null, duration_min: null, kind: 'done', title: '', body: '', occurred_at: nowIso(), tags: [], source: 'capture' }),
   evidence: () => ({ goal_id: null, milestone_id: null, activity_id: null, criterion_id: null, type: 'note', title: '', note: '', url: null, storage_path: null, thumb_path: null, mime: null, size_bytes: null, level: 1, captured_at: nowIso(), upload_state: 'uploaded' }),
-  reflections: () => ({ type: 'learning', body: '', prompt: '', goal_id: null, stage_id: null, milestone_id: null, activity_id: null, evidence_id: null, favorite: false, rating: null, occurred_at: nowIso() }),
+  reflections: () => ({ type: 'learning', title: '', tags: [], body: '', prompt: '', goal_id: null, stage_id: null, milestone_id: null, activity_id: null, evidence_id: null, favorite: false, rating: null, occurred_at: nowIso() }),
   achievements: () => ({ kind: 'progress', rule_key: null, title: '', description: '', earned_at: nowIso(), goal_id: null, milestone_id: null, evidence_id: null, announced_at: null }),
   day_marks: () => ({ day: null, kind: 'rest', note: '' }),
   goal_log: () => ({ goal_id: null, type: 'created', note: '', meta: {}, occurred_at: nowIso() }),
@@ -31,7 +33,7 @@ const BLANK = {
   stages: { title: '', description: '' },
   criteria: { title: '' },
   evidence: { title: '', note: '', url: null, storage_path: null, thumb_path: null },
-  reflections: { body: '', prompt: '' },
+  reflections: { body: '', prompt: '', title: '', tags: [] },
   achievements: { title: '', description: '' },
   day_marks: { note: '' },
   goal_log: { note: '', meta: {} },
@@ -141,7 +143,8 @@ export function applyRemote(t, row, pending) {
 export function profile() {
   return db.kvGet('profile', { display_name: '', timezone: '', focus_areas: [], prefs: {}, onboarded_at: null, migrated_v1_at: null, updated_at: null });
 }
-export const prefs = () => ({ ...DEFAULT_PREFS, ...(profile().prefs || {}) });
+// Siempre devuelve preferencias válidas: lo guardado sobre los valores por defecto, ya normalizado.
+export const prefs = () => resolvePrefs(profile().prefs);
 
 export function setProfile(patch, { dirty = true } = {}) {
   const p = { ...profile(), ...patch, updated_at: nowIso() };
