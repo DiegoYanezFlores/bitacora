@@ -5,6 +5,8 @@
 
 :root {
   color-scheme: light dark;
+  /* Si el tema se fija a mano, los controles nativos (reloj, calendario, desplegables) deben
+     seguir a la app, no al sistema: si no, en un móvil en oscuro salían con fondo negro. */
 
   /* superficies y tinta */
   --bg: #F5F7FB;
@@ -123,6 +125,12 @@ button { cursor: pointer; background: none; border: 0; padding: 0; -webkit-tap-h
 /* ---------- estructura ---------- */
 /* Móvil y tablet: una columna centrada + barra inferior. Escritorio (≥1024): rail o barra lateral fija
    y contenido centrado en su región (nunca pegado a la izquierda). */
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+/* El icono del reloj y del calendario, del color del texto secundario. */
+input[type=time]::-webkit-calendar-picker-indicator, input[type=date]::-webkit-calendar-picker-indicator { opacity: .65; cursor: pointer; }
+input[type=time]:hover::-webkit-calendar-picker-indicator, input[type=date]:hover::-webkit-calendar-picker-indicator { opacity: 1; }
+
 .app { min-height: 100dvh; }
 .main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); } /* despeja la barra inferior (64) con margen */
 .view { max-width: 1200px; margin: 0 auto; padding: 0 var(--sp) 32px; }
@@ -463,7 +471,7 @@ kbd { font: 600 11px var(--font); background: color-mix(in srgb, currentColor 12
 .form { display: grid; gap: 12px; }
 .field { display: grid; gap: 5px; }
 .field > span { font-size: 13px; color: var(--text-2); }
-input:not([type]), input[type=text], input[type=url], input[type=email], input[type=password], input[type=date], input[type=datetime-local], input[type=number], input[type=search], select, textarea {
+input:not([type]), input[type=text], input[type=url], input[type=email], input[type=password], input[type=date], input[type=time], input[type=datetime-local], input[type=month], input[type=week], input[type=tel], input[type=number], input[type=search], select, textarea {
   width: 100%; min-height: var(--tap); background: var(--surface); color: var(--text);
   border: 1px solid var(--line-2); border-radius: var(--r-sm); padding: 11px 13px; font-size: 16px;
 }
