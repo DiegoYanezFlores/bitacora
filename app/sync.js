@@ -16,6 +16,8 @@ const V3_TABLES = ['stages', 'criteria', 'evidence', 'reflections', 'achievement
 // Igual con la migración 005 (resultado real de la tarea y su registro).
 const V5_TABLES = ['task_log'];
 const V5_COLUMNS = { tasks: ['result', 'result_note', 'result_at'] };
+// Y con la 006 (recurrencias y diario): columnas nuevas sobre tablas que ya existían.
+const V6_COLUMNS = { tasks: ['repeat', 'series_id', 'occurrence_date', 'start_time', 'end_time'], reflections: ['title', 'tags'] };
 const V3_COLUMNS = {
   projects: ['template', 'completed_at', 'success_indicator'],
   milestones: ['stage_id', 'weight', 'description', 'expected_evidence', 'status'],
@@ -23,7 +25,7 @@ const V3_COLUMNS = {
   activities: ['milestone_id', 'criterion_id', 'duration_min'],
   profiles: ['vision']
 };
-export const schema = { v3: null, v5: null }; // null = sin comprobar todavía
+export const schema = { v3: null, v5: null, v6: null }; // null = sin comprobar todavía
 const skipped = () => [...(schema.v3 ? [] : V3_TABLES), ...(schema.v5 ? [] : V5_TABLES)];
 const tables = () => ORDER.filter(t => !skipped().includes(t));
 // Cuánto se espera antes de volver a preguntar por una migración que faltaba: así, al aplicarla
@@ -36,7 +38,8 @@ async function probe(path, t) {
     await deps.api(path, { token: t });
     return true;
   } catch (e) {
-    if (e instanceof ApiError && (e.status === 404 || e.code === 'PGRST205')) return false;
+    // 404/PGRST205: falta la tabla. 42703: falta la columna (esa migración no está aplicada).
+    if (e instanceof ApiError && (e.status === 404 || e.code === 'PGRST205' || e.code === '42703')) return false;
     throw e;
   }
 }
@@ -47,6 +50,8 @@ async function detectSchema(t) {
   const recheck = Date.now() - schemaCheckedAt > RECHECK_MS || waitingForSchema().length > 0;
   if (schema.v3 === null || (schema.v3 === false && recheck)) schema.v3 = await probe('/rest/v1/stages?select=id&limit=1', t);
   if (schema.v5 === null || (schema.v5 === false && recheck)) schema.v5 = await probe('/rest/v1/task_log?select=id&limit=1', t);
+  // La 006 no añade tablas: se pregunta por una columna suya.
+  if (schema.v6 === null || (schema.v6 === false && recheck)) schema.v6 = await probe('/rest/v1/tasks?select=repeat&limit=1', t);
   schemaCheckedAt = Date.now();
 }
 
@@ -64,6 +69,7 @@ export function explainError(e) {
 const stripV3 = (table, row) => {
   if (!schema.v3) (V3_COLUMNS[table] || []).forEach(k => delete row[k]);
   if (!schema.v5) (V5_COLUMNS[table] || []).forEach(k => delete row[k]);
+  if (!schema.v6) (V6_COLUMNS[table] || []).forEach(k => delete row[k]);
   return row;
 };
 const CHUNK = 200;
@@ -149,7 +155,7 @@ export function diagnostics() {
     pendingByTable: porTabla,
     waitingForSchema: waitingForSchema().length,
     rejected: rejected().length,
-    schema: { v3: schema.v3, v5: schema.v5 },
+    schema: { v3: schema.v3, v5: schema.v5, v6: schema.v6 },
     running: Boolean(running),
     error: state.error || '',
     errorDetail: state.lastErrorDetail || '',

@@ -10,7 +10,7 @@ Regla: primero las dependencias compartidas, después cada módulo. Nada se reco
 | Fase | Qué incluye | Estado |
 |---|---|---|
 | 1 | Diagnóstico y reparación de la sincronización + panel de estado | **Implementada y probada** (PR #13) |
-| 2 | Arquitectura compartida: preferencias, almacenamiento de imágenes, migración 006 | Pendiente |
+| 2 | Arquitectura compartida: preferencias, almacenamiento de imágenes, migración 006 | **Implementada y probada** |
 | 3 | Actividades recurrentes e itinerario | Pendiente |
 | 4 | Sistema visual: temas, paletas, fondos, biblioteca e imágenes propias | Pendiente |
 | 5 | Celebraciones al completar | Pendiente |
@@ -48,6 +48,25 @@ añadir a `tasks` la regla de repetición. Las preferencias y las imágenes no n
   verdad (nunca al planificar). Se documenta el cambio de criterio en lugar de borrarlo.
 - **Frases.** Se distinguen siempre cita textual (con autor y obra), traducción y reflexión propia.
   Ninguna frase se atribuye sin fuente.
+
+## Fase 2 — resultado
+
+Base común lista, sin interfaz todavía (eso llega en las fases 3 a 7).
+
+- **Migración 006** (+ reversión + `006_test.sql`): `tasks` gana `repeat` (regla de repetición),
+  `series_id`, `occurrence_date`, `start_time` y `end_time`; `reflections` gana `title` y `tags`,
+  acepta el tipo `journal` y amplía el cuerpo a 20 000 caracteres. Nada se borra ni se reescribe.
+  Probada en Postgres 18 local: dos pasadas seguidas, reversión y vuelta a aplicar.
+- **`app/domain/prefs.js`**: una sola fuente de verdad para apariencia, celebraciones y frases, con
+  valores por defecto válidos y normalización de todo lo guardado. Un `prefs` corrupto no rompe la
+  pantalla: vuelve a los valores por defecto. `store.prefs()` ya pasa por aquí.
+- **`app/domain/media.js` + `app/media.js`**: fotos propias con validación (JPG/PNG/WebP, 8 MB, 12
+  fotos), guardado local en IndexedDB para que se vean sin conexión, y subida al bucket privado
+  `evidence` bajo la carpeta del usuario. La referencia viaja en `prefs.media`; el binario nunca va
+  a la base de datos. Borrar la foto activa devuelve a un fondo válido.
+- **Sincronización:** `schema.v6` se detecta preguntando por una columna (42703 = falta la
+  migración). Mientras no esté aplicada, esas columnas se quitan del envío y nada se pierde en este
+  dispositivo; el panel de Ajustes muestra el estado de las tres migraciones.
 
 ## Fase 1 — resultado
 

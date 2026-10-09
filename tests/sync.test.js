@@ -161,3 +161,26 @@ test('con 003: se suben las tablas nuevas en orden de dependencias', async () =>
   assert.equal(calls.find(c => c.path.startsWith('/rest/v1/milestones') && c.method === 'POST').body[0].weight, 3);
   assert.equal(store.pendingCount(), 0);
 });
+
+test('sin 006 en el servidor: las columnas de recurrencias y diario no se envían', async () => {
+  // El servidor responde 42703 (columna inexistente) al preguntar por `repeat`.
+  const antes = sync.deps.api;
+  sync.schema.v3 = true; sync.schema.v5 = true; sync.schema.v6 = null;
+  sync.deps.api = async (path, opts = {}) => {
+    if (path.startsWith('/rest/v1/tasks?select=repeat')) throw new ApiError('column tasks.repeat does not exist', 400, '42703');
+    return antes(path, opts);
+  };
+  const t = store.create('tasks', { title: 'Clases', repeat: { freq: 'weekly' }, start_time: '07:00' });
+  store.create('reflections', { type: 'journal', title: 'Hoy', body: 'texto' });
+  await sync.syncNow();
+  assert.equal(sync.schema.v6, false);
+  const enviada = calls.find(c => c.path.startsWith('/rest/v1/tasks?on_conflict') && c.method === 'POST');
+  assert.ok(enviada, 'la tarea sí se sube, sin las columnas nuevas');
+  assert.equal('repeat' in enviada.body[0], false);
+  assert.equal('start_time' in enviada.body[0], false);
+  assert.equal(enviada.body[0].title, 'Clases');
+  const refl = calls.find(c => c.path.startsWith('/rest/v1/reflections?on_conflict') && c.method === 'POST');
+  assert.equal('title' in refl.body[0], false);
+  assert.equal('tags' in refl.body[0], false);
+  assert.equal(db.get('tasks', t.id).repeat.freq, 'weekly', 'en este dispositivo no se pierde nada');
+});
