@@ -209,6 +209,18 @@ const ACTIONS = {
   'toggle-pref': el => store.setPrefs({ [el.dataset.k]: !store.prefs()[el.dataset.k] }),
   'sync-now': el => busy(el, () => sync.syncNow()),
   'sync-retry': el => busy(el, () => sync.retryRejected()),
+  // Copia el estado de la sincronización en texto plano, para poder enviarlo. Sin tokens ni claves.
+  'copy-diag': async () => {
+    const d = sync.diagnostics();
+    const texto = Object.entries(d).map(([k, v]) => `${k}: ${v && typeof v === 'object' ? JSON.stringify(v) : v}`).join('\n');
+    try {
+      await navigator.clipboard.writeText(texto);
+      feedback({ title: 'Estado copiado', lines: ['Pégalo donde puedas enviarlo'], tone: 'info' });
+    } catch (e) {
+      openSheet(`<h2 class="sheet-title">Estado de la sincronización</h2><pre class="diag-pre">${esc(texto)}</pre>
+        <div class="sheet-actions"><button class="btn primary" data-sheet="close">Cerrar</button></div>`);
+    }
+  },
   'sync-dismiss': () => sync.dismissRejected(),
   'edit-name': () => openSheet(`<form class="form"><h2 class="sheet-title">Tu nombre</h2>
       <label class="field"><span>Nombre</span><input name="n" maxlength="80" value="${esc(store.profile().display_name)}" autofocus></label>

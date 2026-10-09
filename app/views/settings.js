@@ -15,6 +15,35 @@ const toggle = (key, label, on, help = '') => `<li class="set-row">
   <button class="switch ${on ? 'on' : ''}" data-act="toggle-pref" data-k="${key}" role="switch" aria-checked="${on}" aria-label="${esc(label)}"><span></span></button>
 </li>`;
 
+// Panel de diagnóstico: todo lo que hace falta para entender por qué algo no sube.
+// Nunca muestra tokens, claves ni contraseñas: solo estados, cantidades y el último error.
+const SCHEMA_LABEL = { true: 'aplicada', false: 'falta aplicarla', null: 'sin comprobar' };
+function diagnosticsRow() {
+  if (store.session.guest) return `<li class="set-row col"><div><span>Estás en modo prueba</span>
+    <small class="muted">Nada se sincroniza: los datos viven solo en este dispositivo. Crea una cuenta para tenerlos en la nube.</small></div></li>`;
+  const d = sync.diagnostics();
+  const filas = [
+    ['Conexión', d.online ? 'con internet' : 'sin internet'],
+    ['Nube', d.configurado ? 'configurada' : 'no configurada en esta copia'],
+    ['Sesión', `${d.sesion}${d.email ? ` · ${d.email}` : ''}`],
+    ['Última sincronización correcta', d.lastSync ? `${ago(d.lastSync)}` : 'todavía ninguna'],
+    ['Cambios por subir', d.pending ? `${d.pending}${Object.keys(d.pendingByTable).length ? ` (${Object.entries(d.pendingByTable).map(([t, n]) => `${t}: ${n}`).join(', ')})` : ''}` : 'ninguno'],
+    ['Esperando una migración', d.waitingForSchema ? `${d.waitingForSchema}` : 'no'],
+    ['Rechazados por el servidor', d.rejected ? `${d.rejected}` : 'ninguno'],
+    ['Migración 003 (objetivos y evidencia)', SCHEMA_LABEL[String(d.schema.v3)]],
+    ['Migración 005 (resultados de tareas)', SCHEMA_LABEL[String(d.schema.v5)]],
+    ['Sincronizando ahora', d.running ? 'sí' : 'no'],
+    ['Último error', d.error ? `${d.error}${d.errorAt ? ` · ${ago(d.errorAt)}` : ''}` : 'ninguno']
+  ];
+  return `<li class="set-row col"><details class="diag">
+    <summary><span>Estado de la sincronización</span><small class="muted">${esc(d.error || (d.pending ? `${plural(d.pending, 'cambio', 'cambios')} por subir` : 'todo al día'))}</small></summary>
+    <dl class="diag-list">${filas.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('')}</dl>
+    ${d.errorDetail ? `<p class="diag-detail"><strong>Detalle técnico:</strong> ${esc(d.errorDetail)}</p>` : ''}
+    <div class="filters"><button class="btn ghost small" data-act="sync-now">Reintentar ahora</button>
+      <button class="btn ghost small" data-act="copy-diag">Copiar para soporte</button></div>
+  </details></li>`;
+}
+
 // Solo aparece si el servidor rechazó algún cambio: nunca se pierde en silencio.
 function rejectedRow() {
   const bad = sync.rejected();
@@ -39,6 +68,7 @@ export function render() {
         <button class="btn ghost small" data-act="edit-name">${esc(p.display_name || 'Añadir')}</button></li>
       <li class="set-row"><div><span>Sincronización</span><small class="muted">${esc(s.text)}${s.lastSync ? ` · ${ago(s.lastSync)}` : ''}</small></div>
         ${store.session.guest ? '<button class="btn primary small" data-act="signup-from-guest">Crear cuenta</button>' : `<button class="btn ghost small" data-act="sync-now">Sincronizar</button>`}</li>
+      ${diagnosticsRow()}
       ${rejectedRow()}
     </ul>
   </section>

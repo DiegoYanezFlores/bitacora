@@ -647,6 +647,19 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .cal-item.cal-moved i { border: 1.5px dashed currentColor; }
 .cal-legend i.cal-undone, .cal-legend i.cal-moved { border-radius: 0; width: 10px; height: 10px; }
 
+/* ---------- diagnóstico de sincronización ---------- */
+.diag { width: 100%; }
+.diag summary { display: flex; flex-direction: column; gap: 2px; cursor: pointer; padding: 4px 0; list-style: none; }
+.diag summary::-webkit-details-marker { display: none; }
+.diag summary::after { content: "Ver detalle"; font-size: 12px; color: var(--accent); font-weight: 600; }
+.diag[open] summary::after { content: "Ocultar detalle"; }
+.diag-list { margin: 10px 0 4px; display: flex; flex-direction: column; gap: 6px; }
+.diag-list > div { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+.diag-list dt { color: var(--text-2); }
+.diag-list dd { color: var(--text); font-weight: 550; text-align: right; overflow-wrap: anywhere; }
+.diag-detail { font-size: 12px; color: var(--text-2); margin: 8px 0; overflow-wrap: anywhere; }
+.diag-pre { font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--surface-2); border-radius: var(--r-sm); padding: 12px; max-height: 50vh; overflow: auto; }
+
 /* ---------- tablet ---------- */
 @media (min-width: 640px) {
   .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 24px; }
