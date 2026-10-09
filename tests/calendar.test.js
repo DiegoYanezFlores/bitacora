@@ -164,5 +164,24 @@ test('resumen del periodo: cuenta lo hecho, lo no hecho y lo movido, sin juzgar'
   assert.equal(monthDays('2026-09-01').length, 30);
   assert.equal(monthDays('2026-02-01').length, 28);
   // Un mes sin nada no inventa números.
-  assert.deepEqual(rangeSummary(cells, monthDays('2026-11-01')), { done: 0, notDone: 0, moved: 0, pending: 0, activities: 0, activeDays: 0 });
+  assert.deepEqual(rangeSummary(cells, monthDays('2026-11-01')), { done: 0, notDone: 0, moved: 0, pending: 0, recurring: 0, activities: 0, activeDays: 0 });
+});
+
+test('lo que se repite se cuenta aparte y no se mezcla con lo puntual', () => {
+  const serie = { id: 's', title: 'Clases', due_date: '2026-09-07', start_time: '07:00', repeat: { freq: 'weekly', byday: ['mo'] }, project_id: null };
+  const cells = indexByDay({
+    tasks: [serie, task({ id: 'p', due_date: '2026-09-08' })],
+    activities: [],
+    occurrences: [
+      { day: '2026-09-07', series: serie, saved: null, title: 'Clases', start_time: '07:00' },
+      { day: '2026-09-14', series: serie, saved: null, title: 'Clases', start_time: '07:00' }
+    ],
+    dayOfActivity
+  });
+  // La serie es una plantilla: no aparece como tarea suelta en su día de inicio.
+  assert.equal(cells.get('2026-09-07').pending.length, 0);
+  assert.equal(cells.get('2026-09-07').occurrences.length, 1);
+  const s = rangeSummary(cells, monthDays('2026-09-01'));
+  assert.deepEqual([s.pending, s.recurring], [1, 2]);
+  assert.equal(daySummary(cells.get('2026-09-07'), '2026-09-07', '2026-09-07').recurring, 1);
 });

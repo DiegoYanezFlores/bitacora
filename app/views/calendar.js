@@ -6,6 +6,7 @@ import { esc, dayKey, parseDay, plural, fmtDayShort, cap, addDays } from './../l
 import { icon, empty, activityRow, taskRow, dot } from './../ui.js';
 import { monthGrid, weekGrid, monthKeyOf, daySummary, EMPTY_CELL, undatedOpen, overdueTasks, rangeSummary, monthDays } from './../domain/calendar.js';
 import { outcomeLabel, resultInfo } from './../domain/outcomes.js';
+import { agenda, conflicts, describe as describeRule } from './../domain/recurrence.js';
 
 // month: mes visible; day: día seleccionado; mode: mes o semana; project: filtro por objetivo.
 export const state = { month: monthKeyOf(dayKey()), day: dayKey(), mode: 'month', project: '' };
@@ -29,6 +30,7 @@ function marks(s) {
   if (!s.total) return '';
   const out = [];
   if (s.pending) out.push(`<span class="cal-mark cal-pend ${s.overdue ? 'is-overdue' : ''}"></span>`);
+  if (s.recurring) out.push(`<span class="cal-mark cal-rep"></span>`);
   if (s.done) out.push(`<span class="cal-mark cal-done">${icon('check')}</span>`);
   if (s.notDone) out.push(`<span class="cal-mark cal-undone">${icon('x')}</span>`);
   if (s.moved) out.push(`<span class="cal-mark cal-moved">${icon('undo')}</span>`);
@@ -41,6 +43,7 @@ function dayAria(day, s) {
   const parts = [fmtDayFull(day)];
   if (s.isToday) parts.push('hoy');
   if (s.pending) parts.push(plural(s.pending, s.overdue ? 'tarea pendiente' : 'tarea planificada', s.overdue ? 'tareas pendientes' : 'tareas planificadas'));
+  if (s.recurring) parts.push(plural(s.recurring, 'actividad recurrente', 'actividades recurrentes'));
   if (s.done) parts.push(plural(s.done, 'tarea completada', 'tareas completadas'));
   if (s.notDone) parts.push(plural(s.notDone, 'tarea no realizada', 'tareas no realizadas'));
   if (s.moved) parts.push(plural(s.moved, 'tarea movida a otra fecha', 'tareas movidas a otra fecha'));
@@ -94,20 +97,51 @@ function periodSummary(cells) {
     s.notDone ? `${plural(s.notDone, 'no realizada', 'no realizadas')}` : '',
     s.moved ? `${plural(s.moved, 'movida a otra fecha', 'movidas a otra fecha')}` : '',
     s.pending ? `${plural(s.pending, 'pendiente', 'pendientes')}` : '',
+    s.recurring ? `${plural(s.recurring, 'día de actividades que se repiten', 'días de actividades que se repiten')}` : '',
     s.activities ? `${plural(s.activities, 'actividad', 'actividades')} en ${plural(s.activeDays, 'día', 'días')}` : ''
   ].filter(Boolean);
   return `<p class="cal-summary"><strong>${esc(periodo)}:</strong> ${partes.join(' · ')}</p>`;
 }
 
 // Detalle del día: pendientes, completadas y actividad, claramente separadas.
-function dayPanel(today) {
-  const c = model.dayCell(state.day, state.project || null) || EMPTY_CELL;
+function dayPanel(today, cellsOf) {
+  const c = cellsOf(state.day) || EMPTY_CELL;
   const past = state.day < today;
+  // Agenda: todo lo que tiene hora ese día, en orden, con los huecos libres entre medias.
+  const conHora = [
+    ...(c.occurrences || []).map(o => ({ title: o.title, start_time: o.start_time, end_time: o.end_time, act: `data-act="open-occurrence" data-id="${o.series.id}" data-day="${o.day}"`, rep: true })),
+    ...c.pending.filter(t => t.start_time).map(t => ({ title: t.title, start_time: t.start_time, end_time: t.end_time, act: `data-act="edit-task" data-id="${t.id}"`, rep: false }))
+  ];
+  const choques = conflicts(conHora);
+  const { rows } = agenda(conHora);
+  const agendaHtml = conHora.length ? `<section class="cal-sec">
+      <h3 class="eyebrow">${icon('clock')}Agenda</h3>
+      ${choques.length ? `<p class="muted small">${esc(choques.map(([a, b]) => `${a.title} y ${b.title} se solapan`).join(' · '))}. Puedes dejarlo así si quieres.</p>` : ''}
+      <ul class="agenda">${rows.map(r => r.kind === 'gap'
+        ? `<li class="agenda-gap"><span>${esc(r.from.slice(0, 5))}</span><span class="muted small">${esc(r.label)}</span></li>`
+        : `<li class="agenda-row"><span class="agenda-time num">${esc(String(r.item.start_time).slice(0, 5))}${r.item.end_time ? `<small>${esc(String(r.item.end_time).slice(0, 5))}</small>` : ''}</span>
+            <button class="agenda-body" ${r.item.act}><span class="agenda-title">${esc(r.item.title)}</span>${r.item.rep ? `<span class="tag">${icon('undo')}Se repite</span>` : ''}</button></li>`).join('')}</ul>
+    </section>` : '';
+
+  // Recurrentes de ese día que aún no tienen hora: se listan aparte, no en la agenda.
+  const sinHora = (c.occurrences || []).filter(o => !o.start_time);
+  const recurrentes = sinHora.length ? `<section class="cal-sec">
+      <h3 class="eyebrow">Se repiten hoy</h3>
+      <ul class="tasks">${sinHora.map(o => `<li class="task" data-id="${o.series.id}">
+        <button class="tick" data-act="open-occurrence" data-id="${o.series.id}" data-day="${o.day}" aria-label="Qué hacer con ${esc(o.title)}">${icon('check')}</button>
+        <button class="task-body" data-act="open-occurrence" data-id="${o.series.id}" data-day="${o.day}">
+          <span class="task-title">${esc(o.title)}</span>
+          <span class="task-meta"><span class="tag">${icon('undo')}${esc(describeRule(o.series, { fmtDay: fmtDayShort }))}</span></span>
+        </button></li>`).join('')}</ul>
+    </section>` : '';
+
   const sections = [
-    c.pending.length ? `<section class="cal-sec">
+    agendaHtml,
+    recurrentes,
+    c.pending.filter(t => !t.start_time).length ? `<section class="cal-sec">
         <h3 class="eyebrow">${past ? 'Pendiente' : 'Pendientes'}</h3>
         ${past ? `<p class="muted small">${esc(overdueLabel(state.day, today))}. Puedes moverla a otro día abriéndola.</p>` : ''}
-        <ul class="tasks">${c.pending.map(t => taskRow(t)).join('')}</ul>
+        <ul class="tasks">${c.pending.filter(t => !t.start_time).map(t => taskRow(t)).join('')}</ul>
       </section>` : '',
     c.done.length ? `<section class="cal-sec">
         <h3 class="eyebrow">Completadas</h3>
@@ -146,7 +180,11 @@ function dayPanel(today) {
 export function render() {
   const today = dayKey();
   const project = state.project || null;
-  const cells = model.calendarDays(project);
+  // Ventana visible: las ocurrencias recurrentes solo se calculan para lo que se está viendo.
+  const grid = state.mode === 'week' ? weekGrid(state.day) : monthGrid(state.month).flat();
+  const dias = [...grid.map(c => c.day), state.day].sort();
+  const window = { from: dias[0], to: dias.at(-1) };
+  const cells = model.calendarDays(project, window);
   const all = model.tasks();
   const undated = undatedOpen(all, project);
   const overdue = overdueTasks(all, today, project);
@@ -189,11 +227,12 @@ export function render() {
         <span><i class="cal-mark cal-done">${icon('check')}</i>Completado</span>
         <span><i class="cal-mark cal-undone">${icon('x')}</i>No realizado</span>
         <span><i class="cal-mark cal-moved">${icon('undo')}</i>Movido</span>
+        <span><i class="cal-mark cal-rep"></i>Se repite</span>
         <span><i class="cal-mark cal-act"></i>Actividad</span>
       </p>
     </div>
     <div class="cal-side">
-      ${dayPanel(today)}
+      ${dayPanel(today, d => cells.get(d))}
       ${overdue.length ? `<section class="block cal-extra">
         <div class="block-head"><h2 class="eyebrow">Esperando desde antes</h2><span class="muted small num">${overdue.length}</span></div>
         <ul class="tasks">${model.sortTasks(overdue).slice(0, 5).map(t => taskRow(t, { move: true })).join('')}</ul>
