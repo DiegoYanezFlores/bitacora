@@ -9,6 +9,7 @@
 
 import { dayKey, addDays, parseDay, weekStart } from '../lib.js';
 import { wasDone, notDone as notDoneTask, isOpen } from './outcomes.js';
+import { isSeries } from './recurrence.js';
 
 export const monthKeyOf = day => day.slice(0, 7) + '-01';
 export const addMonths = (monthKey, n) => {
@@ -43,18 +44,25 @@ export const isOverdue = (task, today) => Boolean(task.due_date) && isOpen(task)
 // Índice día → { pending, done, notDone, moved, activities } con lo que toca ver en el calendario.
 // Las tareas se reparten por due_date (lo planificado) y las actividades por su día real.
 // `moved` son tareas que ese día estaban previstas y se pasaron a otra fecha: el día conserva su historia.
-export function indexByDay({ tasks = [], activities = [], taskLog = [], dayOfActivity, project = null }) {
+export function indexByDay({ tasks = [], activities = [], taskLog = [], occurrences = [], dayOfActivity, project = null }) {
   const map = new Map();
   const cell = day => {
-    if (!map.has(day)) map.set(day, { day, pending: [], done: [], notDone: [], moved: [], activities: [] });
+    if (!map.has(day)) map.set(day, { day, pending: [], done: [], notDone: [], moved: [], occurrences: [], activities: [] });
     return map.get(day);
   };
   const byId = new Map();
   for (const t of tasks) {
     byId.set(t.id, t);
     if (!t.due_date) continue; // sin fecha: nunca se coloca en un día inventado
+    if (isSeries(t)) continue; // la serie es una plantilla: lo que se ve son sus ocurrencias
     if (project && t.project_id !== project) continue;
     cell(t.due_date)[wasDone(t) ? 'done' : notDoneTask(t) ? 'notDone' : 'pending'].push(t);
+  }
+  // Ocurrencias que aún no existen como fila: se calculan a partir de la regla de su serie.
+  for (const o of occurrences) {
+    if (o.saved) continue; // ya está guardada: aparece como tarea normal, sin duplicar
+    if (project && o.series.project_id !== project) continue;
+    cell(o.day).occurrences.push(o);
   }
   for (const a of activities) {
     if (project && a.project_id !== project) continue;
@@ -71,7 +79,7 @@ export function indexByDay({ tasks = [], activities = [], taskLog = [], dayOfAct
   return map;
 }
 
-export const EMPTY_CELL = { pending: [], done: [], notDone: [], moved: [], activities: [] };
+export const EMPTY_CELL = { pending: [], done: [], notDone: [], moved: [], occurrences: [], activities: [] };
 
 // Resumen de un día para pintar la celda: cantidades y si hay algo vencido.
 export function daySummary(cell, day, today) {
@@ -79,14 +87,16 @@ export function daySummary(cell, day, today) {
   const overdue = c.pending.filter(t => day < today).length;
   const notDoneN = (c.notDone || []).length;
   const movedN = (c.moved || []).length;
+  const planned = (c.occurrences || []).length; // recurrentes de ese día, todavía sin tocar
   return {
-    pending: c.pending.length,
+    pending: c.pending.length + planned,
+    recurring: planned,
     done: c.done.length,
     notDone: notDoneN,
     moved: movedN,
     activities: c.activities.length,
     overdue,
-    total: c.pending.length + c.done.length + notDoneN + movedN + c.activities.length,
+    total: c.pending.length + planned + c.done.length + notDoneN + movedN + c.activities.length,
     isToday: day === today,
     isPast: day < today
   };
@@ -103,10 +113,11 @@ export const overdueTasks = (tasks, today, project = null) =>
 // Resumen de un periodo: qué se hizo, qué no y qué se movió. Descriptivo, nunca una nota al usuario.
 // Cuenta tareas por su día previsto y actividades por su día real; los días activos salen de lo registrado.
 export function rangeSummary(cells, days) {
-  const out = { done: 0, notDone: 0, moved: 0, pending: 0, activities: 0, activeDays: 0 };
+  const out = { done: 0, notDone: 0, moved: 0, pending: 0, recurring: 0, activities: 0, activeDays: 0 };
   for (const day of days) {
     const c = cells.get(day);
     if (!c) continue;
+    out.recurring += (c.occurrences || []).length; // lo que se repite se cuenta aparte
     out.done += c.done.length;
     out.notDone += (c.notDone || []).length;
     out.moved += (c.moved || []).length;

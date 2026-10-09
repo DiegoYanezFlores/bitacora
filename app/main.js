@@ -166,6 +166,8 @@ const ACTIONS = {
   'edit-task': el => actions.taskForm(db.get('tasks', el.dataset.id)),
   'toggle-task': el => actions.toggleTask(el.dataset.id),
   'move-task': el => actions.outcomeSheet(el.dataset.id, { start: 'reschedule' }),
+  // Un día concreto de una actividad recurrente: qué hacer con él.
+  'open-occurrence': el => actions.occurrenceSheet(el.dataset.id, el.dataset.day),
   'complete-next': el => actions.completeTask(el.dataset.id),
   'start-task': el => actions.startTask(el.dataset.id),
   'next-other': () => { today.state.next++; render(); },

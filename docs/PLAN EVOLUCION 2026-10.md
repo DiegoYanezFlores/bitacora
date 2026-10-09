@@ -11,7 +11,7 @@ Regla: primero las dependencias compartidas, después cada módulo. Nada se reco
 |---|---|---|
 | 1 | Diagnóstico y reparación de la sincronización + panel de estado | **Implementada y probada** (PR #13) |
 | 2 | Arquitectura compartida: preferencias, almacenamiento de imágenes, migración 006 | **Implementada y probada** |
-| 3 | Actividades recurrentes e itinerario | Pendiente |
+| 3 | Actividades recurrentes e itinerario | **Implementada y probada** |
 | 4 | Sistema visual: temas, paletas, fondos, biblioteca e imágenes propias | Pendiente |
 | 5 | Celebraciones al completar | Pendiente |
 | 6 | Diario y filosofía estoica | Pendiente |
@@ -48,6 +48,24 @@ añadir a `tasks` la regla de repetición. Las preferencias y las imágenes no n
   verdad (nunca al planificar). Se documenta el cambio de criterio en lugar de borrarlo.
 - **Frases.** Se distinguen siempre cita textual (con autor y obra), traducción y reflexión propia.
   Ninguna frase se atribuye sin fuente.
+
+## Fase 3 — resultado
+
+- `app/domain/recurrence.js` con 12 pruebas: reglas diaria/semanal/mensual con intervalo, días de la
+  semana, fecha final, meses sin día 31, tope de generación, cruce con ocurrencias guardadas,
+  ocurrencias movidas, agenda con huecos, avisos de solape y texto en palabras de la regla.
+- Formulario de tarea: horas de inicio y fin, y bloque "Se repite" con frecuencia, días, intervalo
+  y fecha final, con la regla explicada debajo en lenguaje natural.
+- Calendario: marca propia para los días que se repiten, agenda del día con horas y huecos libres,
+  y aviso de solapes. El resumen del periodo cuenta lo recurrente aparte de lo puntual.
+- Al tocar un día de una serie: completarlo, decir qué pasó, omitirlo, cambiar solo ese día,
+  cambiar ese día y los siguientes, o cambiar toda la serie. Borrar una serie avisa de cuántos
+  días ya registrados se van con ella y permite deshacer.
+
+Comprobado en el navegador con el caso real (clases de 07:00 a 11:00, de lunes a viernes, un
+semestre): 10 días en dos semanas con **una sola fila** en la base, el sábado vacío, marcar un día
+como no realizado crea exactamente una fila sin duplicar el día, y dividir la serie desde el
+miércoles deja la anterior terminando el martes.
 
 ## Fase 2 — resultado
 

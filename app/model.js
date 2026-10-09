@@ -7,6 +7,7 @@ import { goalProgress, metricIndicator, milestoneProgress, fmtNum } from './doma
 import { periodOf } from './domain/period.js';
 import { indexByDay, EMPTY_CELL } from './domain/calendar.js';
 import { wasDone, notDone, isOpen, outcomeLabel, plannedDate } from './domain/outcomes.js';
+import { isSeries, isOccurrence, expand, nextDay, describe as describeRule } from './domain/recurrence.js';
 
 // ---------- memo por revisión de datos ----------
 const memo = new Map();
@@ -63,7 +64,8 @@ export const msProgress = m => milestoneProgress(m, criteriaByMilestone().get(m.
 export const activities = () => cached('activities', () => db.live('activities').sort((a, b) => time(b.occurred_at) - time(a.occurred_at)));
 export const actDay = a => dayKey(new Date(a.occurred_at));
 
-export const openTasks = () => tasks().filter(isOpen);
+// Pendientes: las tareas abiertas de verdad. Las series son plantillas, no se listan como tarea.
+export const openTasks = () => tasks().filter(t => isOpen(t) && !isSeries(t));
 export const activeProjects = () => projects().filter(p => p.status === 'active');
 
 const byProject = (list, id) => list.filter(x => x.project_id === id);
@@ -80,9 +82,28 @@ export function sortTasks(list) {
 // ---------- calendario ----------
 // Reparto por día de lo planificado (tareas con due_date) y lo ocurrido (actividades).
 // Se calcula una vez por revisión de datos y filtro: la vista no consulta nada más.
-export const calendarDays = (project = null) =>
-  cached('calendar:' + (project || 'all'), () => indexByDay({ tasks: tasks(), activities: activities(), taskLog: taskLog(), dayOfActivity: actDay, project }));
-export const dayCell = (day, project = null) => calendarDays(project).get(day) || { day, ...EMPTY_CELL };
+// Series (plantillas con regla) y sus ocurrencias calculadas para una ventana de días.
+export const seriesList = () => cached('series', () => tasks().filter(t => isSeries(t) && !isOccurrence(t)));
+export const occurrencesIn = (from, to, project = null) => {
+  const guardadas = tasks().filter(isOccurrence);
+  return seriesList()
+    .filter(s => !project || s.project_id === project)
+    .flatMap(s => expand(s, from, to, guardadas));
+};
+// La serie a la que pertenece una ocurrencia (null si la tarea es suelta).
+export const seriesOf = task => {
+  const s = task && task.series_id ? db.get('tasks', task.series_id) : null;
+  return s && !s.deleted_at ? s : null;
+};
+export const nextOccurrence = (series, from = dayKey()) => nextDay(series, from);
+export { describeRule, isSeries, isOccurrence };
+
+export const calendarDays = (project = null, window = null) =>
+  cached('calendar:' + (project || 'all') + ':' + (window ? window.from + window.to : ''), () => indexByDay({
+    tasks: tasks(), activities: activities(), taskLog: taskLog(), dayOfActivity: actDay, project,
+    occurrences: window ? occurrencesIn(window.from, window.to, project) : []
+  }));
+export const dayCell = (day, project = null, window = null) => calendarDays(project, window || { from: day, to: day }).get(day) || { day, ...EMPTY_CELL };
 
 // ---------- días activos y racha ----------
 export const activeDays = () => cached('activeDays', () => countByDay(activities(), actDay));

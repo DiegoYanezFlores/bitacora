@@ -2,11 +2,12 @@
 import * as store from './store.js';
 import * as model from './model.js';
 import * as db from './db.js';
-import { esc, nowIso, dayKey, plural, fmtDayShort, addDays } from './lib.js';
+import { esc, nowIso, dayKey, plural, fmtDayShort, fmtDayLong, addDays } from './lib.js';
 import { feedback, celebrate, openSheet, closeSheet, confirmSheet, icon, KINDS, TASK_STATUS, PROJECT_STATUS, COLORS, dot } from './ui.js';
 import { TEMPLATES } from './domain/templates.js';
 import { dateShortcuts } from './domain/calendar.js';
 import { RESULTS, RESULT_KEYS, resultInfo, closePatch, reopenPatch, reschedulePatch, closeEntry, rescheduleEntry, reopenEntry, isClosed } from './domain/outcomes.js';
+import { DAYS, FREQS, normalizeRule, describe as describeRule, untilBefore, isSeries, isOccurrence } from './domain/recurrence.js';
 
 // Estado del objetivo → tipo de registro de rumbo (goal_log).
 const STATUS_LOG = { paused: 'paused', done: 'closed', archived: 'archived' };
@@ -181,6 +182,89 @@ export function outcomeSheet(id, { start = null } = {}) {
   if (start) el.querySelector(`[data-res="${start}"]`)?.click();
 }
 
+// ---------- actividades recurrentes ----------
+// Una ocurrencia solo se guarda como fila cuando pasa algo con ella. Hasta entonces es un cálculo.
+export function materialize(seriesId, day, patch = {}) {
+  const serie = db.get('tasks', seriesId);
+  if (!serie) return null;
+  const ya = model.tasks().find(t => t.series_id === seriesId && t.occurrence_date === day);
+  if (ya) return patch && Object.keys(patch).length ? store.update('tasks', ya.id, patch) || db.get('tasks', ya.id) : ya;
+  return store.create('tasks', {
+    title: serie.title, notes: serie.notes, project_id: serie.project_id, milestone_id: serie.milestone_id,
+    priority: serie.priority, start_time: serie.start_time, end_time: serie.end_time,
+    series_id: seriesId, occurrence_date: day, due_date: day, ...patch
+  });
+}
+
+// Qué se puede hacer con un día concreto de una actividad recurrente.
+export function occurrenceSheet(seriesId, day) {
+  const serie = db.get('tasks', seriesId);
+  if (!serie) return;
+  const horario = serie.start_time ? ` · ${String(serie.start_time).slice(0, 5)}${serie.end_time ? `–${String(serie.end_time).slice(0, 5)}` : ''}` : '';
+  openSheet(`
+    <div class="form">
+      <div class="sheet-head"><h2 class="sheet-title">${esc(serie.title)}</h2><button type="button" class="icon-btn" data-sheet="close" aria-label="Cerrar">✕</button></div>
+      <p class="muted outcome-task">${esc(fmtDayLong(day))}${esc(horario)} · ${esc(describeRule(serie, { fmtDay: fmtDayShort }))}</p>
+      <div class="outcome-opts">
+        <button type="button" class="btn primary outcome-opt" data-occ="done">${icon('check')}Completar este día</button>
+        <button type="button" class="btn ghost outcome-opt" data-occ="result">${icon('circle')}No se hizo: decir qué pasó</button>
+        <button type="button" class="btn ghost outcome-opt" data-occ="skip">${icon('x')}Omitir este día</button>
+        <button type="button" class="btn ghost outcome-opt" data-occ="one">${icon('edit')}Cambiar solo este día</button>
+        <button type="button" class="btn ghost outcome-opt" data-occ="following">${icon('arrow')}Cambiar este día y los siguientes</button>
+        <button type="button" class="btn ghost outcome-opt" data-occ="series">${icon('undo')}Cambiar toda la serie</button>
+      </div>
+    </div>`, {
+    onClick: e => {
+      const b = e.target.closest('[data-occ]');
+      if (!b) return;
+      const accion = b.dataset.occ;
+      closeSheet();
+      if (accion === 'done') { const o = materialize(seriesId, day); completeTask(o.id); return; }
+      if (accion === 'result') { const o = materialize(seriesId, day); outcomeSheet(o.id); return; }
+      if (accion === 'skip') { const o = materialize(seriesId, day); closeTask(o.id, 'canceled', 'Día omitido'); return; }
+      if (accion === 'one') { taskForm(materialize(seriesId, day)); return; }
+      if (accion === 'series') { taskForm(serie); return; }
+      if (accion === 'following') splitSeries(seriesId, day);
+    }
+  });
+}
+
+// "Este día y los siguientes": la serie anterior termina el día antes y empieza otra desde aquí.
+// Así lo ya ocurrido conserva su historia y el cambio no toca el pasado.
+export function splitSeries(seriesId, day) {
+  const serie = db.get('tasks', seriesId);
+  if (!serie) return;
+  const regla = normalizeRule(serie.repeat);
+  if (!regla) { taskForm(serie); return; }
+  const antes = { repeat: { ...regla, until: untilBefore(day) } };
+  const nueva = store.create('tasks', {
+    title: serie.title, notes: serie.notes, project_id: serie.project_id, milestone_id: serie.milestone_id,
+    priority: serie.priority, start_time: serie.start_time, end_time: serie.end_time,
+    due_date: day, repeat: { ...regla, until: regla.until }
+  });
+  store.update('tasks', seriesId, antes);
+  feedback({ title: 'Serie dividida', lines: [`Lo anterior al ${fmtDayShort(day)} queda como estaba`], tone: 'info', undo: () => { store.remove('tasks', nueva.id); store.update('tasks', seriesId, { repeat: regla }); } });
+  taskForm(db.get('tasks', nueva.id));
+}
+
+// Borrar una serie se lleva también los días suyos que ya estaban guardados.
+export async function removeSeries(id) {
+  const serie = db.get('tasks', id);
+  if (!serie) return;
+  const hijas = model.tasks().filter(t => t.series_id === id);
+  const ok = await confirmSheet('¿Eliminar la actividad recurrente?', {
+    confirm: 'Eliminar', danger: true,
+    detail: hijas.length ? `Se eliminan también los ${hijas.length} días ya registrados de esta serie.` : 'Dejará de aparecer en el calendario.'
+  });
+  if (!ok) return;
+  const previas = hijas.map(h => store.remove('tasks', h.id));
+  const prev = store.remove('tasks', id);
+  feedback({
+    title: 'Actividad recurrente eliminada', tone: 'info',
+    undo: () => { store.restore('tasks', prev); previas.forEach(p => p && store.restore('tasks', p)); }
+  });
+}
+
 // ---------- borrar con deshacer ----------
 export async function removeWithUndo(table, id, label, { ask = false } = {}) {
   if (ask && !(await confirmSheet(`¿Eliminar ${label}?`, { confirm: 'Eliminar', danger: true }))) return false;
@@ -215,6 +299,7 @@ export function taskForm(task = null, defaults = {}) {
   // defaults.due_date llega del calendario: la fecha del día elegido viene puesta.
   const t = task || { title: '', project_id: defaults.project_id || '', status: 'todo', priority: 2, due_date: defaults.due_date || '', waiting_on: '', notes: '' };
   const chips = dateShortcuts(dayKey());
+  const regla = normalizeRule(t.repeat);
   openSheet(`
     <form class="form">
       <div class="sheet-head"><h2 class="sheet-title">${task ? 'Editar tarea' : 'Nueva tarea'}</h2><button type="button" class="icon-btn" data-sheet="close" aria-label="Cerrar">✕</button></div>
@@ -224,10 +309,25 @@ export function taskForm(task = null, defaults = {}) {
       <div class="field"><span>Estado</span>${seg('status', Object.entries(TASK_STATUS), t.status)}</div>
       <div class="field"><span>Prioridad</span>${seg('priority', [[1, 'Alta'], [2, 'Media'], [3, 'Baja']], t.priority)}</div>
       <div class="row2">
-        <label class="field"><span>Fecha</span><input type="date" name="due_date" value="${esc(t.due_date || '')}">
+        <label class="field"><span>${isSeries(t) ? 'Primera fecha' : 'Fecha'}</span><input type="date" name="due_date" value="${esc(t.due_date || '')}">
           <span class="day-chips">${chips.map(c => `<button type="button" class="pill" data-day-set="${c.day}">${esc(c.label)}</button>`).join('')}${t.due_date ? '<button type="button" class="pill" data-day-set="">Sin fecha</button>' : ''}</span>
         </label>
         <label class="field" data-waiting ${t.status === 'waiting' ? '' : 'hidden'}><span>Esperando a</span><input name="waiting_on" maxlength="200" value="${esc(t.waiting_on)}" placeholder="Persona o equipo"></label>
+      </div>
+      <div class="row2">
+        <label class="field"><span>Hora de inicio (opcional)</span><input type="time" name="start_time" value="${esc((t.start_time || '').slice(0, 5))}"></label>
+        <label class="field"><span>Hora de fin (opcional)</span><input type="time" name="end_time" value="${esc((t.end_time || '').slice(0, 5))}"></label>
+      </div>
+      <div class="field"><span>Se repite</span>
+        ${seg('freq', [['', 'No se repite'], ...Object.entries(FREQS)], (regla && regla.freq) || '')}
+        <div class="repeat-box" data-repeat ${regla ? '' : 'hidden'}>
+          <div class="day-chips" data-byday>${DAYS.map(([code, nombre, letra]) => `<label class="pill"><input type="checkbox" name="byday" value="${code}" ${regla && regla.byday.includes(code) ? 'checked' : ''}><span aria-label="${nombre}">${letra}</span></label>`).join('')}</div>
+          <div class="row2">
+            <label class="field"><span>Cada</span><input type="number" name="interval" min="1" max="30" value="${regla ? regla.interval : 1}"></label>
+            <label class="field"><span>Hasta (opcional)</span><input type="date" name="until" value="${esc((regla && regla.until) || '')}"></label>
+          </div>
+          <p class="muted small" data-repeat-text>${esc(describeRule({ ...t, repeat: regla }, { fmtDay: fmtDayShort }))}</p>
+        </div>
       </div>
       <label class="field"><span>Notas</span><textarea name="notes" rows="3" maxlength="4000">${esc(t.notes)}</textarea></label>
       ${task && task.result && task.result !== 'done' ? `<p class="muted small">Resultado: ${esc(RESULTS[task.result].label)}${task.result_note ? ` · ${esc(task.result_note)}` : ''}. Cambia el estado a “Por hacer” para reabrirla.</p>` : ''}
@@ -237,8 +337,10 @@ export function taskForm(task = null, defaults = {}) {
       </div>
     </form>`, {
     onClick: (e, el) => {
-      if (e.target.closest('[data-del]')) { closeSheet(); removeWithUndo('tasks', task.id, 'tarea'); }
+      // Borrar una serie no es borrar una tarea: se avisa de los días ya registrados.
+      if (e.target.closest('[data-del]')) { closeSheet(); if (isSeries(task)) removeSeries(task.id); else removeWithUndo('tasks', task.id, 'tarea'); }
       if (e.target.name === 'status') el.querySelector('[data-waiting]').hidden = e.target.value !== 'waiting';
+      if (e.target.name === 'freq') el.querySelector('[data-repeat]').hidden = !e.target.value;
       // Atajos de fecha: rellenan el campo, no guardan solos (el usuario sigue decidiendo).
       const chip = e.target.closest('[data-day-set]');
       if (chip) { const input = el.querySelector('input[name=due_date]'); input.value = chip.dataset.daySet; input.focus(); }
@@ -246,7 +348,11 @@ export function taskForm(task = null, defaults = {}) {
     onSubmit: fd => {
       const msId = val(fd, 'milestone_id') || null;
       const ms = msId ? model.milestone(msId) : null;
-      const data = { title: val(fd, 'title'), project_id: ms ? ms.project_id : (val(fd, 'project_id') || null), milestone_id: msId, status: val(fd, 'status') || 'todo', priority: Number(val(fd, 'priority')) || 2, due_date: val(fd, 'due_date') || null, waiting_on: val(fd, 'waiting_on'), notes: val(fd, 'notes') };
+      const freq = val(fd, 'freq');
+      const repeat = freq ? normalizeRule({ freq, interval: val(fd, 'interval'), byday: fd.getAll('byday').map(String), until: val(fd, 'until') }) : null;
+      const data = { title: val(fd, 'title'), project_id: ms ? ms.project_id : (val(fd, 'project_id') || null), milestone_id: msId, status: val(fd, 'status') || 'todo', priority: Number(val(fd, 'priority')) || 2, due_date: val(fd, 'due_date') || null, waiting_on: val(fd, 'waiting_on'), notes: val(fd, 'notes'), start_time: val(fd, 'start_time') || null, end_time: val(fd, 'end_time') || null, repeat };
+      // Una serie necesita fecha de inicio: sin ella no hay nada que repetir.
+      if (repeat && !data.due_date) data.due_date = dayKey();
       if (!data.title) return;
       closeSheet();
       if (task) {
@@ -257,8 +363,12 @@ export function taskForm(task = null, defaults = {}) {
         feedback({ title: 'Tarea actualizada', tone: 'info' });
       } else {
         const created = store.create('tasks', { ...data, completed_at: data.status === 'done' ? nowIso() : null });
-        store.track('task_create', {});
-        feedback({ title: 'Tarea creada', lines: [model.project(created.project_id)?.name].filter(Boolean), undo: () => store.remove('tasks', created.id) });
+        store.track('task_create', { repeat: Boolean(repeat) });
+        feedback({
+          title: repeat ? 'Actividad recurrente creada' : 'Tarea creada',
+          lines: [repeat ? describeRule(created, { fmtDay: fmtDayShort }) : model.project(created.project_id)?.name].filter(Boolean),
+          undo: () => store.remove('tasks', created.id)
+        });
       }
     }
   });
