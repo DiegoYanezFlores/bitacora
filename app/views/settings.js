@@ -6,7 +6,7 @@ import * as sync from './../sync.js';
 import { syncState } from './../main.js';
 import { esc, plural, ago } from './../lib.js';
 import { icon } from './../ui.js';
-import { PALETTES, PALETTE_FAMILIES } from './../domain/prefs.js';
+import { PALETTES, PALETTE_FAMILIES, CELEBRATE } from './../domain/prefs.js';
 import { LIBRARY, CATEGORIES, srcOf } from './../domain/library.js';
 import { MAX_FILES } from './../domain/media.js';
 
@@ -41,6 +41,10 @@ function appearanceBlock(prefs) {
 
     <h3 class="set-sub">Paleta de colores</h3>
     ${paletas}
+
+    <h3 class="set-sub">Celebraciones</h3>
+    <p class="muted small">Al completar una tarea, cerrar un hito o terminar el día. Nunca por planificar.</p>
+    <div class="filters">${Object.entries(CELEBRATE).map(([k, l]) => `<button class="pill ${prefs.celebrate === k ? 'on' : ''}" data-act="set-celebrate" data-v="${k}">${l}</button>`).join('')}</div>
 
     <h3 class="set-sub">Fondo</h3>
     <div class="filters">
