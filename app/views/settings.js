@@ -6,8 +6,81 @@ import * as sync from './../sync.js';
 import { syncState } from './../main.js';
 import { esc, plural, ago } from './../lib.js';
 import { icon } from './../ui.js';
+import { PALETTES, PALETTE_FAMILIES } from './../domain/prefs.js';
+import { LIBRARY, CATEGORIES, srcOf } from './../domain/library.js';
+import { MAX_FILES } from './../domain/media.js';
+
+// Apariencia: paleta, fondo y fotos propias. Todo tiene un valor por defecto válido, así que
+// esta pantalla es opcional: la app ya se ve bien sin tocar nada.
+function appearanceBlock(prefs) {
+  const bg = prefs.background;
+  const paletas = PALETTE_FAMILIES.map(([fam, nombre]) => {
+    const lista = Object.entries(PALETTES).filter(([, [, f]]) => f === fam);
+    if (!lista.length) return '';
+    return `<div class="pal-group"><h3 class="muted small">${esc(nombre)}</h3>
+      <div class="pal-grid">${lista.map(([key, [label]]) => `
+        <button class="pal ${prefs.palette === key ? 'on' : ''}" data-act="set-palette" data-v="${key}" aria-pressed="${prefs.palette === key}" title="${esc(label)}">
+          <span class="pal-swatch" data-pal="${key}"><i></i><i></i><i></i></span>
+          <span class="pal-name">${esc(label)}</span>
+        </button>`).join('')}</div></div>`;
+  }).join('');
+
+  const fotos = prefs.media.map(m => `<div class="bg-card ${bg.kind === 'photo' && bg.id === m.id ? 'on' : ''}">
+      <button class="bg-pick" data-act="set-bg" data-kind="photo" data-id="${esc(m.id)}" aria-pressed="${bg.kind === 'photo' && bg.id === m.id}">
+        <img src="" alt="" data-photo="${esc(m.id)}" loading="lazy"><span class="bg-name">${esc(m.name || 'Foto')}</span>
+      </button>
+      <button class="icon-btn small bg-del" data-act="remove-photo" data-id="${esc(m.id)}" aria-label="Borrar ${esc(m.name || 'foto')}">${icon('trash')}</button>
+    </div>`).join('');
+
+  return `
+  <section class="block">
+    <div class="block-head"><h2 class="eyebrow">Apariencia</h2>
+      <button class="link" data-act="reset-appearance">Restaurar</button></div>
+    <p class="muted small">Tema del sistema, claro u oscuro:</p>
+    <div class="filters">${THEMES.map(([k, l]) => `<button class="pill ${prefs.theme === k ? 'on' : ''}" data-act="set-theme" data-v="${k}">${l}</button>`).join('')}</div>
+
+    <h3 class="set-sub">Paleta de colores</h3>
+    ${paletas}
+
+    <h3 class="set-sub">Fondo</h3>
+    <div class="filters">
+      <button class="pill ${bg.kind === 'none' ? 'on' : ''}" data-act="set-bg" data-kind="none">Sin fondo</button>
+      <button class="pill ${bg.kind === 'library' ? 'on' : ''}" data-act="set-bg" data-kind="library" data-id="${esc(bg.kind === 'library' ? bg.id : LIBRARY[0].id)}">Biblioteca</button>
+      <button class="pill ${bg.kind === 'photo' ? 'on' : ''}" data-act="set-bg" data-kind="photo" data-id="${esc(bg.kind === 'photo' ? bg.id : (prefs.media[0] ? prefs.media[0].id : ''))}" ${prefs.media.length ? '' : 'disabled'}>Mis fotos</button>
+    </div>
+
+    ${bg.kind === 'library' ? CATEGORIES.map(([cat, nombre]) => {
+      const lista = LIBRARY.filter(b => b.category === cat);
+      return lista.length ? `<div class="pal-group"><h3 class="muted small">${esc(nombre)}</h3>
+        <div class="bg-grid">${lista.map(b => `<div class="bg-card ${bg.id === b.id ? 'on' : ''}">
+          <button class="bg-pick" data-act="set-bg" data-kind="library" data-id="${esc(b.id)}" aria-pressed="${bg.id === b.id}">
+            <img src="${esc(srcOf(b.id))}" alt="${esc(b.name)}" loading="lazy"><span class="bg-name">${esc(b.name)}</span>
+          </button></div>`).join('')}</div></div>` : '';
+    }).join('') : ''}
+
+    ${bg.kind === 'photo' ? `<div class="bg-grid">${fotos}</div>
+      <p class="muted small">${prefs.media.length}/${MAX_FILES} fotos · JPG, PNG o WebP hasta 8 MB. Se guardan en tu cuenta y solo las ves tú.</p>` : ''}
+    ${bg.kind === 'photo' || prefs.media.length ? `<button class="btn ghost small" data-act="add-photo" ${prefs.media.length >= MAX_FILES ? 'disabled' : ''}>${icon('plus')}Añadir fotos</button>` : `<button class="link" data-act="add-photo">${icon('plus')}Subir una foto mía</button>`}
+
+    ${bg.kind !== 'none' ? `
+      <h3 class="set-sub">Ajustes del fondo</h3>
+      <p class="muted small">Encuadre</p>
+      <div class="filters">${FIT.map(([k, l]) => `<button class="pill ${bg.fit === k ? 'on' : ''}" data-act="set-bg-opt" data-k="fit" data-v="${k}">${l}</button>`).join('')}</div>
+      <p class="muted small">Suavizar el fondo, para que el texto se lea bien</p>
+      <div class="filters">${DIM.map(v => `<button class="pill ${bg.dim === v ? 'on' : ''}" data-act="set-bg-opt" data-k="dim" data-v="${v}">${v}%</button>`).join('')}</div>
+      <p class="muted small">Desenfoque</p>
+      <div class="filters">${BLUR.map(v => `<button class="pill ${bg.blur === v ? 'on' : ''}" data-act="set-bg-opt" data-k="blur" data-v="${v}">${v ? v + ' px' : 'Ninguno'}</button>`).join('')}</div>
+      <ul class="set"><li class="set-row">
+        <div><span>Cambiar de imagen cada día</span><small class="muted">Usa una distinta cada día, dentro de lo elegido</small></div>
+        <button class="switch ${bg.rotate ? 'on' : ''}" data-act="set-bg-opt" data-k="rotate" role="switch" aria-checked="${bg.rotate}" aria-label="Cambiar de imagen cada día"><span></span></button>
+      </li></ul>` : ''}
+  </section>`;
+}
 
 const THEMES = [['system', 'Sistema'], ['light', 'Claro'], ['dark', 'Oscuro']];
+const FIT = [['cover', 'Llenar'], ['contain', 'Entera'], ['top', 'Arriba'], ['bottom', 'Abajo']];
+const DIM = [0, 25, 40, 55, 70, 85];
+const BLUR = [0, 3, 6, 10];
 const NOTICES = [['all', 'Todos'], ['important', 'Solo importantes'], ['none', 'Ninguno']];
 
 const toggle = (key, label, on, help = '') => `<li class="set-row">
@@ -74,10 +147,7 @@ export function render() {
     </ul>
   </section>
 
-  <section class="block">
-    <div class="block-head"><h2 class="eyebrow">Apariencia</h2></div>
-    <div class="filters">${THEMES.map(([k, l]) => `<button class="pill ${prefs.theme === k ? 'on' : ''}" data-act="set-theme" data-v="${k}">${l}</button>`).join('')}</div>
-  </section>
+  ${appearanceBlock(prefs)}
 
   <section class="block">
     <div class="block-head"><h2 class="eyebrow">Meta semanal</h2></div>

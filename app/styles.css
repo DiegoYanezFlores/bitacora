@@ -676,6 +676,32 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .cal-mark.cal-rep { border: 1.6px dotted var(--accent); }
 .is-selected .cal-mark.cal-rep { border-color: var(--block-line); }
 
+/* ---------- apariencia: paletas, fondos y fotos ---------- */
+/* El fondo va en su propia capa, detrás de todo, con un velo regulable encima: así el texto
+   mantiene su contraste pase lo que pase con la imagen. */
+#bg-layer { position: fixed; inset: 0; z-index: -2; background-repeat: no-repeat; background-attachment: fixed; }
+/* Velo sobre la imagen: a más valor, más se suaviza el fondo y mejor se lee el texto. */
+:root[data-bg="on"] body::before { content: ""; position: fixed; inset: 0; z-index: -1; background: var(--bg); opacity: var(--bg-dim, .55); pointer-events: none; }
+:root[data-bg="on"] body { background: transparent; }
+/* Las tarjetas dejan ver algo del fondo, pero el bloque protagonista conserva su color sólido. */
+:root[data-bg="on"] .card:not(.next), :root[data-bg="on"] .tabbar, :root[data-bg="on"] .navside { background: color-mix(in srgb, var(--surface) 92%, transparent); }
+.set-sub { font-size: 14px; font-weight: 650; margin: 18px 0 8px; }
+.pal-group { margin-bottom: 12px; }
+.pal-group h3 { margin-bottom: 6px; }
+.pal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; margin-bottom: 10px; }
+.pal { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding: 8px; border: 1px solid var(--line-2); border-radius: var(--r-sm); background: var(--surface); }
+.pal.on { border-color: var(--accent); background: var(--accent-soft); }
+.pal-swatch { display: flex; width: 100%; height: 26px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
+.pal-swatch i { flex: 1; }
+.pal-name { font-size: 12px; font-weight: 600; color: var(--text); }
+.bg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-bottom: 10px; }
+.bg-card { position: relative; border: 1px solid var(--line-2); border-radius: var(--r-sm); overflow: hidden; background: var(--surface-2); }
+.bg-card.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.bg-pick { display: block; width: 100%; text-align: left; }
+.bg-pick img { display: block; width: 100%; height: 86px; object-fit: cover; background: var(--surface-2); }
+.bg-name { display: block; padding: 6px 8px; font-size: 12px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bg-del { position: absolute; top: 4px; right: 4px; background: color-mix(in srgb, var(--surface) 85%, transparent); }
+
 /* ---------- tablet ---------- */
 @media (min-width: 640px) {
   .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 24px; }
