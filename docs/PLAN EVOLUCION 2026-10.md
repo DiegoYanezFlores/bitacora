@@ -13,7 +13,7 @@ Regla: primero las dependencias compartidas, después cada módulo. Nada se reco
 | 2 | Arquitectura compartida: preferencias, almacenamiento de imágenes, migración 006 | **Implementada y probada** |
 | 3 | Actividades recurrentes e itinerario | **Implementada y probada** |
 | 4 | Sistema visual: temas, paletas, fondos, biblioteca e imágenes propias | **Implementada y probada** |
-| 5 | Celebraciones al completar | Pendiente |
+| 5 | Celebraciones al completar | **Implementada y probada** |
 | 6 | Diario y filosofía estoica | Pendiente |
 | 7 | Construcción del yo: frases y cierre de la interfaz | Pendiente |
 | 8 | Pruebas integrales y documentación | Pendiente |
@@ -48,6 +48,21 @@ añadir a `tasks` la regla de repetición. Las preferencias y las imágenes no n
   verdad (nunca al planificar). Se documenta el cambio de criterio en lugar de borrarlo.
 - **Frases.** Se distinguen siempre cita textual (con autor y obra), traducción y reflexión propia.
   Ninguna frase se atribuye sin fuente.
+
+## Fase 5 — resultado
+
+- Confeti propio en canvas (sin dependencias), háptica y sonido, con tres niveles: ninguna,
+  discreta (mensaje sin confeti) y completa. `prefers-reduced-motion` baja a discreta solo.
+- Enganchadas a los puntos reales de finalización, no a los datos: completar una tarea, cerrar un
+  hito y marcar un objetivo como terminado. Sincronizar o repintar nunca celebra.
+- Deduplicación por clave: la misma tarea, hito, día, objetivo o marca de racha se celebra una
+  sola vez, aunque la acción se repita o se recargue la app.
+- El día se celebra **solo al cerrar lo último que quedaba**, y la racha solo en 7, 30, 100 y 365.
+- Al cambiar el nivel en Ajustes se ve una muestra inmediata, para decidir con el resultado delante.
+
+Comprobado en el navegador: el confeti aparece y se limpia solo; apagadas no dejan rastro;
+discretas no pintan confeti; cerrar la penúltima tarea del día no celebra el día y cerrar la última
+sí; y repintar la pantalla no genera celebraciones.
 
 ## Fase 4 — resultado
 

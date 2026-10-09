@@ -8,6 +8,7 @@ import { TEMPLATES } from './domain/templates.js';
 import { dateShortcuts } from './domain/calendar.js';
 import { RESULTS, RESULT_KEYS, resultInfo, closePatch, reopenPatch, reschedulePatch, closeEntry, rescheduleEntry, reopenEntry, isClosed } from './domain/outcomes.js';
 import { DAYS, FREQS, normalizeRule, describe as describeRule, untilBefore, isSeries, isOccurrence } from './domain/recurrence.js';
+import { celebrateEvent, checkDayComplete, checkStreak, taskKey, goalKey } from './celebrate.js';
 
 // Estado del objetivo → tipo de registro de rumbo (goal_log).
 const STATUS_LOG = { paused: 'paused', done: 'closed', archived: 'archived' };
@@ -62,7 +63,11 @@ export function completeTask(id, { note = '' } = {}) {
   const entry = store.create('task_log', closeEntry(t, 'done', note, at));
   const a = store.create('activities', { kind: 'done', title: t.title, project_id: t.project_id, task_id: t.id, milestone_id: t.milestone_id || null, source: 'task', occurred_at: at });
   store.track('task_complete', {});
-  celebrate();
+  // Celebrar lo que de verdad se hizo: esta tarea y, si con ella no queda nada abierto, el día.
+  celebrateEvent({ type: 'task', key: taskKey(id) });
+  const hoy = dayKey();
+  if ((t.due_date || hoy) === hoy) checkDayComplete(hoy, model.tasks().filter(x => x.due_date === hoy));
+  checkStreak(model.streak().current);
   feedback({
     title: 'Tarea completada',
     lines: deltaLines(before, t.project_id),
@@ -439,6 +444,8 @@ export function projectForm(project = null, { onCreated } = {}) {
         if (data.status !== project.status) {
           data.completed_at = data.status === 'done' ? nowIso() : null;
           logGoal(project.id, STATUS_LOG[data.status] || (project.status === 'paused' ? 'resumed' : 'reopened'), { from: project.status });
+          // Terminar un objetivo es lo más grande que se puede celebrar aquí.
+          if (data.status === 'done') celebrateEvent({ type: 'goal', key: goalKey(project.id) });
         }
         store.update('projects', project.id, data);
         feedback({ title: 'Objetivo actualizado', tone: 'info' });

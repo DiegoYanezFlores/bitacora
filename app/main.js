@@ -12,6 +12,7 @@ import { esc, debounce, plural, dayKey, addDays } from './lib.js';
 import { addMonths } from './domain/calendar.js';
 import * as motion from './motion.js';
 import { applyAppearance, applyBackground } from './appearance.js';
+import * as celebrar from './celebrate.js';
 import * as media from './media.js';
 import { PALETTES, PALETTE_FAMILIES, resetAppearance } from './domain/prefs.js';
 
@@ -212,6 +213,13 @@ const ACTIONS = {
   'set-theme': el => { store.setPrefs({ theme: el.dataset.v }); applyTheme(); },
   // ---------- apariencia ----------
   'set-palette': el => { store.setPrefs({ palette: el.dataset.v }); applyAppearance(); render(); },
+  'set-celebrate': el => {
+    store.setPrefs({ celebrate: el.dataset.v });
+    render();
+    // Una muestra inmediata de lo elegido, para decidir con el resultado delante.
+    if (el.dataset.v !== 'off') celebrar.demo();
+    else feedback({ title: 'Celebraciones apagadas', tone: 'info' });
+  },
   'set-bg': el => {
     const kind = el.dataset.kind;
     const prefs = store.prefs();

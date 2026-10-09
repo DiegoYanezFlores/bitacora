@@ -8,6 +8,7 @@ import { openSheet, closeSheet, confirmSheet, feedback, celebrate, icon } from '
 import { seg, setTemplateApplier } from './actions.js';
 import { WEIGHTS, progressDelta } from './domain/progress.js';
 import { TEMPLATES, template } from './domain/templates.js';
+import { celebrateEvent, milestoneKey } from './celebrate.js';
 
 const MAX_CRITERIA = 8;
 const val = (fd, k) => String(fd.get(k) ?? '').trim();
@@ -312,7 +313,7 @@ export function closeMilestone(id, { url = '', note = '', reflection = '' } = {}
     }
   }
   const next = model.progress(model.project(gid)).nextMilestone;
-  celebrate();
+  celebrateEvent({ type: 'milestone', key: milestoneKey(id) });
   store.track('milestone_close', { criteria: model.msProgress(model.milestone(id)).total, evidence: Boolean(url || note) });
   feedback({
     tone: 'milestone',

@@ -676,6 +676,10 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .cal-mark.cal-rep { border: 1.6px dotted var(--accent); }
 .is-selected .cal-mark.cal-rep { border-color: var(--block-line); }
 
+/* Confeti: por encima de todo, pero sin recibir clics ni bloquear nada. Se borra solo. */
+.confetti { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 60; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .confetti { display: none; } }
+
 /* ---------- apariencia: paletas, fondos y fotos ---------- */
 /* El fondo va en su propia capa, detrás de todo, con un velo regulable encima: así el texto
    mantiene su contraste pase lo que pase con la imagen. */
