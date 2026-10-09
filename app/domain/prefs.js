@@ -22,7 +22,8 @@ export const CELEBRATE = { off: 'Ninguna', soft: 'Discreta', full: 'Completa' };
 export const QUOTE_SPOTS = { off: 'Ocultas', home: 'Solo en Inicio', all: 'Inicio y esquina' };
 
 // Fondo: 'none' (liso), 'library' (imagen incluida) o 'photo' (foto del usuario).
-export const DEFAULT_BACKGROUND = { kind: 'none', id: '', fit: 'cover', dim: 35, blur: 0, rotate: false };
+// dim = cuánto se suaviza la imagen con un velo del color de fondo (0 = imagen pura).
+export const DEFAULT_BACKGROUND = { kind: 'none', id: '', fit: 'cover', dim: 55, blur: 0, rotate: false };
 
 export const DEFAULTS = {
   theme: 'system',
@@ -52,7 +53,7 @@ export function normalizeBackground(bg) {
     kind,
     id: kind === 'none' ? '' : String(b.id || '').slice(0, 120),
     fit: ['cover', 'contain', 'top', 'bottom'].includes(b.fit) ? b.fit : 'cover',
-    dim: isFinite(Number(b.dim)) ? clamp(b.dim, 0, 80) : DEFAULT_BACKGROUND.dim,
+    dim: isFinite(Number(b.dim)) ? clamp(b.dim, 0, 90) : DEFAULT_BACKGROUND.dim,
     blur: isFinite(Number(b.blur)) ? clamp(b.blur, 0, 12) : 0,
     rotate: Boolean(b.rotate)
   };

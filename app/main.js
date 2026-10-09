@@ -11,6 +11,9 @@ import { icon, initSheet, openSheet, closeSheet, confirmSheet, feedback, busy, h
 import { esc, debounce, plural, dayKey, addDays } from './lib.js';
 import { addMonths } from './domain/calendar.js';
 import * as motion from './motion.js';
+import { applyAppearance, applyBackground } from './appearance.js';
+import * as media from './media.js';
+import { PALETTES, PALETTE_FAMILIES, resetAppearance } from './domain/prefs.js';
 
 import * as today from './views/today.js';
 import * as projects from './views/projects.js';
@@ -47,12 +50,8 @@ let booted = false;
 let lastRenderKey = '';
 
 // ---------- tema ----------
-export function applyTheme() {
-  const t = store.prefs().theme;
-  document.documentElement.dataset.theme = t === 'system' ? '' : t;
-  const dark = t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
-  document.querySelector('meta[name=theme-color]').setAttribute('content', dark ? '#0B1020' : '#F5F7FB');
-}
+// Tema, paleta y fondo: todo lo visual se aplica desde app/appearance.js.
+export function applyTheme() { applyAppearance(); }
 
 // ---------- estado de sincronización para la vista de ajustes ----------
 export function syncState() {
@@ -110,6 +109,11 @@ function render() {
   root.innerHTML = view.render(route.params);
   motion.play(root, previous);
   $('#chip').innerHTML = syncChip();
+  // Miniaturas de las fotos propias: su dirección se pide al almacén local después de pintar.
+  root.querySelectorAll('img[data-photo]').forEach(async img => {
+    const url = await media.photoUrl(img.dataset.photo);
+    if (url) img.src = url;
+  });
   document.querySelectorAll('[data-nav]').forEach(a => {
     const on = a.dataset.nav === route.name || (route.name === 'goal' && a.dataset.nav === 'goals') || (route.name === 'next' && a.dataset.nav === 'home');
     a.classList.toggle('on', on);
@@ -206,6 +210,34 @@ const ACTIONS = {
   'dismiss-notice': el => { store.track('notice_action', { action: 'dismiss' }); model.dismissNotice(el.dataset.id); },
   'notice-open': el => { store.track('notice_action', { action: 'open' }); model.dismissNotice(el.dataset.id); },
   'set-theme': el => { store.setPrefs({ theme: el.dataset.v }); applyTheme(); },
+  // ---------- apariencia ----------
+  'set-palette': el => { store.setPrefs({ palette: el.dataset.v }); applyAppearance(); render(); },
+  'set-bg': el => {
+    const kind = el.dataset.kind;
+    const prefs = store.prefs();
+    store.setPrefs({ background: { ...prefs.background, kind, id: el.dataset.id || '' } });
+    applyBackground(); render();
+  },
+  'set-bg-opt': el => {
+    const prefs = store.prefs();
+    const k = el.dataset.k;
+    const valor = k === 'rotate' ? !prefs.background.rotate : k === 'fit' ? el.dataset.v : Number(el.dataset.v);
+    store.setPrefs({ background: { ...prefs.background, [k]: valor } });
+    applyBackground(); render();
+  },
+  'reset-appearance': async () => {
+    if (!(await confirmSheet('¿Volver a la apariencia por defecto?', { confirm: 'Restaurar', detail: 'Se recupera la paleta y el fondo originales. Tus fotos y el resto de ajustes no se tocan.' }))) return;
+    store.setPrefs(resetAppearance());
+    applyAppearance(); render();
+    feedback({ title: 'Apariencia restaurada', tone: 'info' });
+  },
+  'add-photo': () => $('#photo-file').click(),
+  'remove-photo': async el => {
+    if (!(await confirmSheet('¿Borrar esta foto?', { confirm: 'Borrar', danger: true, detail: 'Se quita de este dispositivo y de la nube. Si era tu fondo, se vuelve al fondo por defecto.' }))) return;
+    await media.removePhoto(el.dataset.id);
+    applyBackground(); render();
+    feedback({ title: 'Foto borrada', tone: 'info' });
+  },
   'set-goal': el => { store.setPrefs({ weeklyGoal: Number(el.dataset.v) }); feedback({ title: `Meta: ${plural(Number(el.dataset.v), 'día activo', 'días activos')} por semana`, tone: 'info' }); },
   'set-notices': el => store.setPrefs({ notices: el.dataset.v }),
   'toggle-pref': el => store.setPrefs({ [el.dataset.k]: !store.prefs()[el.dataset.k] }),
@@ -313,7 +345,32 @@ function wire() {
     }
   });
 
-  $('#import-file').addEventListener('change', async e => {
+  // Fotos propias: se guardan en el dispositivo al instante y se suben cuando hay conexión.
+  // Si el navegador no tiene el selector (una página de prueba, por ejemplo), la app sigue funcionando.
+  $('#photo-file')?.addEventListener('change', async e => {
+    const files = [...e.target.files];
+    e.target.value = '';
+    let añadidas = 0;
+    const errores = [];
+    for (const f of files) {
+      const r = await media.addPhoto(f);
+      if (r.ok) añadidas++; else errores.push(r.reason);
+    }
+    if (añadidas) {
+      const prefs = store.prefs();
+      // La primera foto se pone de fondo directamente: así se ve el resultado sin más pasos.
+      if (prefs.background.kind !== 'photo') store.setPrefs({ background: { ...prefs.background, kind: 'photo', id: prefs.media.at(-1).id } });
+      await applyBackground();
+    }
+    render();
+    feedback({
+      title: añadidas ? `${plural(añadidas, 'foto añadida', 'fotos añadidas')}` : 'No se añadió ninguna foto',
+      lines: errores.slice(0, 2),
+      tone: añadidas ? 'ok' : 'info'
+    });
+  });
+
+  $('#import-file')?.addEventListener('change', async e => {
     const file = e.target.files[0];
     e.target.value = '';
     if (!file) return;

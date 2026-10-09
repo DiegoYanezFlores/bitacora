@@ -26,7 +26,7 @@ test('lo guardado manda, pero lo inválido vuelve al valor por defecto', () => {
 
 test('el fondo se normaliza: recortes, opacidad y desenfoque dentro de rango', () => {
   const b = normalizeBackground({ kind: 'library', id: 'montana', fit: 'top', dim: 120, blur: -5, rotate: 'sí' });
-  assert.deepEqual([b.kind, b.id, b.fit, b.dim, b.blur, b.rotate], ['library', 'montana', 'top', 80, 0, true]);
+  assert.deepEqual([b.kind, b.id, b.fit, b.dim, b.blur, b.rotate], ['library', 'montana', 'top', 90, 0, true]);
   assert.equal(normalizeBackground({ kind: 'none', id: 'x' }).id, '');
   assert.equal(normalizeBackground({ kind: 'inventado' }).kind, 'none');
 });

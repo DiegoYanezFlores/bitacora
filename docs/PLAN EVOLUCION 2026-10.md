@@ -12,7 +12,7 @@ Regla: primero las dependencias compartidas, después cada módulo. Nada se reco
 | 1 | Diagnóstico y reparación de la sincronización + panel de estado | **Implementada y probada** (PR #13) |
 | 2 | Arquitectura compartida: preferencias, almacenamiento de imágenes, migración 006 | **Implementada y probada** |
 | 3 | Actividades recurrentes e itinerario | **Implementada y probada** |
-| 4 | Sistema visual: temas, paletas, fondos, biblioteca e imágenes propias | Pendiente |
+| 4 | Sistema visual: temas, paletas, fondos, biblioteca e imágenes propias | **Implementada y probada** |
 | 5 | Celebraciones al completar | Pendiente |
 | 6 | Diario y filosofía estoica | Pendiente |
 | 7 | Construcción del yo: frases y cierre de la interfaz | Pendiente |
@@ -48,6 +48,23 @@ añadir a `tasks` la regla de repetición. Las preferencias y las imágenes no n
   verdad (nunca al planificar). Se documenta el cambio de criterio en lugar de borrarlo.
 - **Frases.** Se distinguen siempre cita textual (con autor y obra), traducción y reflexión propia.
   Ninguna frase se atribuye sin fuente.
+
+## Fase 4 — resultado
+
+- **9 paletas** además de la base (pastel, psicodélicas, naturales, minimalista, oscura), generadas
+  con `scripts/make-palettes.mjs`: los tonos se ajustan solos hasta cumplir AA y el verificador
+  revisa las 20 combinaciones de tema y paleta.
+- **Biblioteca de 10 fondos** propios en SVG (`img/bg/`, 32 KB en total): montañas, bosque, océano,
+  ciudad, constancia, respiración, libros, red de ideas y dos abstractos. Sin fotos de terceros,
+  sin servicios externos y sin enlaces que se puedan romper.
+- **Fotos propias**: subir varias, previsualizar, elegir cuál es el fondo, borrar y volver al fondo
+  por defecto. Validación con motivo claro (formato, 8 MB, 12 fotos) y uso sin conexión.
+- **Ajustes del fondo**: encuadre, velo para leer mejor, desenfoque y cambio de imagen cada día.
+- Todo persiste y se sincroniza en `profiles.prefs`; "Restaurar" devuelve la apariencia por defecto
+  sin tocar el resto de preferencias ni los datos.
+
+Dos fallos encontrados al revisar las capturas y corregidos: el bloque protagonista perdía su color
+sólido sobre un fondo con imagen, y el velo estaba invertido (más valor daba menos legibilidad).
 
 ## Fase 3 — resultado
 

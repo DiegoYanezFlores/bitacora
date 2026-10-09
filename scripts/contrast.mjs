@@ -29,8 +29,20 @@ const PAIRS = [
   ...['teal', 'blue', 'violet', 'rose', 'orange', 'amber', 'green', 'slate'].map(c => [`c-${c}`, 'surface', 3])
 ];
 
+// Las paletas elegibles (app/palettes.css) redefinen tokens: cada una se revisa igual que la base.
+const paletas = [];
+try {
+  const extra = readFileSync(new URL('../app/palettes.css', import.meta.url), 'utf8');
+  const bloque = (text, sel) => { const i = text.indexOf(sel); return i < 0 ? '' : text.slice(i, text.indexOf('}', i)); };
+  for (const key of [...new Set([...extra.matchAll(/data-palette="([\w-]+)"/g)].map(m => m[1]))]) {
+    const claro = { ...light, ...tokens(bloque(extra, `:root[data-palette="${key}"] {`)) };
+    const oscuro = { ...dark, ...tokens(bloque(extra, `:root[data-palette="${key}"][data-theme="dark"]`)) };
+    paletas.push([`${key} claro`, claro], [`${key} oscuro`, oscuro]);
+  }
+} catch (e) { /* todavía sin paletas generadas */ }
+
 let failed = 0;
-for (const [name, theme] of [['claro', light], ['oscuro', dark]]) {
+for (const [name, theme] of [['claro', light], ['oscuro', dark], ...paletas]) {
   for (const [fg, bg, min] of PAIRS) {
     if (!theme[fg] || !theme[bg]) { console.error(`${name}: falta --${theme[fg] ? bg : fg}`); failed++; continue; }
     const r = ratio(theme[fg], theme[bg]);
@@ -38,4 +50,4 @@ for (const [name, theme] of [['claro', light], ['oscuro', dark]]) {
   }
 }
 if (failed) process.exit(1);
-console.log(`Contraste correcto: ${PAIRS.length} pares en claro y oscuro.`);
+console.log(`Contraste correcto: ${PAIRS.length} pares en ${2 + paletas.length} combinaciones de tema y paleta.`);
